@@ -1,0 +1,34 @@
+# --- Dependencies ---
+node_modules/
+.pnp
+.pnp.js
+
+# --- Environment Variables ---
+.env
+.env.test
+.env.production
+.env.local
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Prisma & Database ---
+generated/
+prisma/generated/
+
+# --- Build Outputs ---
+dist/
+build/
+coverage/
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# --- Editor/IDE ---
+.vscode/
+.idea/

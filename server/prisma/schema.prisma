@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id            String     @id @default(uuid())
+  username      String
+  email         String     @unique
+  password_hash String
+  role          Role
+  is_active     Boolean
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  analyses      Analysis[]
+  auditLogs     AuditLog[]
+}
+
+model Image {
+  id                String     @id @default(uuid())
+  file_path         String
+  file_size_bytes   Int
+  mime_type         String
+  width             Int
+  height            Int
+  created_at        DateTime   @default(now())
+  used_as_before_in Analysis[] @relation("BeforeImage")
+  used_as_after_in  Analysis[] @relation("AfterImage")
+  used_as_result_in Analysis[] @relation("ResultImage")
+}
+
+model Analysis {
+  id               String         @id @default(uuid())
+  inspector_id     String
+  issued_by        User           @relation(fields: [inspector_id], references: [id])
+  before_image_id  String
+  before_image     Image          @relation("BeforeImage", fields: [before_image_id], references: [id])
+  after_image_id   String
+  after_image      Image          @relation("AfterImage", fields: [after_image_id], references: [id])
+  result_image_id  String?
+  result_image     Image?         @relation("ResultImage", fields: [result_image_id], references: [id])
+  status           AnalysisStatus @default(Pending)
+  anomaly_detected Boolean?
+  created_at       DateTime       @default(now())
+}
+
+model AuditLog {
+  id         String       @id @default(uuid())
+  user_id    String
+  user       User         @relation(fields: [user_id], references: [id])
+  action     String
+  ip_address String
+  status     ActionStatus
+  timestamp  DateTime     @default(now())
+}
+
+enum Role {
+  Admin
+  Inspector
+}
+
+enum AnalysisStatus {
+  Pending
+  Completed
+  Failed
+}
+
+enum ActionStatus {
+  Success
+  Failure
+}
