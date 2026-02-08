@@ -8,11 +8,9 @@ interface UserPayload {
   role: string;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: UserPayload;
-    }
+declare module 'express' {
+  export interface Request {
+    user?: UserPayload;
   }
 }
 
