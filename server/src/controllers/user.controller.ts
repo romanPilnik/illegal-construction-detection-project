@@ -1,7 +1,6 @@
 import type { Request, Response } from 'express';
-import { PrismaClient, Prisma, Role } from '../../generated/prisma/index.js';
-
-const prisma = new PrismaClient();
+import { Prisma, Role } from '../generated/prisma/client.js';
+import { prisma } from '../lib/prisma.js';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -9,11 +8,13 @@ export const getUsers = async (req: Request, res: Response) => {
     const requestedLimit = Number(req.query.limit) || 10;
 
     if (requestedLimit > 50) {
-      res.status(400).json({ message: "Limit cannot exceed 50 items per page" });
+      res
+        .status(400)
+        .json({ message: 'Limit cannot exceed 50 items per page' });
       return;
     }
 
-    const  limit = requestedLimit;
+    const limit = requestedLimit;
 
     const role = req.query.role as string;
     const search = req.query.search as string;
@@ -29,7 +30,7 @@ export const getUsers = async (req: Request, res: Response) => {
     if (search) {
       whereClause.OR = [
         { username: { contains: search } },
-        { email: { contains: search } }
+        { email: { contains: search } },
       ];
     }
 
@@ -59,9 +60,8 @@ export const getUsers = async (req: Request, res: Response) => {
         hasNextPage: page < totalPages,
       },
     });
-}
-  catch (error) {
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching users" });
+    res.status(500).json({ message: 'Error fetching users' });
   }
 };
