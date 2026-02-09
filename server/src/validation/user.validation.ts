@@ -1,23 +1,26 @@
 import { z } from 'zod';
 
 const optionalTrimmedString = z
-  .preprocess((value) => {
+  .transform((value) => {
     if (typeof value !== 'string') {
       return value;
     }
 
     const trimmedValue = value.trim();
     return trimmedValue.length === 0 ? undefined : trimmedValue;
-  }, z.string().optional());
+  })
+  .pipe(z.string().optional());
 
-const optionalNormalizedEmail = z.preprocess((value) => {
-  if (typeof value !== 'string') {
-    return value;
-  }
+const optionalNormalizedEmail = z
+  .transform((value) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
 
-  const normalizedEmail = value.trim().toLowerCase();
-  return normalizedEmail.length === 0 ? undefined : normalizedEmail;
-}, z.email().optional());
+    const normalizedEmail = value.trim().toLowerCase();
+    return normalizedEmail.length === 0 ? undefined : normalizedEmail;
+  })
+  .pipe(z.email().optional());
 
 export const userIdParamsSchema = z.strictObject({
   id: z.uuid(),

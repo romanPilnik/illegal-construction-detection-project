@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { ZodIssue, ZodTypeAny } from 'zod';
+import type { ZodIssue, ZodType } from 'zod';
 
 type RequestSchemas = {
-  body?: ZodTypeAny;
-  params?: ZodTypeAny;
-  query?: ZodTypeAny;
+  body?: ZodType;
+  params?: ZodType;
+  query?: ZodType;
 };
 
 export const validateRequest = (schemas: RequestSchemas) => {
