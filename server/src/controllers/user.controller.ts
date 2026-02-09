@@ -2,7 +2,11 @@ import type { Request, Response } from 'express';
 import { Prisma, Role } from '../generated/prisma/client.js';
 import { prisma } from '../lib/prisma.js';
 
-export const getUsers = async (req: Request, res: Response) => {
+type GetUserByIdParams = {
+  id: string;
+};
+
+const getUsers = async (req: Request, res: Response) => {
   try {
     const page = Math.max(Number(req.query.page) || 1, 1);
     const requestedLimit = Number(req.query.limit) || 10;
@@ -64,4 +68,149 @@ export const getUsers = async (req: Request, res: Response) => {
     console.error(error);
     res.status(500).json({ message: 'Error fetching users' });
   }
+};
+
+const getUserById = async (req: Request<GetUserByIdParams>, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    res.status(200).json({ data: user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching user' });
+  }
+};
+
+const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { username, email } = req.body as {
+      username?: string;
+      email?: string;
+    };
+
+    if (!id) {
+      res.status(400).json({ message: 'User id is required' });
+      return;
+    }
+
+    const data: Prisma.UserUpdateInput = {};
+
+    if (username !== undefined) {
+      if (typeof username !== 'string' || !username.trim()) {
+        res
+          .status(400)
+          .json({ message: 'Username must be a non-empty string' });
+        return;
+      }
+      data.username = username.trim();
+    }
+
+    if (email !== undefined) {
+      if (typeof email !== 'string' || !email.trim()) {
+        res.status(400).json({ message: 'Email must be a non-empty string' });
+        return;
+      }
+      data.email = email.trim().toLowerCase();
+    }
+
+    if (Object.keys(data).length === 0) {
+      res.status(400).json({
+        message: 'No valid fields to update. Allowed: username, email',
+      });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        is_active: true,
+      },
+    });
+
+    res
+      .status(200)
+      .json({ message: 'User updated successfully', data: updatedUser });
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+
+      if (error.code === 'P2002') {
+        res.status(400).json({ message: 'Email already in use' });
+        return;
+      }
+    }
+
+    res.status(500).json({ message: 'Error updating user details' });
+  }
+};
+
+const deleteUser = async (req: Request<GetUserByIdParams>, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      res.status(400).json({ message: 'User id is required' });
+      return;
+    }
+
+    const deletedUser = await prisma.user.update({
+      where: { id },
+      data: { is_active: false },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        is_active: true,
+      },
+    });
+
+    res
+      .status(200)
+      .json({ message: 'User deleted successfully', data: deletedUser });
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+    }
+
+    res.status(500).json({ message: 'Error deleting user' });
+  }
+};
+
+export const UserController = {
+  getUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
 };

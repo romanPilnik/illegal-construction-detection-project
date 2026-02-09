@@ -1,14 +1,14 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
-
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_123';
 
 /**
  * Handles new user registration
  */
-export const register = async (req: Request, res: Response): Promise<void> => {
+const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password, role } = req.body;
 
@@ -46,7 +46,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 /**
  * Handles user authentication and issues a JWT
  */
-export const login = async (req: Request, res: Response): Promise<void> => {
+const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
@@ -89,4 +89,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error during login' });
   }
+};
+
+export const AuthController = {
+  register,
+  login,
 };
