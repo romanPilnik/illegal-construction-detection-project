@@ -8,20 +8,12 @@ type GetUserByIdParams = {
 
 const getUsers = async (req: Request, res: Response) => {
   try {
-    const page = Math.max(Number(req.query.page) || 1, 1);
-    const requestedLimit = Number(req.query.limit) || 10;
-
-    if (requestedLimit > 50) {
-      res
-        .status(400)
-        .json({ message: 'Limit cannot exceed 50 items per page' });
-      return;
-    }
-
-    const limit = requestedLimit;
-
-    const role = req.query.role as string;
-    const search = req.query.search as string;
+    const { page, limit, role, search } = req.query as unknown as {
+      page: number;
+      limit: number;
+      role?: string;
+      search?: string;
+    };
 
     const skip = (page - 1) * limit;
 
@@ -99,41 +91,16 @@ const getUserById = async (req: Request<GetUserByIdParams>, res: Response) => {
 const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
   try {
     const { id } = req.params;
-    const { username, email } = req.body as {
-      username?: string;
-      email?: string;
-    };
-
-    if (!id) {
-      res.status(400).json({ message: 'User id is required' });
-      return;
-    }
+    const { username, email } = req.body;
 
     const data: Prisma.UserUpdateInput = {};
 
     if (username !== undefined) {
-      if (typeof username !== 'string' || !username.trim()) {
-        res
-          .status(400)
-          .json({ message: 'Username must be a non-empty string' });
-        return;
-      }
-      data.username = username.trim();
+      data.username = username;
     }
 
     if (email !== undefined) {
-      if (typeof email !== 'string' || !email.trim()) {
-        res.status(400).json({ message: 'Email must be a non-empty string' });
-        return;
-      }
-      data.email = email.trim().toLowerCase();
-    }
-
-    if (Object.keys(data).length === 0) {
-      res.status(400).json({
-        message: 'No valid fields to update. Allowed: username, email',
-      });
-      return;
+      data.email = email;
     }
 
     const updatedUser = await prisma.user.update({
@@ -173,11 +140,6 @@ const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
 const deleteUser = async (req: Request<GetUserByIdParams>, res: Response) => {
   try {
     const { id } = req.params;
-
-    if (!id) {
-      res.status(400).json({ message: 'User id is required' });
-      return;
-    }
 
     const deletedUser = await prisma.user.update({
       where: { id },
