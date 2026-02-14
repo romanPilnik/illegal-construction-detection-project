@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { logActivity } from '../services/audit.service.js';
+import { sendWelcomeEmail } from '../services/email.service.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -13,7 +14,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password, role } = req.body;
 
-    // Check if a user with this email already exists
+    // Check if a user with this email  already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       res.status(400).json({ message: 'Email already in use' });
@@ -33,6 +34,13 @@ const register = async (req: Request, res: Response): Promise<void> => {
         role: role || 'Inspector', // Default role if not provided
         is_active: true,
       },
+    });
+
+    await sendWelcomeEmail(newUser.email, newUser.username);
+
+    res.status(201).json({
+      message: 'User created successfully',
+      userId: newUser.id
     });
 
     res
