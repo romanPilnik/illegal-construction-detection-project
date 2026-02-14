@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
+import { logActivity } from '../services/audit.service.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -56,6 +57,12 @@ const login = async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({ message: 'Invalid email or password' });
       return;
     }
+    if (!existingUser.is_active) {
+      res.status(403).json({
+        message: 'Your account has been deactivated. Please contact an administrator.'
+      });
+      return;
+    }
 
     // 2. Compare the provided password with the hashed password in the DB
     const isMatch = await bcrypt.compare(password, existingUser.password_hash);
@@ -74,6 +81,10 @@ const login = async (req: Request, res: Response): Promise<void> => {
       JWT_SECRET,
       { expiresIn: '24h' } // Token expires in 24 hours
     );
+
+
+    await logActivity(existingUser.id, 'USER_LOGIN', `User ${existingUser.email} logged in`);
+
 
     // 4. Return the token and basic user info
     res.status(200).json({

@@ -31,6 +31,7 @@ export const getUsersQuerySchema = z.strictObject({
   limit: z.coerce.number().int().min(1).max(50).default(10),
   role: z.enum(['Admin', 'Inspector']).optional(),
   search: optionalTrimmedString,
+  isActiveFilter: z.string().optional().transform((val) => val ? Number(val) : 0),
 });
 
 export const updateUserBodySchema = z
