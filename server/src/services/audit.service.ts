@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma.js';
-import { ActionStatus, Prisma } from '../generated/prisma/index.js';
+import { ActionStatus, Prisma } from '../generated/prisma/client.js';
 
 export const logActivity = async (
   userId: string,
@@ -15,7 +15,8 @@ export const logActivity = async (
         action: action,
         details: details || '',
         status: status,
-        metadata: (metadata || {}) as Prisma.InputJsonValue,        ip_address: '0.0.0.0'
+        metadata: (metadata || {}) as Prisma.InputJsonValue,
+        ip_address: '0.0.0.0',
       },
     });
   } catch (error) {

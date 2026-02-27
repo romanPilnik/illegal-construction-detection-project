@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { logActivity } from '../services/audit.service.js';
-import { Prisma, Role } from '../generated/prisma/index.js';
+import { Prisma, Role } from '../generated/prisma/client.js';
 import { prisma } from '../lib/prisma.js';
 
 type GetUserByIdParams = {
@@ -12,13 +12,14 @@ type GetUserByIdParams = {
  */
 const getUsers = async (req: Request, res: Response) => {
   try {
-    const { page, limit, role, search, isActiveFilter } = req.query as unknown as {
-      page: number;
-      limit: number;
-      role?: string;
-      search?: string;
-      isActiveFilter?: boolean;
-    };
+    const { page, limit, role, search, isActiveFilter } =
+      req.query as unknown as {
+        page: number;
+        limit: number;
+        role?: string;
+        search?: string;
+        isActiveFilter?: boolean;
+      };
 
     const skip = (page - 1) * limit;
     const whereClause: Prisma.UserWhereInput = {};
@@ -112,7 +113,13 @@ const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
     const updatedUser = await prisma.user.update({
       where: { id },
       data,
-      select: { id: true, username: true, email: true, role: true, is_active: true },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        is_active: true,
+      },
     });
 
     const adminId = req.user?.userId;
@@ -123,12 +130,14 @@ const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
         `Updated user details for: ${updatedUser.email}`,
         {
           before: { username: oldUser.username, email: oldUser.email },
-          after: { username: updatedUser.username, email: updatedUser.email }
+          after: { username: updatedUser.username, email: updatedUser.email },
         }
       );
     }
 
-    res.status(200).json({ message: 'User updated successfully', data: updatedUser });
+    res
+      .status(200)
+      .json({ message: 'User updated successfully', data: updatedUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error updating user details' });
@@ -145,7 +154,13 @@ const deleteUser = async (req: Request<GetUserByIdParams>, res: Response) => {
     const deletedUser = await prisma.user.update({
       where: { id },
       data: { is_active: false },
-      select: { id: true, username: true, email: true, role: true, is_active: true },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        is_active: true,
+      },
     });
 
     const adminId = req.user?.userId;
@@ -158,7 +173,9 @@ const deleteUser = async (req: Request<GetUserByIdParams>, res: Response) => {
       );
     }
 
-    res.status(200).json({ message: 'User deleted successfully', data: deletedUser });
+    res
+      .status(200)
+      .json({ message: 'User deleted successfully', data: deletedUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error deleting user' });

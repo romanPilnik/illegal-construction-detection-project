@@ -8,7 +8,15 @@ import {
 
 const router = Router();
 
-router.post('/register', validateRequest({ body: registerBodySchema }), AuthController.register);
-router.post('/login', validateRequest({ body: loginBodySchema }), AuthController.login);
+router.post(
+  '/register',
+  validateRequest({ body: registerBodySchema }),
+  AuthController.register
+);
+router.post(
+  '/login',
+  validateRequest({ body: loginBodySchema }),
+  AuthController.login
+);
 
 export default router;

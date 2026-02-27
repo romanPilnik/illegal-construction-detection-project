@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
 
@@ -58,8 +58,7 @@ model AuditLog {
   timestamp  DateTime     @default(now())
   details    String?      @db.Text
 
-
-  metadata  Json?
+  metadata Json?
 }
 
 enum Role {

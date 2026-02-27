@@ -1,8 +1,5 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
-import type { Server } from 'node:net';
-import userRoutes from '../routes/user.routes.js';
-import { userIdParamsSchema } from '../validation/user.validation.js';
 
 let io: SocketIOServer;
 
@@ -11,7 +8,7 @@ export const initWebSocket = (server: HttpServer) => {
     cors: {
       origin: '*',
       methods: ['GET', 'POST', 'PATCH'],
-    }
+    },
   });
 
   io.on('connection', (socket) => {
@@ -22,10 +19,10 @@ export const initWebSocket = (server: HttpServer) => {
     });
     socket.on(`disconnect`, () => {
       console.log(`Client disconnected: ${socket.id}`);
+    });
   });
-});
   return io;
-  };
+};
 export const getIO = () => {
   if (!io) {
     throw new Error('Socket.io is not initialized!');

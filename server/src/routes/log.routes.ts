@@ -6,7 +6,6 @@ import { getLogsQuerySchema } from '../validation/log.validation.js';
 
 const router = Router();
 
-
 router.get(
   '/',
   authenticateToken,

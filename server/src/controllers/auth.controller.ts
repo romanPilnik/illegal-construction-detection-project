@@ -40,7 +40,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
 
     res.status(201).json({
       message: 'User created successfully',
-      userId: newUser.id
+      userId: newUser.id,
     });
 
     res
@@ -67,7 +67,8 @@ const login = async (req: Request, res: Response): Promise<void> => {
     }
     if (!existingUser.is_active) {
       res.status(403).json({
-        message: 'Your account has been deactivated. Please contact an administrator.'
+        message:
+          'Your account has been deactivated. Please contact an administrator.',
       });
       return;
     }
@@ -90,9 +91,11 @@ const login = async (req: Request, res: Response): Promise<void> => {
       { expiresIn: '24h' } // Token expires in 24 hours
     );
 
-
-    await logActivity(existingUser.id, 'USER_LOGIN', `User ${existingUser.email} logged in`);
-
+    await logActivity(
+      existingUser.id,
+      'USER_LOGIN',
+      `User ${existingUser.email} logged in`
+    );
 
     // 4. Return the token and basic user info
     res.status(200).json({
