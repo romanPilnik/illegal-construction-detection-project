@@ -50,7 +50,6 @@ export const validateRequest = (schemas: RequestSchemas) => {
       return;
     }
 
-    // הפתרון ל-Express 5: שימוש ב-Object.defineProperty כדי לדרוס את הנעילה
     if (validatedValues.params !== undefined) {
       Object.defineProperty(req, 'params', {
         value: validatedValues.params,

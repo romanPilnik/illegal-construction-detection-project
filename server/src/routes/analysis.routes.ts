@@ -3,6 +3,8 @@ import type { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { upload } from '../services/multer.config.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
+import { exportAnalyses } from '../controllers/export.controller.js'
+import { exportAnalysesSchema } from '../validation/analysis.validation.js';
 import { validateRequest } from '../middlewares/validate-request.middleware.js';
 import {
   createAnalysis,
@@ -50,6 +52,13 @@ router.post(
     });
   },
   createAnalysis
+);
+
+router.post(
+  '/export',
+  authenticateToken,
+  validateRequest({ body: exportAnalysesSchema.shape.body }),
+  exportAnalyses
 );
 
 export default router;

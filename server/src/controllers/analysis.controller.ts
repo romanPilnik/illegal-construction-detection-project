@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
-import { AnalysisStatus, Prisma, Role } from '../generated/prisma/client.js';
+import { AnalysisStatus, Prisma, Role } from '../generated/prisma/index.js';
 import { prisma } from '../lib/prisma.js';
+
 
 export const createAnalysis = async (req: Request, res: Response) => {
   console.log('=== createAnalysis hit ===');

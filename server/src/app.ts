@@ -7,6 +7,7 @@ import analysisRoutes from './routes/analysis.routes.js';
 const app = express();
 
 app.use(express.json());
+app.use('/reports', express.static('reports'));
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);

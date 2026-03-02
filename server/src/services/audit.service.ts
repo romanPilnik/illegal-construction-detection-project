@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma.js';
-import { ActionStatus, Prisma } from '../generated/prisma/client.js';
+import { ActionStatus, Prisma } from '../generated/prisma/index.js';
 
 export const logActivity = async (
   userId: string,

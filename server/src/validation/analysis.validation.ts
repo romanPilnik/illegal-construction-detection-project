@@ -9,3 +9,13 @@ export const getAnalysesQuerySchema = z.strictObject({
 export const analysisIdParamsSchema = z.strictObject({
   id: z.string().uuid(),
 });
+
+export const exportAnalysesSchema = z.object({
+  body: z.object({
+    format: z.enum(['EXCEL', 'PDF'], {
+      error: "Format is required (EXCEL or PDF)",
+    }),
+    start_date: z.string().datetime().optional(), // מצפה לפורמט ISO
+    end_date: z.string().datetime().optional(),
+  }),
+});
