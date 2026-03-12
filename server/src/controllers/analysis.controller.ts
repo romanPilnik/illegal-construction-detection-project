@@ -140,6 +140,8 @@ const createAnalysis = async (req: Request, res: Response) => {
   console.log('req.files:', req.files);
   console.log('req.user:', req.user);
 
+  const { location_address } = req.body;
+
   try {
     const files = req.files as { [fieldnames: string]: Express.Multer.File[] };
     const beforeFile = files['beforeImage']?.[0];
@@ -191,6 +193,7 @@ const createAnalysis = async (req: Request, res: Response) => {
             before_image_id: beforeImg.id,
             after_image_id: afterImg.id,
             status: 'Pending',
+            location_address
           },
         });
 
@@ -215,6 +218,7 @@ const createAnalysis = async (req: Request, res: Response) => {
       Inspector ID: ${inspectorId}
       Analysis ID:  ${analysis.id}
       Status:       ${analysis.status}
+      location_address:     ${location_address}
       Timestamp:    ${new Date().toLocaleString()}
       -----------------------
     `);
@@ -222,6 +226,7 @@ const createAnalysis = async (req: Request, res: Response) => {
     res.status(201).json({
       message: 'Analysis created successfully and sent to processing',
       analysisId: analysis.id,
+      location_address: location_address,
     });
 
     void processAnalysisInBackground({

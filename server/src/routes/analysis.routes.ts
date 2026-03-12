@@ -50,7 +50,7 @@ router.get(
 );
 
 router.post(
-  '/analyze',
+  '/analyse',
   authenticateToken,
   handleAnalyzeUpload,
   AnalysisController.createAnalysis

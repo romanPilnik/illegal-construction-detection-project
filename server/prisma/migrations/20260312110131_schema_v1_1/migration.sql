@@ -1,3 +1,1 @@
--- AlterTable
-ALTER TABLE `AuditLog` ADD COLUMN `details` TEXT NULL,
-    ADD COLUMN `metadata` JSON NULL;
+-- Empty migration: columns already exist

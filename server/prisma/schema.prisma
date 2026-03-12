@@ -49,6 +49,7 @@ model Analysis {
   bbox_y1          Int?
   bbox_x2          Int?
   bbox_y2          Int?
+  location_address String?
   created_at       DateTime       @default(now())
 }
 
