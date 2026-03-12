@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { logActivity } from '../services/audit.service.js';
-import { Prisma, Role } from '../generated/prisma/index.js';
+import { Prisma, Role } from '../generated/prisma/client.js';
 import { prisma } from '../lib/prisma.js';
 
 type GetUserByIdParams = {

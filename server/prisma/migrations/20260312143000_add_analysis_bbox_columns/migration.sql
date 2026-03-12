@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `Analysis`
+    ADD COLUMN `bbox_x1` INTEGER NULL,
+    ADD COLUMN `bbox_y1` INTEGER NULL,
+    ADD COLUMN `bbox_x2` INTEGER NULL,
+    ADD COLUMN `bbox_y2` INTEGER NULL;

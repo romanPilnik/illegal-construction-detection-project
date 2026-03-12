@@ -8,6 +8,7 @@ const app = express();
 
 app.use(express.json());
 app.use('/reports', express.static('reports'));
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);

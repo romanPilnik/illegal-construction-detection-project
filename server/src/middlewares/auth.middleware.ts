@@ -1,17 +1,12 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { Role } from '../generated/prisma/client.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_123';
 
 interface UserPayload {
   userId: string;
-  role: string;
-}
-
-declare module 'express' {
-  export interface Request {
-    user?: UserPayload;
-  }
+  role: Role;
 }
 
 export const authenticateToken = (

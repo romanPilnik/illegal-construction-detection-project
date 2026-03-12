@@ -45,6 +45,10 @@ model Analysis {
   result_image     Image?         @relation("ResultImage", fields: [result_image_id], references: [id])
   status           AnalysisStatus @default(Pending)
   anomaly_detected Boolean?
+  bbox_x1          Int?
+  bbox_y1          Int?
+  bbox_x2          Int?
+  bbox_y2          Int?
   created_at       DateTime       @default(now())
 }
 
