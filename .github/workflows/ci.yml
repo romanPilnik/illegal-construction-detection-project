@@ -23,6 +23,10 @@ jobs:
         working-directory: ./server
         run: npm install
 
+      - name: Generate Prisma Client
+        working-directory: ./server
+        run: npx prisma generate
+
       - name: Run tests
         working-directory: ./server
         run: npm test
