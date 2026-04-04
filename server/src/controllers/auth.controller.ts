@@ -2,15 +2,18 @@ import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { logActivity } from '../services/audit.service.js';
 import { sendWelcomeEmail } from '../services/email.service.js';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_123';
 
 /**
  * Handles new user registration
  */
-const register = async (req: Request, res: Response): Promise<void> => {
+const register = async (
+  req: Request,   // was: req: Partial<e.Request>
+  res: Response   // was: res: Partial<e.Response>
+): Promise<void> => {
   try {
     const { username, email, password, role } = req.body;
 

@@ -1,8 +1,8 @@
 import uuid
 import unittest
 import requests
-from .Utils import register_test_user, pretty_print
-from .TestConfig import   AUTH_URL, ANALYSE_URL, USERS_URL
+from tests.api.Utils import register_test_user, pretty_print
+from tests.api.TestConfig import   AUTH_URL, ANALYSE_URL, USERS_URL
 
 
 unique_id = uuid.uuid4().hex[:8]

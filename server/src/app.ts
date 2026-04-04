@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import auditLogRoutes from './routes/log.routes.js';
@@ -6,6 +7,14 @@ import analysisRoutes from './routes/analysis.routes.js';
 
 const app = express();
 
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/reports', express.static('reports'));
 app.use('/uploads', express.static('uploads'));

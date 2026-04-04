@@ -165,6 +165,7 @@ const createAnalysis = async (req: Request, res: Response) => {
       getImageDimensions(afterFile.path),
     ]);
 
+
     const analysis = await prisma.$transaction(
       async (tx: Prisma.TransactionClient) => {
         const beforeImg = await tx.image.create({
