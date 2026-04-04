@@ -81,13 +81,13 @@ const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     // 3. Generate a JWT token containing the user's ID and role
-    const token = jwt.sign(
+    const token = jwt.default.sign(
       {
         userId: existingUser.id,
         role: existingUser.role,
       },
       JWT_SECRET,
-      { expiresIn: '24h' } // Token expires in 24 hours
+      { expiresIn: '24h' }
     );
 
     await logActivity(

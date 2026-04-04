@@ -46,6 +46,10 @@ const logAnalysisFailure = async (
         metadata: { analysisId: payload.analysisId },
       },
     });
+    },
+    {
+      timeout: 30000,
+      maxWait: 10000,
   });
 
   emitAnalysisUpdated(payload.inspectorId, {
@@ -107,7 +111,12 @@ const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
       });
 
       return updatedAnalysis;
-    });
+      },
+      {
+        timeout: 30000,
+        maxWait: 10000,
+      });
+
 
     // TODO: Keep empty coordinates for "no anomaly" response; revisit if product contract changes.
     const socketCoordinates: BoundingBoxCoordinates | Record<string, never> =
@@ -210,8 +219,13 @@ const createAnalysis = async (req: Request, res: Response) => {
         });
 
         return newAnalysis;
-      }
-    );
+      },
+      {
+        timeout: 30000,
+        maxWait: 10000,
+      });
+
+
 
     console.log(`
       📸 New Upload Success!
