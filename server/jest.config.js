@@ -13,4 +13,7 @@ export default {
   },
   testMatch: ["**/src/test/**/*.test.ts"],
   extensionsToTreatAsEsm: [".ts"],
+  moduleNameMapper: {
+    "^(\\.{1,2}/(?!.*generated).*)\\.js$": "$1",
+  },
 };
