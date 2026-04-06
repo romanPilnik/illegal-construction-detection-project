@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import React,{ useState } from 'react'
 import { api } from '../services/api'
+import axios from 'axios'
 
 interface Props {
     onRegisterSuccess: (token: string) => void
@@ -7,7 +8,6 @@ interface Props {
 }
 
 export default function Register({ onRegisterSuccess, onNavigateToLogin }: Props) {
-    // השדות המדויקים לפי הפוסטמן
     const [username, setUsername] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -16,30 +16,28 @@ export default function Register({ onRegisterSuccess, onNavigateToLogin }: Props
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setLoading(true)
         setError('')
 
         try {
-            // שליחת האובייקט בדיוק כפי שהופיע בפוסטמן
-            const data = await api.post('/auth/register', {
-                username,
-                email,
-                password,
-                role
-            })
+            const response = await api.post('/auth/register', { username, email, password, role })
 
-            if (data.token) {
-                localStorage.setItem('token', data.token)
-                onRegisterSuccess(data.token)
+            // שימוש ב-response.data כפי ש-Axios דורש
+            if (response.data.token) {
+                localStorage.setItem('token', response.data.token)
+                onRegisterSuccess(response.data.token)
             } else {
-                setError(data.message || 'Registration failed')
+                setError(response.data.message || 'Registration failed')
             }
-        } catch (err: any) {
-            // הצגת הודעת השגיאה המדויקת מהשרת (אם יש כזו ב-Response)
-            const serverMessage = err.response?.data?.message || err.response?.data?.errors?.[0]?.message;
-            setError(serverMessage || 'Something went wrong during registration');
+        } catch (err: unknown) { // שינינו מ-any ל-unknown
+            if (axios.isAxiosError(err)) {
+                // כאן TypeScript כבר יודע ש-err הוא AxiosError בזכות ה-isAxiosError
+                setError(err.response?.data?.message || 'Registration failed')
+            } else {
+                setError('Something went wrong')
+            }
         } finally {
             setLoading(false)
         }

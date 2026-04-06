@@ -2,71 +2,51 @@ import { useState } from 'react'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
-import SubmitAnalysis from './pages/SubmitAnalysis'
-import AnalysisHistory from './pages/AnalysisHistory'
 import Profile from './pages/Profile'
+import SubmitAnalysis from './pages/SubmitAnalysis'
 import UserManagement from './pages/UserManagement'
+import AnalysisHistory from './pages/AnalysisHistory'
 
-type PageType = 'login' | 'register' | 'dashboard' | 'submit' | 'analysis' | 'profile' | 'users'
+type Page = 'login' | 'register' | 'dashboard' | 'profile' | 'submit' | 'users' | 'analysis'
 
 function App() {
-    // בדיקה ראשונית: האם המשתמש כבר מחובר?
+    console.log('API URL:', import.meta.env.VITE_API_URL) // ← add here
+
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+    const [page, setPage] = useState<Page>('dashboard')
 
-    // אם יש טוקן - דשבורד. אם אין - לוגין.
-    const [currentPage, setCurrentPage] = useState<PageType>(token ? 'dashboard' : 'login')
-
-    // הפונקציה המרכזית שמעבירה לדשבורד אחרי הצלחה (לוגין או הרשמה)
-    const handleAuthSuccess = (newToken: string) => {
-        setToken(newToken);
-        localStorage.setItem('token', newToken);
-        setCurrentPage('dashboard'); // המעבר האוטומטי לדשבורד
+    const handleLogin = (token: string) => {
+        setToken(token)
+        setPage('dashboard')
     }
 
     const handleLogout = () => {
         localStorage.removeItem('token')
         setToken(null)
-        setCurrentPage('login')
+        setPage('login')
     }
 
-    const goHome = () => setCurrentPage('dashboard')
-
-    // ניהול הניווט (Routing)
-    switch (currentPage) {
-        case 'login':
-            return <Login
-                onLogin={handleAuthSuccess} // מעבר לדשבורד אחרי לוגין
-                onNavigateToRegister={() => setCurrentPage('register')}
-            />
-        case 'register':
-            return <Register
-                onRegisterSuccess={handleAuthSuccess} // מעבר לדשבורד אחרי הרשמה
-                onNavigateToLogin={() => setCurrentPage('login')}
-            />
-        case 'submit':
-            return <SubmitAnalysis onBack={goHome} />
-        case 'analysis':
-            return <AnalysisHistory onBack={goHome} />
-        case 'profile':
-            return <Profile onBack={goHome} />
-        case 'users':
-            return <UserManagement onBack={goHome} />
-        case 'dashboard':
-        default:
-            // הגנה: אם אין טוקן, אי אפשר להיות בדשבורד
-            if (!token) {
-                return <Login onLogin={handleAuthSuccess} onNavigateToRegister={() => setCurrentPage('register')} />
-            }
-            return (
-                <Dashboard
-                    onLogout={handleLogout}
-                    onNavigateToSubmit={() => setCurrentPage('submit')}
-                    onNavigateToAnalysis={() => setCurrentPage('analysis')}
-                    onNavigateToProfile={() => setCurrentPage('profile')}
-                    onNavigateToUsers={() => setCurrentPage('users')}
-                />
-            )
+    if (!token) {
+        if (page === 'register') {
+            return <Register onRegisterSuccess={handleLogin} onNavigateToLogin={() => setPage('login')} />
+        }
+        return <Login onLogin={handleLogin} onNavigateToRegister={() => setPage('register')} />
     }
+
+    if (page === 'profile') return <Profile onBack={() => setPage('dashboard')} />
+    if (page === 'submit') return <SubmitAnalysis onBack={() => setPage('dashboard')} />
+    if (page === 'users') return <UserManagement onBack={() => setPage('dashboard')} />
+    if (page === 'analysis') return <AnalysisHistory onBack={() => setPage('dashboard')} />
+
+    return (
+        <Dashboard
+            onLogout={handleLogout}
+            onNavigateToSubmit={() => setPage('submit')}
+            onNavigateToAnalysis={() => setPage('analysis')}
+            onNavigateToProfile={() => setPage('profile')}
+            onNavigateToUsers={() => setPage('users')}
+        />
+    )
 }
 
 export default App

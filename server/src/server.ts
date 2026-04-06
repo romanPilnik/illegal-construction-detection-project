@@ -10,6 +10,9 @@ initWebSocket(server);
 server.listen(config.port, async () => {
   console.log(` Server is running on port ${config.port}`);
   console.log(` WebSocket server is ready`);
+  console.log('Environment:', process.env.NODE_ENV);   // ← add here
+  console.log('DB Host:', process.env.DATABASE_HOST);  // ← add here
+
 
   try {
     await prisma.$connect();

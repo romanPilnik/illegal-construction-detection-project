@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
+import axios from 'axios'
 import { api } from '../services/api'
 
 interface Props {
@@ -18,16 +19,24 @@ export default function Login({ onLogin , onNavigateToRegister}: Props) {
         setError('')
 
         try {
-            const data = await api.post('/auth/login', { email, password })
-            if (data.token) {
-                localStorage.setItem('token', data.token)
-                onLogin(data.token)
+            // שימי לב לשינוי כאן: אנחנו מחלצים את data מתוך התשובה של Axios
+            const response = await api.post('/auth/login', { email, password })
+
+            // ב-Axios, המידע מהשרת תמיד נמצא בתוך response.data
+            const { token, message } = response.data
+
+            if (token) {
+                localStorage.setItem('token', token)
+                onLogin(token)
             } else {
-                setError(data.message || 'Login failed')
+                setError(message || 'Login failed')
             }
-        } catch {
-            setError('Something went wrong')
-        } finally {
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                setError(err.response?.data?.message || 'Login failed')
+            } else {
+                setError('Something went wrong')
+            }        } finally {
             setLoading(false)
         }
     }

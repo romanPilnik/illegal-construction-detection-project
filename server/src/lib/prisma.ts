@@ -1,5 +1,12 @@
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-import { PrismaClient } from '../generated/prisma/client.js';
+import dotenv from 'dotenv'
+
+// Load environment-specific file
+dotenv.config({
+  path: process.env.NODE_ENV === 'production' ? '.env' : '.env.development'
+})
+
+import { PrismaMariaDb } from '@prisma/adapter-mariadb'
+import { PrismaClient } from '../generated/prisma/client.js'
 
 const adapter = new PrismaMariaDb({
   host: process.env.DATABASE_HOST!,
@@ -9,14 +16,11 @@ const adapter = new PrismaMariaDb({
   database: process.env.DATABASE_NAME!,
   connectionLimit: 2,
   connectTimeout: 30000,
-  ssl: {
-    rejectUnauthorized: false,
-    minVersion: 'TLSv1.2',
-  },
-});
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+})
 
-export const prisma = new PrismaClient({ adapter });
+export const prisma = new PrismaClient({ adapter })
 
 prisma.$connect()
   .then(() => console.log('Prisma connected to database'))
-  .catch((err) => console.error('Prisma connection failed:', err));
+  .catch((err) => console.error('Prisma connection failed:', err))
