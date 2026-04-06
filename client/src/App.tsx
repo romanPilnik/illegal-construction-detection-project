@@ -1,52 +1,41 @@
-import { useState } from 'react'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Profile from './pages/Profile'
-import SubmitAnalysis from './pages/SubmitAnalysis'
-import UserManagement from './pages/UserManagement'
-import AnalysisHistory from './pages/AnalysisHistory'
-
-type Page = 'login' | 'register' | 'dashboard' | 'profile' | 'submit' | 'users' | 'analysis'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import Login from './features/auth/pages/Login'
+import Register from './features/auth/pages/Register'
+import Dashboard from './features/dashboard/pages/Dashboard'
+import SubmitAnalysis from './features/analyses/pages/SubmitAnalysis'
+import Profile from './features/users/pages/Profile'
+import UserManagement from './features/users/pages/UserManagement'
+import AnalysisHistory from './features/analyses/pages/AnalysisHistory'
+import AnalysisDetail from './features/analyses/pages/AnalysisDetail'
+import AuditLogs from './features/audit-logs/pages/AuditLogs'
+import { RequireAuth } from './routes/RequireAuth'
+import { GuestRoute } from './routes/GuestRoute'
+import { AdminRoute } from './routes/AdminRoute'
 
 function App() {
-    console.log('API URL:', import.meta.env.VITE_API_URL) // ← add here
+  return (
+    <Routes>
+      <Route element={<GuestRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Route>
 
-    const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
-    const [page, setPage] = useState<Page>('dashboard')
+      <Route element={<RequireAuth />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/analyses" element={<AnalysisHistory />} />
+        <Route path="/analyses/:analysisId" element={<AnalysisDetail />} />
+        <Route path="/submit" element={<SubmitAnalysis />} />
 
-    const handleLogin = (token: string) => {
-        setToken(token)
-        setPage('dashboard')
-    }
+        <Route element={<AdminRoute />}>
+          <Route path="/users" element={<UserManagement />} />
+          <Route path="/logs" element={<AuditLogs />} />
+        </Route>
+      </Route>
 
-    const handleLogout = () => {
-        localStorage.removeItem('token')
-        setToken(null)
-        setPage('login')
-    }
-
-    if (!token) {
-        if (page === 'register') {
-            return <Register onRegisterSuccess={handleLogin} onNavigateToLogin={() => setPage('login')} />
-        }
-        return <Login onLogin={handleLogin} onNavigateToRegister={() => setPage('register')} />
-    }
-
-    if (page === 'profile') return <Profile onBack={() => setPage('dashboard')} />
-    if (page === 'submit') return <SubmitAnalysis onBack={() => setPage('dashboard')} />
-    if (page === 'users') return <UserManagement onBack={() => setPage('dashboard')} />
-    if (page === 'analysis') return <AnalysisHistory onBack={() => setPage('dashboard')} />
-
-    return (
-        <Dashboard
-            onLogout={handleLogout}
-            onNavigateToSubmit={() => setPage('submit')}
-            onNavigateToAnalysis={() => setPage('analysis')}
-            onNavigateToProfile={() => setPage('profile')}
-            onNavigateToUsers={() => setPage('users')}
-        />
-    )
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
 }
 
 export default App
