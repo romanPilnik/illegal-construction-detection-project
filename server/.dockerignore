@@ -2,6 +2,6 @@
 .venv
 venv
 npm-debug.log
-.env
+.env.production
 Dockerfile
 .dockerignore

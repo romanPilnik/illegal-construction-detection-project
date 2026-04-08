@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 
 // Load environment-specific file
 dotenv.config({
-  path: process.env.NODE_ENV === 'production' ? '.env' : '.env.development'
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.production.development'
 })
 
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
