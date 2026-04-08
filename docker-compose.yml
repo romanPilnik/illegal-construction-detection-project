@@ -1,4 +1,16 @@
 services:
+  db:
+    image: mysql:8
+    container_name: illegal-construction-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: illegal-construction-detection-project
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
   api:
     build: ./server
     container_name: illegal-construction-api
@@ -6,6 +18,12 @@ services:
     ports:
       - "5001:5001"
     env_file:
-      - ./server/.env
+      - ./server/.env.development
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:root@db:3306/illegal-construction-detection-project # שימי לב לכתובת!
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
