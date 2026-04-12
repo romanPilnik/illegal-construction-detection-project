@@ -8,6 +8,10 @@ const mockFindMany = jest.fn<() => Promise<unknown[]>>().mockResolvedValue([]);
 const mockCount = jest.fn<() => Promise<number>>().mockResolvedValue(0);
 const mockFindUnique = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
 const mockUpdate = jest.fn<() => Promise<any>>().mockResolvedValue(null);
+const mockCreate = jest.fn<() => Promise<any>>().mockResolvedValue(null);
+const mockSendWelcomeEmail = jest.fn<() => Promise<void>>();
+const mockGenSalt = jest.fn<() => Promise<string>>().mockResolvedValue('salt');
+const mockHash = jest.fn<() => Promise<string>>().mockResolvedValue('hashed');
 
 jest.unstable_mockModule('../lib/prisma.js', () => ({
   prisma: {
@@ -16,12 +20,26 @@ jest.unstable_mockModule('../lib/prisma.js', () => ({
       findMany: mockFindMany,
       count: mockCount,
       update: mockUpdate,
+      create: mockCreate,
     },
   },
 }));
 
 jest.unstable_mockModule('../services/audit.service.js', () => ({
   logActivity: mockLogActivity,
+}));
+
+jest.unstable_mockModule('../services/email.service.js', () => ({
+  sendWelcomeEmail: mockSendWelcomeEmail,
+}));
+
+jest.unstable_mockModule('bcryptjs', () => ({
+  default: {
+    genSalt: mockGenSalt,
+    hash: mockHash,
+  },
+  genSalt: mockGenSalt,
+  hash: mockHash,
 }));
 
 const { UserController } = await import('../controllers/user.controller.js');
@@ -45,6 +63,66 @@ describe('UserController', () => {
       status: jest.fn().mockReturnThis() as unknown as Response['status'],
       json: jest.fn() as unknown as Response['json'],
     };
+  });
+
+  describe('createUser', () => {
+    it('should return 201, send welcome email, and log USER_CREATE', async () => {
+      req.body = {
+        username: 'newuser',
+        email: 'new@test.com',
+        password: 'secret123',
+        role: Role.Inspector,
+      };
+      mockFindUnique.mockResolvedValue(null);
+      mockCreate.mockResolvedValue({
+        id: 'u-new',
+        username: 'newuser',
+        email: 'new@test.com',
+        role: Role.Inspector,
+        is_active: true,
+      });
+
+      await UserController.createUser(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(mockSendWelcomeEmail).toHaveBeenCalledWith('new@test.com', 'newuser');
+      expect(mockLogActivity).toHaveBeenCalledWith(
+        'admin-123',
+        'USER_CREATE',
+        expect.stringContaining('new@test.com'),
+        expect.objectContaining({ target_user_id: 'u-new' })
+      );
+    });
+
+    it('should return 400 if email already exists', async () => {
+      req.body = {
+        username: 'x',
+        email: 'taken@test.com',
+        password: 'secret123',
+        role: Role.Inspector,
+      };
+      mockFindUnique.mockResolvedValue({ id: 'existing' });
+
+      await UserController.createUser(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(mockCreate).not.toHaveBeenCalled();
+    });
+
+    it('should return 500 if create fails', async () => {
+      req.body = {
+        username: 'x',
+        email: 'x@test.com',
+        password: 'p',
+        role: Role.Inspector,
+      };
+      mockFindUnique.mockResolvedValue(null);
+      mockCreate.mockRejectedValue(new Error('fail'));
+
+      await UserController.createUser(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
   });
 
   describe('getUsers', () => {
@@ -73,7 +151,12 @@ describe('UserController', () => {
   describe('getUserById', () => {
     it('should return 200 if user is found', async () => {
       req.params = { id: 'user-1' };
-      const mockUser = { id: 'user-1', username: 'shirel', email: 's@test.com' };
+      const mockUser = {
+        id: 'user-1',
+        username: 'shirel',
+        email: 's@test.com',
+        role: Role.Inspector,
+      };
       mockFindUnique.mockResolvedValue(mockUser);
 
       await UserController.getUserById(req as any, res as Response);

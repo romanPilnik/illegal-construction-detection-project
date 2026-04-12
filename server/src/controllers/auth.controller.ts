@@ -7,14 +7,29 @@ import * as jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_123';
 
+function isPublicRegistrationAllowed(): boolean {
+  return (
+    process.env.ALLOW_PUBLIC_REGISTRATION === 'true' ||
+    process.env.NODE_ENV !== 'production'
+  );
+}
+
 /**
- * Handles new user registration
+ * Handles new user registration (public only when allowed; see ALLOW_PUBLIC_REGISTRATION / NODE_ENV).
  */
 const register = async (
   req: Request,   // was: req: Partial<e.Request>
   res: Response   // was: res: Partial<e.Response>
 ): Promise<void> => {
   try {
+    if (!isPublicRegistrationAllowed()) {
+      res.status(403).json({
+        message:
+          'Public registration is disabled. Contact an administrator.',
+      });
+      return;
+    }
+
     const { username, email, password, role } = req.body;
 
     // Check if a user with this email  already exists
@@ -103,6 +118,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
       user: {
         id: existingUser.id,
         username: existingUser.username,
+        email: existingUser.email,
         role: existingUser.role,
       },
     });
@@ -112,7 +128,69 @@ const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * Updates password for the authenticated user (JWT).
+ */
+const changePassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body as {
+      currentPassword: string;
+      newPassword: string;
+    };
+
+    const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!existingUser) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    if (!existingUser.is_active) {
+      res.status(403).json({
+        message:
+          'Your account has been deactivated. Please contact an administrator.',
+      });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(
+      currentPassword,
+      existingUser.password_hash
+    );
+
+    if (!isMatch) {
+      res.status(401).json({ message: 'Current password is incorrect' });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password_hash: hashedPassword },
+    });
+
+    await logActivity(
+      userId,
+      'PASSWORD_CHANGE',
+      `User ${existingUser.email} changed their password`
+    );
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Error updating password' });
+  }
+};
+
 export const AuthController = {
   register,
   login,
+  changePassword,
 };

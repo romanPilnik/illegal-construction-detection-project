@@ -1,3 +1,7 @@
-/** Dashboard-specific types — populate as needed. */
-
-export {}
+export type AnalysesListMeta = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+};

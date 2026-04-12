@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 
 const mockFindUnique = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
 const mockCreate = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
+const mockUpdate = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
 const mockSendWelcomeEmail = jest.fn<() => Promise<void>>();
 const mockGenSalt = jest.fn<() => Promise<string>>().mockResolvedValue('fake_salt');
 const mockHash = jest.fn<() => Promise<string>>().mockResolvedValue('hashed_password');
@@ -15,6 +16,7 @@ jest.unstable_mockModule('../lib/prisma.js', () => ({
     user: {
       findUnique: mockFindUnique,
       create: mockCreate,
+      update: mockUpdate,
     },
   },
 }));
@@ -94,6 +96,25 @@ describe('AuthController - register', () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
   });
+
+  it('should return 403 when public registration is disabled in production', async () => {
+    const prevEnv = process.env.NODE_ENV;
+    const prevAllow = process.env.ALLOW_PUBLIC_REGISTRATION;
+    process.env.NODE_ENV = 'production';
+    delete process.env.ALLOW_PUBLIC_REGISTRATION;
+
+    await AuthController.register(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(mockCreate).not.toHaveBeenCalled();
+
+    process.env.NODE_ENV = prevEnv;
+    if (prevAllow === undefined) {
+      delete process.env.ALLOW_PUBLIC_REGISTRATION;
+    } else {
+      process.env.ALLOW_PUBLIC_REGISTRATION = prevAllow;
+    }
+  });
 });
 
 
@@ -124,7 +145,11 @@ describe('AuthController - login', () => {
 
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-            token: 'fake_jwt_token_123'
+            token: 'fake_jwt_token_123',
+            user: expect.objectContaining({
+                id: 1,
+                email: 'shirel@test.com',
+            }),
         }));
         expect(mockLoginActivity).toHaveBeenCalledWith(1, 'USER_LOGIN', expect.any(String));
     });
@@ -167,3 +192,77 @@ describe('AuthController - login', () => {
     });
 
     });
+
+describe('AuthController - changePassword', () => {
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    req = {
+      user: { userId: 'user-uuid-1', role: 'Inspector' },
+      body: {
+        currentPassword: 'OldPassword123',
+        newPassword: 'NewPassword456',
+      },
+    };
+    res = {
+      status: jest.fn().mockReturnThis() as unknown as Response['status'],
+      json: jest.fn() as unknown as Response['json'],
+    };
+  });
+
+  it('should update password and return 200', async () => {
+    mockFindUnique.mockResolvedValue({
+      id: 'user-uuid-1',
+      email: 'u@test.com',
+      password_hash: 'stored_hash',
+      is_active: true,
+    });
+    mockCompare.mockResolvedValue(true);
+    mockHash.mockResolvedValue('new_hashed');
+
+    await AuthController.changePassword(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(mockLoginActivity).toHaveBeenCalledWith(
+      'user-uuid-1',
+      'PASSWORD_CHANGE',
+      expect.any(String)
+    );
+  });
+
+  it('should return 401 if current password is wrong', async () => {
+    mockFindUnique.mockResolvedValue({
+      id: 'user-uuid-1',
+      email: 'u@test.com',
+      password_hash: 'stored_hash',
+      is_active: true,
+    });
+    mockCompare.mockResolvedValue(false);
+
+    await AuthController.changePassword(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should return 404 if user is not found', async () => {
+    mockFindUnique.mockResolvedValue(null);
+
+    await AuthController.changePassword(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('should return 401 if req.user is missing', async () => {
+    req.user = undefined;
+
+    await AuthController.changePassword(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(mockFindUnique).not.toHaveBeenCalled();
+  });
+});

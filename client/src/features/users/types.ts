@@ -21,7 +21,7 @@ export type UsersListResponse = {
     meta: UsersListMeta
 }
 
-/** Shape of `GET /users/:id` — server does not include `is_active` on this endpoint. */
+/** Shape of `GET /users/:id` (admins only). */
 export type UserByIdData = {
     id: string
     username: string
@@ -55,4 +55,16 @@ export type GetUsersQuery = {
     search?: string
     /** Query string: `'0'` active only, `'1'` inactive only; omit to use server default (active-only). */
     isActiveFilter?: '0' | '1'
+}
+
+export type CreateUserBody = {
+    username: string
+    email: string
+    password: string
+    role: UserRole
+}
+
+export type CreateUserResponse = {
+    message: string
+    data: UserListRow
 }

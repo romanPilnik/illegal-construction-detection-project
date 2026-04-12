@@ -1,10 +1,74 @@
 import type { Request, Response } from 'express';
+import * as bcrypt from 'bcryptjs';
 import { logActivity } from '../services/audit.service.js';
+import { sendWelcomeEmail } from '../services/email.service.js';
 import { Prisma, Role } from '../generated/prisma/client.js';
 import { prisma } from '../lib/prisma.js';
 
 type GetUserByIdParams = {
   id: string;
+};
+
+/**
+ * Creates a user (admin-provisioned password). Sends welcome email and audit log.
+ */
+const createUser = async (req: Request, res: Response) => {
+  try {
+    const { username, email, password, role } = req.body as {
+      username: string;
+      email: string;
+      password: string;
+      role: Role;
+    };
+    const adminId = req.user?.userId;
+    if (!adminId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      res.status(400).json({ message: 'Email already in use' });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password_hash: hashedPassword,
+        role,
+        is_active: true,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        is_active: true,
+      },
+    });
+
+    await sendWelcomeEmail(newUser.email, newUser.username);
+
+    await logActivity(
+      adminId,
+      'USER_CREATE',
+      `Created user: ${newUser.email}`,
+      { target_user_id: newUser.id, role: newUser.role }
+    );
+
+    res.status(201).json({
+      message: 'User created successfully',
+      data: newUser,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error creating user' });
+  }
 };
 
 /**
@@ -183,6 +247,7 @@ const deleteUser = async (req: Request<GetUserByIdParams>, res: Response) => {
 };
 
 export const UserController = {
+  createUser,
   getUsers,
   getUserById,
   updateUser,

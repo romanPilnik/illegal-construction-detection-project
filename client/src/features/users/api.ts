@@ -1,5 +1,7 @@
 import { api } from '../../services/api'
 import type {
+    CreateUserBody,
+    CreateUserResponse,
     DeactivateUserResponse,
     GetUsersQuery,
     UpdateUserBody,
@@ -7,6 +9,11 @@ import type {
     UserByIdResponse,
     UsersListResponse,
 } from './types'
+
+export async function createUser(body: CreateUserBody): Promise<CreateUserResponse> {
+    const res = await api.post<CreateUserResponse>('/users', body)
+    return res.data
+}
 
 export async function getUsers(params: GetUsersQuery): Promise<UsersListResponse> {
     const res = await api.get<UsersListResponse>('/users', {

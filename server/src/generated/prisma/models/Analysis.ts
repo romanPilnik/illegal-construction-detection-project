@@ -260,7 +260,7 @@ export type AnalysisGroupByOutputType = {
   _max: AnalysisMaxAggregateOutputType | null
 }
 
-type GetAnalysisGroupByPayload<T extends AnalysisGroupByArgs> = Prisma.PrismaPromise<
+export type GetAnalysisGroupByPayload<T extends AnalysisGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<AnalysisGroupByOutputType, T['by']> &
       {

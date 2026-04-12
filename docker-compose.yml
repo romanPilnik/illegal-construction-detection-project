@@ -12,6 +12,8 @@ services:
       - mysql_data:/var/lib/mysql
 
   api:
+    profiles:
+      - full-stack
     build: ./server
     container_name: illegal-construction-api
     restart: always
@@ -21,7 +23,9 @@ services:
       - ./server/.env.development
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=mysql://root:root@db:3306/illegal-construction-detection-project # שימי לב לכתובת!
+      - DATABASE_URL=mysql://root:root@db:3306/illegal-construction-detection-project
+      - DATABASE_HOST=db
+      - DATABASE_PORT=3306
     depends_on:
       - db
 

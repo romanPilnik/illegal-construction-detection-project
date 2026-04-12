@@ -18,3 +18,16 @@ export const loginBodySchema = z.strictObject({
   email: normalizedEmail,
   password: nonEmptyString,
 });
+
+export const changePasswordBodySchema = z
+  .strictObject({
+    currentPassword: nonEmptyString,
+    newPassword: z.string().trim().min(8, 'New password must be at least 8 characters'),
+  })
+  .refine(
+    ({ currentPassword, newPassword }) => currentPassword !== newPassword,
+    {
+      message: 'New password must be different from current password',
+      path: ['newPassword'],
+    }
+  );

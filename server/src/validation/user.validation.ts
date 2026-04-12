@@ -46,3 +46,18 @@ export const updateUserBodySchema = z
     (value) => value.username !== undefined || value.email !== undefined,
     'At least one field must be provided for update'
   );
+
+const nonEmptyString = z.string().trim().min(1);
+const normalizedEmail = z
+  .transform((value) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value
+  )
+  .pipe(z.email());
+
+/** Admin-only user creation (initial password set by admin). */
+export const createUserBodySchema = z.strictObject({
+  username: nonEmptyString,
+  email: normalizedEmail,
+  password: nonEmptyString,
+  role: z.enum(['Admin', 'Inspector']),
+});
