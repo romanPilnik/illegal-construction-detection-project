@@ -4,11 +4,12 @@ import { prisma } from '../lib/prisma.js';
 import { ExportService } from '../services/export.service.js';
 import type { AnalysisReport } from '../services/export.service.js';
 import { Jimp } from 'jimp';
-import {
-  type BoundingBoxCoordinates,
-  requestAIInference,
-} from '../services/ai-inference.service.js';
 import { createAnnotatedResultImage } from '../services/image-annotator.service.js';
+import type { BoundingBoxCoordinates } from '../services/ai-inference.service.js';
+//import {
+//  type BoundingBoxCoordinates,
+//  requestAIInference,
+// } from '../services/ai-inference.service.js';
 import { emitAnalysisUpdated } from '../services/socket.service.js';
 
 type ProcessAnalysisPayload = {
@@ -63,14 +64,25 @@ const logAnalysisFailure = async (
 
 const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
   try {
-    const inference = await requestAIInference(
-      payload.beforeImagePath,
-      payload.afterImagePath
-    );
+    //const inference = await requestAIInference(
+      //payload.beforeImagePath,
+      //payload.afterImagePath
+    //);
+    //const resultImage = await createAnnotatedResultImage(
+      //payload.afterImagePath,
+      //inference.coordinates
+    //);
+    const inference = {
+      anomalyDetected: true,
+      coordinates: { x1: 50, y1: 50, x2: 250, y2: 250 }
+    };
+
+    console.log("🖌️ Drawing red box on image...");
     const resultImage = await createAnnotatedResultImage(
       payload.afterImagePath,
       inference.coordinates
     );
+    console.log("✅ New image created at:", resultImage.filePath);
 
     const analysis = await prisma.$transaction(async (tx) => {
       const imageRecord = await tx.image.create({
@@ -317,6 +329,8 @@ type ExportByDateRangeBody = {
 const exportAnalysisInclude = {
   issued_by: { select: { username: true } },
   before_image: { select: { file_path: true } },
+  after_image: { select: { file_path: true } },
+  result_image: { select: { file_path: true } },
 } satisfies Prisma.AnalysisInclude;
 
 const buildReportDownloadUrl = (
