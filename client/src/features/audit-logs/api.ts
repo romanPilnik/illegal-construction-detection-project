@@ -1,7 +1,7 @@
 import { api } from '../../services/api'
 import type { AuditLogsResponse } from './types'
 
-const PAGE_LIMIT = 25
+const PAGE_LIMIT = 10
 
 export async function getAuditLogs(params: {
     page: number

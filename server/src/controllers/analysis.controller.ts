@@ -280,10 +280,12 @@ const analysisInclude = {
 
 const getAnalyses = async (req: Request, res: Response) => {
   try {
-    const { page, limit, status } = req.query as unknown as {
+    const { page, limit, status, start_date, end_date } = req.query as unknown as {
       page: number;
       limit: number;
       status?: AnalysisStatus;
+      start_date?: string;
+      end_date?: string;
     };
 
     const where: Prisma.AnalysisWhereInput = {};
@@ -293,6 +295,19 @@ const getAnalyses = async (req: Request, res: Response) => {
     }
     if (status) {
       where.status = status;
+    }
+    if (start_date || end_date) {
+      where.created_at = {};
+
+      if (start_date) {
+        where.created_at.gte = new Date(start_date);
+      }
+
+      if (end_date) {
+        const endOfDay = new Date(end_date);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        where.created_at.lte = endOfDay;
+      }
     }
 
     const skip = (page - 1) * limit;

@@ -4,6 +4,8 @@ export const getAnalysesQuerySchema = z.strictObject({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
   status: z.enum(['Pending', 'Completed', 'Failed']).optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
 });
 
 export const analysisIdParamsSchema = z.strictObject({
