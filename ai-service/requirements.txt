@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+torch
+torchvision
+opencv-python-headless
+numpy
+Pillow
+torchgeo
+segmentation-models-pytorch
+timm
+torchgeo
+segmentation-models-pytorch
+timm

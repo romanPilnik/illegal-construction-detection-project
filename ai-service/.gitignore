@@ -1,3 +1,11 @@
 node_modules/
 .env
 dist/
+
+# Python bytecode (never commit)
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Model checkpoints (large binaries; keep local or mount in Docker)
+models/*.pth

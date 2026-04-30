@@ -1,0 +1,54 @@
+from __future__ import annotations
+
+import os
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, File, Header, HTTPException, UploadFile
+
+from .inference import load_model, predict_change_mask
+from .postprocess import mask_to_boxes
+
+INTERNAL_API_KEY = os.getenv("AI_SERVICE_API_KEY")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Load the model once on startup so requests stay fast.
+    load_model()
+    yield
+
+
+app = FastAPI(title="AI Inference Service", version="1.0.0", lifespan=lifespan)
+
+
+@app.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.post("/predict")
+async def predict(
+    beforeImage: UploadFile = File(...),
+    afterImage: UploadFile = File(...),
+    x_internal_api_key: str | None = Header(default=None),
+) -> dict[str, object]:
+    if INTERNAL_API_KEY and x_internal_api_key != INTERNAL_API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized internal request")
+
+    before_bytes = await beforeImage.read()
+    after_bytes = await afterImage.read()
+    if not before_bytes or not after_bytes:
+        raise HTTPException(status_code=400, detail="Both beforeImage and afterImage are required")
+
+    try:
+        model = load_model()
+        mask = predict_change_mask(before_bytes, after_bytes)
+        coordinates = mask_to_boxes(mask)
+        return {
+            "anomalyDetected": len(coordinates) > 0,
+            "coordinates": coordinates,
+            "modelName": "FCSiamDiff",
+            "modelVersion": getattr(model, "_model_version", "unknown"),
+        }
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"Inference failed: {exc}") from exc
