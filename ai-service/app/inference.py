@@ -77,8 +77,8 @@ def load_model() -> nn.Module:
         model_version = f"custom-checkpoint:{MODEL_PATH.name}"
     else:
         print(
-            f"[ai-service] No valid checkpoint at {MODEL_PATH}. "
-            "Using TorchGeo ImageNet encoder weights."
+            "[ai-service] No non-empty checkpoint in models/ (or AI_MODEL_CHECKPOINT); "
+            "using TorchGeo ImageNet encoder weights."
         )
 
     model.eval()
