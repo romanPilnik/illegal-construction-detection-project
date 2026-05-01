@@ -36,8 +36,44 @@ jobs:
         working-directory: ./server
         run: npm test
 
+  ai-regression:
+    runs-on: ubuntu-latest
+    env:
+      AI_MODEL_CHECKPOINT: levir_best.pth
+      AI_MODEL_CHECKPOINT_URL: ${{ secrets.AI_MODEL_CHECKPOINT_URL }}
+      AI_MODEL_INIT_SEED: "42"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate checkpoint URL is configured
+        working-directory: ./ai-service
+        run: |
+          if [ -z "$AI_MODEL_CHECKPOINT_URL" ]; then
+            echo "Missing required secret: AI_MODEL_CHECKPOINT_URL"
+            echo "Set this repository secret so regression tests run against the intended model checkpoint."
+            exit 1
+          fi
+
+      - name: Install AI service dependencies
+        working-directory: ./ai-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+
+      - name: Run model regression suite
+        working-directory: ./ai-service
+        run: python -m unittest tests.model_regression_test -v
+
   deploy:
-    needs: test
+    needs: [test, ai-regression]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
