@@ -4,6 +4,7 @@ from io import BytesIO
 import os
 from pathlib import Path
 from typing import Any
+from urllib.request import urlopen
 
 import numpy as np
 import torch
@@ -34,6 +35,9 @@ IMAGE_SIZE = (256, 256)
 MASK_THRESHOLD = 0.5
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 USE_IMAGENET_FALLBACK = os.getenv("AI_USE_IMAGENET_WEIGHTS", "true").lower() == "true"
+MODEL_DOWNLOAD_URL = os.getenv("AI_MODEL_CHECKPOINT_URL", "").strip()
+MODEL_DOWNLOAD_TIMEOUT_SECONDS = int(os.getenv("AI_MODEL_DOWNLOAD_TIMEOUT_SECONDS", "120"))
+MODEL_INIT_SEED = int(os.getenv("AI_MODEL_INIT_SEED", "42"))
 
 _model: nn.Module | None = None
 
@@ -61,15 +65,45 @@ def _build_model() -> nn.Module:
     )
 
 
+def _ensure_checkpoint_from_url_if_needed() -> bool:
+    has_checkpoint = MODEL_PATH.exists() and MODEL_PATH.stat().st_size > 0
+    if has_checkpoint:
+        return True
+
+    if not MODEL_DOWNLOAD_URL:
+        return False
+
+    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    print(f"[ai-service] Downloading checkpoint from AI_MODEL_CHECKPOINT_URL -> {MODEL_PATH}")
+
+    with urlopen(MODEL_DOWNLOAD_URL, timeout=MODEL_DOWNLOAD_TIMEOUT_SECONDS) as response:
+        data = response.read()
+
+    if not data:
+        raise RuntimeError("Downloaded checkpoint is empty")
+    if data.lstrip().startswith(b"<"):
+        raise RuntimeError(
+            "Downloaded content looks like HTML, not a model file. "
+            "Check AI_MODEL_CHECKPOINT_URL direct download link."
+        )
+
+    MODEL_PATH.write_bytes(data)
+    print(f"[ai-service] Checkpoint downloaded successfully ({len(data)} bytes)")
+    return True
+
+
 def load_model() -> nn.Module:
     global _model
     if _model is not None:
         return _model
 
+    # Ensure deterministic initialization for any layers not loaded from checkpoint.
+    torch.manual_seed(MODEL_INIT_SEED)
+    np.random.seed(MODEL_INIT_SEED)
     model = _build_model().to(DEVICE)
     model_version = "torchgeo-imagenet"
 
-    has_checkpoint = MODEL_PATH.exists() and MODEL_PATH.stat().st_size > 0
+    has_checkpoint = _ensure_checkpoint_from_url_if_needed()
     if has_checkpoint:
         checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
         state_dict = _extract_state_dict(checkpoint)
@@ -85,6 +119,19 @@ def load_model() -> nn.Module:
     setattr(model, "_model_version", model_version)
     _model = model
     return _model
+
+
+def get_runtime_inference_info() -> dict[str, object]:
+    has_checkpoint = MODEL_PATH.exists() and MODEL_PATH.stat().st_size > 0
+    return {
+        "modelPath": str(MODEL_PATH),
+        "checkpointExists": has_checkpoint,
+        "checkpointSizeBytes": MODEL_PATH.stat().st_size if has_checkpoint else 0,
+        "device": str(DEVICE),
+        "maskThreshold": MASK_THRESHOLD,
+        "usesImagenetFallback": USE_IMAGENET_FALLBACK,
+        "downloadUrlConfigured": bool(MODEL_DOWNLOAD_URL),
+    }
 
 
 def _preprocess_image(image_bytes: bytes) -> torch.Tensor:

@@ -1,0 +1,47 @@
+{
+  "cases": {
+    "brightness_patch": {
+      "anomalyDetected": true,
+      "boxesCount": 1,
+      "coordinates": [
+        {
+          "confidence": 1.0,
+          "height": 256,
+          "width": 256,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "maskPositivePixels": 65530
+    },
+    "hard_change_patch": {
+      "anomalyDetected": true,
+      "boxesCount": 1,
+      "coordinates": [
+        {
+          "confidence": 1.0,
+          "height": 256,
+          "width": 256,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "maskPositivePixels": 65532
+    },
+    "no_change": {
+      "anomalyDetected": true,
+      "boxesCount": 1,
+      "coordinates": [
+        {
+          "confidence": 1.0,
+          "height": 256,
+          "width": 256,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "maskPositivePixels": 65536
+    }
+  },
+  "modelVersion": "custom-checkpoint:levir_best.pth"
+}

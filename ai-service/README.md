@@ -116,3 +116,36 @@ Configure your server environment:
 - `AI_SERVICE_API_KEY=<same-secret-as-ai-service>`
 
 The Node backend should send `beforeImage` and `afterImage` via multipart request to `/predict`.
+
+## Model regression tests
+
+This service includes a regression suite to detect prediction drift between deployments.
+
+Files:
+
+- `tests/model_regression_test.py` - output contract + regression comparison
+- `tests/generate_model_regression_baseline.py` - writes/update golden baseline snapshot
+- `tests/baselines/model_regression_baseline.json` - golden expected output
+
+Generate baseline (intentionally updates the golden file):
+
+```bash
+cd ai-service
+AI_REGRESSION_UPDATE_BASELINE=true python -m unittest tests.model_regression_test -v
+```
+
+Run regression checks:
+
+```bash
+cd ai-service
+python -m unittest tests.model_regression_test -v
+```
+
+Notes:
+
+- Baseline is model-version specific in practice; regenerate it when you intentionally change checkpoint/model behavior.
+- The suite uses deterministic synthetic fixture pairs and compares:
+  - `anomalyDetected`
+  - `boxesCount`
+  - `maskPositivePixels`
+  - normalized `coordinates`
