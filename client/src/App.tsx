@@ -11,30 +11,34 @@ import AuditLogs from './features/audit-logs/pages/AuditLogs'
 import { RequireAuth } from './routes/RequireAuth'
 import { GuestRoute } from './routes/GuestRoute'
 import { AdminRoute } from './routes/AdminRoute'
+import { SessionTimeoutManager } from './routes/SessionTimeoutManager'
 
 function App() {
   return (
-    <Routes>
-      <Route element={<GuestRoute />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Route>
-
-      <Route element={<RequireAuth />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/analyses" element={<AnalysisHistory />} />
-        <Route path="/analyses/:analysisId" element={<AnalysisDetail />} />
-        <Route path="/submit" element={<SubmitAnalysis />} />
-
-        <Route element={<AdminRoute />}>
-          <Route path="/users" element={<UserManagement />} />
-          <Route path="/logs" element={<AuditLogs />} />
+    <>
+      <SessionTimeoutManager />
+      <Routes>
+        <Route element={<GuestRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Route>
-      </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/analyses" element={<AnalysisHistory />} />
+          <Route path="/analyses/:analysisId" element={<AnalysisDetail />} />
+          <Route path="/submit" element={<SubmitAnalysis />} />
+
+          <Route element={<AdminRoute />}>
+            <Route path="/users" element={<UserManagement />} />
+            <Route path="/logs" element={<AuditLogs />} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   )
 }
 

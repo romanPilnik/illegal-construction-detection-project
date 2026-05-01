@@ -1,8 +1,24 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { getAnalysesMeta } from "../api";
 import { clearAuthStorage, getStoredUser } from "../../../lib/stored-user";
+
+function overviewRequestErrorMessage(reason: unknown): string {
+  if (isAxiosError(reason)) {
+    const data = reason.response?.data as
+      | { message?: string; error?: string }
+      | undefined;
+    return (
+      data?.message ??
+      data?.error ??
+      reason.message ??
+      "Request failed"
+    );
+  }
+  if (reason instanceof Error) return reason.message;
+  return "Request failed";
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -11,42 +27,53 @@ export default function Dashboard() {
 
   const [totalAnalyses, setTotalAnalyses] = useState<number | null>(null);
   const [pendingCount, setPendingCount] = useState<number | null>(null);
-  const [overviewError, setOverviewError] = useState("");
+  const [countsError, setCountsError] = useState("");
   const [overviewLoading, setOverviewLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setOverviewError("");
-      setOverviewLoading(true);
-      try {
-        const [allMeta, pendingMeta] = await Promise.all([
-          getAnalysesMeta({}),
-          getAnalysesMeta({ status: "Pending" }),
-        ]);
-        if (!cancelled) {
-          setTotalAnalyses(allMeta.total);
-          setPendingCount(pendingMeta.total);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          if (isAxiosError(err)) {
-            const data = err.response?.data as { message?: string } | undefined;
-            setOverviewError(data?.message ?? "Failed to load overview");
-          } else {
-            setOverviewError("Failed to load overview");
-          }
-          setTotalAnalyses(null);
-          setPendingCount(null);
-        }
-      } finally {
-        if (!cancelled) setOverviewLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const loadOverview = useCallback(async () => {
+    setCountsError("");
+    setOverviewLoading(true);
+
+    const [allRes, pendingRes] = await Promise.allSettled([
+      getAnalysesMeta({}),
+      getAnalysesMeta({ status: "Pending" }),
+    ]);
+
+    if (allRes.status === "fulfilled") {
+      setTotalAnalyses(allRes.value.total);
+    } else {
+      setTotalAnalyses(0);
+    }
+
+    if (pendingRes.status === "fulfilled") {
+      setPendingCount(pendingRes.value.total);
+    } else {
+      setPendingCount(0);
+    }
+
+    const metaFailures: string[] = [];
+    if (allRes.status === "rejected") {
+      metaFailures.push(overviewRequestErrorMessage(allRes.reason));
+    }
+    if (pendingRes.status === "rejected") {
+      metaFailures.push(overviewRequestErrorMessage(pendingRes.reason));
+    }
+    setCountsError(metaFailures.filter(Boolean).join(" · "));
+
+    setOverviewLoading(false);
   }, []);
+
+  useEffect(() => {
+    void loadOverview();
+  }, [loadOverview]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void loadOverview();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [loadOverview]);
 
   const handleLogout = () => {
     clearAuthStorage();
@@ -54,24 +81,24 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f0f4f8_0%,#ffffff_100%)] text-[#1a202c] [font-:'Segoe_UI',system-ui,sans-serif]">
-      <nav className="flex items-center justify-between border-b border-[#e2e8f0] bg-white px-8 py-3 text-[#1a202c] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+    <div className="app-page">
+      <nav className="glass-card sticky top-0 z-50 flex items-center justify-between px-8 py-3 text-slate-100">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] text-base font-bold text-[#2563eb]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-base font-bold text-[#60a5fa]">
             C
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-[#1e293b]">
+            <h2 className="text-lg font-semibold text-slate-100">
               Construction Compliance
             </h2>
-            <p className="-mt-px text-xs text-[#64748b]">
+            <p className="-mt-px text-xs text-slate-400">
               Welcome{user?.username ? `, ${user.username}` : ""}
             </p>
           </div>
         </div>
         <button
           type="button"
-          className="flex cursor-pointer items-center gap-2 rounded-md border border-transparent bg-transparent px-4 py-2 text-sm font-medium text-[#64748b] transition-all duration-200 hover:bg-[#fee2e2] hover:text-[#ef4444]"
+          className="flex cursor-pointer items-center gap-2 rounded-md border border-transparent bg-transparent px-4 py-2 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-red-500/20 hover:text-red-300"
           onClick={handleLogout}
         >
           <svg
@@ -92,11 +119,11 @@ export default function Dashboard() {
 
       <main className="mx-auto max-w-[1200px] p-10">
         <section>
-          <h2 className="mb-5 mt-6 text-sm font-semibold uppercase tracking-[0.05em] text-[#64748b]">
+          <h2 className="mb-5 mt-6 text-sm font-semibold uppercase tracking-[0.05em] text-slate-400">
             Quick Actions
           </h2>
           <div
-            className="relative flex cursor-pointer items-center gap-6 rounded-xl bg-[#2563eb] px-8 py-6 text-white shadow-[0_4px_14px_rgba(37,99,235,0.3)] transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#1d4ed8]"
+            className="relative flex cursor-pointer items-center gap-6 rounded-xl bg-gradient-to-r from-[#2563eb] to-[#7c3aed] px-8 py-6 text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)] transition-transform duration-200 hover:-translate-y-0.5"
             onClick={() => navigate("/submit")}
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15">
@@ -114,15 +141,15 @@ export default function Dashboard() {
         </section>
 
         <section>
-          <h2 className="mb-5 mt-6 text-sm font-semibold uppercase tracking-[0.05em] text-[#64748b]">
+          <h2 className="mb-5 mt-6 text-sm font-semibold uppercase tracking-[0.05em] text-slate-400">
             Navigation
           </h2>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-6">
             <div
-              className="flex cursor-pointer items-center gap-4 rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-[#2563eb] hover:bg-[#f8fafc] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)]"
+              className="glass-card flex cursor-pointer items-center gap-4 rounded-xl p-5 transition-all duration-200 hover:border-[#60a5fa] hover:bg-white/10"
               onClick={() => navigate("/analyses")}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] text-[#2563eb]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#60a5fa]">
                 <svg
                   width="18"
                   height="18"
@@ -136,19 +163,19 @@ export default function Dashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-[0.9rem] font-semibold text-[#1e293b]">
+                <h3 className="text-[0.9rem] font-semibold text-slate-100">
                   Analysis History
                 </h3>
-                <p className="mt-[0.15rem] text-xs text-[#64748b]">
+                <p className="mt-[0.15rem] text-xs text-slate-400">
                   View all submitted analyses and results
                 </p>
               </div>
             </div>
             <div
-              className="flex cursor-pointer items-center gap-4 rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-[#2563eb] hover:bg-[#f8fafc] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)]"
+              className="glass-card flex cursor-pointer items-center gap-4 rounded-xl p-5 transition-all duration-200 hover:border-[#60a5fa] hover:bg-white/10"
               onClick={() => navigate("/profile")}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] text-[#2563eb]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#60a5fa]">
                 <svg
                   width="18"
                   height="18"
@@ -162,10 +189,10 @@ export default function Dashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-[0.9rem] font-semibold text-[#1e293b]">
+                <h3 className="text-[0.9rem] font-semibold text-slate-100">
                   Profile
                 </h3>
-                <p className="mt-[0.15rem] text-xs text-[#64748b]">
+                <p className="mt-[0.15rem] text-xs text-slate-400">
                   Manage your account settings
                 </p>
               </div>
@@ -173,10 +200,10 @@ export default function Dashboard() {
             {isAdmin && (
               <>
                 <div
-                  className="flex cursor-pointer items-center gap-4 rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-[#2563eb] hover:bg-[#f8fafc] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)]"
+                  className="glass-card flex cursor-pointer items-center gap-4 rounded-xl p-5 transition-all duration-200 hover:border-[#60a5fa] hover:bg-white/10"
                   onClick={() => navigate("/users")}
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] text-[#2563eb]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#60a5fa]">
                     <svg
                       width="18"
                       height="18"
@@ -192,19 +219,19 @@ export default function Dashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-[0.9rem] font-semibold text-[#1e293b]">
+                    <h3 className="text-[0.9rem] font-semibold text-slate-100">
                       User Management
                     </h3>
-                    <p className="mt-[0.15rem] text-xs text-[#64748b]">
+                    <p className="mt-[0.15rem] text-xs text-slate-400">
                       Manage users and permissions
                     </p>
                   </div>
                 </div>
                 <div
-                  className="flex cursor-pointer items-center gap-4 rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-[#2563eb] hover:bg-[#f8fafc] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)]"
+                  className="glass-card flex cursor-pointer items-center gap-4 rounded-xl p-5 transition-all duration-200 hover:border-[#60a5fa] hover:bg-white/10"
                   onClick={() => navigate("/logs")}
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e2e8f0] bg-[#f1f5f9] text-[#2563eb]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#60a5fa]">
                     <svg
                       width="18"
                       height="18"
@@ -221,10 +248,10 @@ export default function Dashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-[0.9rem] font-semibold text-[#1e293b]">
+                    <h3 className="text-[0.9rem] font-semibold text-slate-100">
                       Audit logs
                     </h3>
-                    <p className="mt-[0.15rem] text-xs text-[#64748b]">
+                    <p className="mt-[0.15rem] text-xs text-slate-400">
                       Review system activity
                     </p>
                   </div>
@@ -235,37 +262,30 @@ export default function Dashboard() {
         </section>
 
         <section>
-          <h2 className="mb-5 mt-6 text-sm font-semibold uppercase tracking-[0.05em] text-[#64748b]">
+          <h2 className="mb-5 mt-6 text-sm font-semibold uppercase tracking-[0.05em] text-slate-400">
             Overview
           </h2>
-          {overviewError && (
-            <p className="mb-4 text-sm text-[#b91c1c]">{overviewError}</p>
+          {countsError && (
+            <p className="mb-4 text-sm text-amber-200/90">
+              Totals could not be refreshed: {countsError}
+            </p>
           )}
           <div className="mb-8 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
-            <div className="rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-              <div className="text-[0.8rem] font-medium text-[#64748b]">
+            <div className="glass-card rounded-xl p-6">
+              <div className="text-[0.8rem] font-medium text-slate-400">
                 Total Analyses
               </div>
-              <div className="mt-2 text-4xl font-bold text-[#2563eb]">
-                {overviewLoading ? "…" : (totalAnalyses ?? "—")}
+              <div className="mt-2 text-4xl font-bold text-[#60a5fa]">
+                {overviewLoading ? "…" : (totalAnalyses ?? 0)}
               </div>
             </div>
-            <div className="rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-              <div className="text-[0.8rem] font-medium text-[#64748b]">
+            <div className="glass-card rounded-xl p-6">
+              <div className="text-[0.8rem] font-medium text-slate-400">
                 Pending Results
               </div>
               <div className="mt-2 text-4xl font-bold text-[#f59e0b]">
-                {overviewLoading ? "…" : (pendingCount ?? "—")}
+                {overviewLoading ? "…" : (pendingCount ?? 0)}
               </div>
-            </div>
-            <div className="rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
-              <div className="text-[0.8rem] font-medium text-[#64748b]">
-                Completed This Week
-              </div>
-              <div className="mt-2 text-4xl font-bold text-[#166534]">—</div>
-              <p className="mt-2 text-xs text-[#94a3b8]">
-                Date range filter not available yet
-              </p>
             </div>
           </div>
         </section>

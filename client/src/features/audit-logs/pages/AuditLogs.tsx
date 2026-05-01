@@ -4,11 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { AUDIT_LOGS_PAGE_LIMIT, getAuditLogs } from "../api";
 import type { AuditLogRow, AuditLogsListMeta } from "../types";
 
-const cell = "border-b border-[#e2e8f0] px-4 py-3 text-left";
-const head = `${cell} bg-[#f8fafc] font-semibold text-[#475569]`;
+const cell = "border-b border-white/10 px-4 py-3 text-left text-slate-300";
+const head = `${cell} bg-white/5 font-semibold text-slate-200`;
 
 const btnNav =
-  "cursor-pointer rounded-md border border-[#cbd5e1] bg-white px-3 py-1.5 text-sm font-medium text-[#334155] hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50";
+  "cursor-pointer rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-medium text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function AuditLogs() {
   const navigate = useNavigate();
@@ -70,14 +70,14 @@ export default function AuditLogs() {
   const canNext = meta?.hasNextPage ?? false;
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] pt-8 [font-:'Segoe_UI',system-ui,sans-serif]">
+    <div className="app-page pt-8">
       <div className="mx-auto mb-4 max-w-[1100px] px-4">
-        <h1 className="text-[2rem] font-bold text-[#1e293b]">Audit logs</h1>
+        <h1 className="page-title text-[2rem] font-bold">Audit logs</h1>
       </div>
-      <div className="flex items-center gap-8 border-b border-t border-[#e2e8f0] bg-white px-8 py-4">
+      <div className="glass-card flex items-center gap-8 px-8 py-4">
         <button
           type="button"
-          className="cursor-pointer border-none bg-transparent text-sm font-semibold text-[#64748b] hover:text-[#2563eb]"
+          className="cursor-pointer border-none bg-transparent text-sm font-semibold text-slate-300 hover:text-[#60a5fa]"
           onClick={() => navigate("/")}
         >
           ← Back to Dashboard
@@ -85,12 +85,12 @@ export default function AuditLogs() {
       </div>
       <div className="mx-auto mt-6 max-w-[1100px] px-4">
         <label
-          className="block text-sm font-medium text-[#475569]"
+          className="block text-sm font-medium text-slate-300"
           htmlFor="audit-action-filter"
         >
           Filter by action
         </label>
-        <p className="mt-0.5 text-xs text-[#64748b]">
+        <p className="mt-0.5 text-xs text-slate-400">
           Matches entries whose action contains this text.
         </p>
         <input
@@ -99,7 +99,7 @@ export default function AuditLogs() {
           value={actionInput}
           onChange={(e) => setActionInput(e.target.value)}
           placeholder="e.g. login, update"
-          className="mt-2 w-full max-w-md rounded-lg border border-[#cbd5e1] px-3 py-2 text-sm text-[#1e293b] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
+          className="mt-2 w-full max-w-md rounded-lg border border-white/15 bg-[#0b1220] px-3 py-2 text-sm text-slate-100 outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
         />
       </div>
       {error && (
@@ -107,17 +107,17 @@ export default function AuditLogs() {
           {error}
         </p>
       )}
-      <div className="mx-auto my-8 max-w-[1100px] overflow-auto rounded-xl border border-[#e2e8f0] bg-white">
+      <div className="glass-card mx-auto my-8 max-w-[1100px] overflow-auto rounded-xl">
         {loading && logs.length === 0 ? (
-          <p className="px-8 py-8 text-center text-[#64748b]">Loading…</p>
+          <p className="px-8 py-8 text-center text-slate-400">Loading…</p>
         ) : logs.length === 0 ? (
-          <p className="px-8 py-8 text-center text-[#64748b]">
+          <p className="px-8 py-8 text-center text-slate-400">
             No log entries.
           </p>
         ) : (
           <>
             {loading && (
-              <p className="border-b border-[#e2e8f0] bg-[#f8fafc] px-4 py-2 text-center text-xs text-[#64748b]">
+              <p className="border-b border-white/10 bg-white/5 px-4 py-2 text-center text-xs text-slate-400">
                 Updating…
               </p>
             )}
@@ -146,11 +146,11 @@ export default function AuditLogs() {
               </tbody>
             </table>
             {meta && totalPages > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#e2e8f0] px-4 py-3 text-sm text-[#475569]">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3 text-sm text-slate-300">
                 <span>
                   Page {meta.page} of {totalPages}
                   {meta.total > 0 ? (
-                    <span className="text-[#64748b]">
+                    <span className="text-slate-400">
                       {" "}
                       ({meta.total} {meta.total === 1 ? "entry" : "entries"})
                     </span>

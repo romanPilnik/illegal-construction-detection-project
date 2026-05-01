@@ -7,10 +7,10 @@ import type { UserByIdData, UserRole } from "../types";
 import { getStoredUser } from "../../../lib/stored-user";
 
 const readOnlyInput =
-  "w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-3 text-sm text-[#1e293b] read-only:cursor-not-allowed read-only:text-[#64748b] focus:border-[#2563eb] focus:bg-white focus:outline-none";
+  "w-full rounded-lg border border-white/10 bg-[#0b1220] p-3 text-sm text-slate-200 read-only:cursor-not-allowed read-only:text-slate-400 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:outline-none";
 
 const passwordInput =
-  "w-full rounded-lg border border-[#e2e8f0] bg-white p-3 text-sm text-[#1e293b] outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[rgba(37,99,235,0.15)]";
+  "w-full rounded-lg border border-white/10 bg-[#0b1220] p-3 text-sm text-slate-200 outline-none focus:border-[#60a5fa] focus:ring-2 focus:ring-[rgba(96,165,250,0.15)]";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -101,23 +101,23 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] pt-8 [font-:'Segoe_UI',system-ui,sans-serif]">
+    <div className="app-page pt-8">
       <div className="mx-auto mb-8 max-w-[1000px]">
-        <h1 className="mb-6 text-[2rem] font-bold text-[#1e293b]">
+        <h1 className="page-title mb-6 text-[2rem] font-bold">
           Profile Page:
         </h1>
       </div>
-      <div className="flex items-center gap-8 border-b border-t border-[#e2e8f0] bg-white px-8 py-4">
+      <div className="glass-card flex items-center gap-8 px-8 py-4">
         <button
           type="button"
-          className="flex cursor-pointer items-center gap-2 border-none bg-transparent text-sm font-semibold text-[#64748b] hover:text-[#2563eb]"
+          className="flex cursor-pointer items-center gap-2 border-none bg-transparent text-sm font-semibold text-slate-300 hover:text-[#60a5fa]"
           onClick={() => navigate("/")}
         >
           ← Back to Dashboard
         </button>
         <div>
-          <h2 className="text-lg font-bold text-[#1e293b]">Profile Settings</h2>
-          <p className="text-xs text-[#64748b]">
+          <h2 className="text-lg font-bold text-slate-100">Profile Settings</h2>
+          <p className="text-xs text-slate-400">
             Manage your account information
           </p>
         </div>
@@ -125,26 +125,26 @@ export default function Profile() {
 
       <div className="mx-auto my-8 flex max-w-[800px] flex-col gap-6">
         {loadError && (
-          <div className="rounded-lg bg-[#fef2f2] px-4 py-4 text-sm text-[#b91c1c]">
+          <div className="rounded-lg bg-red-500/10 px-4 py-4 text-sm text-red-300">
             {loadError}
           </div>
         )}
-        <div className="rounded-xl border border-[#e2e8f0] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div className="glass-card rounded-xl p-8">
           <div className="mb-6">
-            <h3 className="flex items-center gap-2 text-[1.1rem] text-[#1e293b]">
+            <h3 className="flex items-center gap-2 text-[1.1rem] text-slate-100">
               👤 Account Information
             </h3>
-            <p className="mt-1 text-sm text-[#64748b]">
+            <p className="mt-1 text-sm text-slate-400">
               Your basic account details
             </p>
           </div>
           {loadingProfile ? (
-            <p className="py-4 text-center text-sm text-[#64748b]">Loading…</p>
+            <p className="py-4 text-center text-sm text-slate-400">Loading…</p>
           ) : (
             <>
               <div className="mb-6 grid grid-cols-2 gap-6">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#475569]">
+                    <label className="mb-2 block text-sm font-semibold text-slate-400">
                     Username
                   </label>
                   <input
@@ -192,12 +192,12 @@ export default function Profile() {
           )}
         </div>
 
-        <div className="rounded-xl border border-[#e2e8f0] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div className="glass-card rounded-xl p-8">
           <div className="mb-6">
-            <h3 className="flex items-center gap-2 text-[1.1rem] text-[#1e293b]">
+            <h3 className="flex items-center gap-2 text-[1.1rem] text-slate-100">
               🔒 Security Settings
             </h3>
-            <p className="mt-1 text-sm text-[#64748b]">Change your password</p>
+            <p className="mt-1 text-sm text-slate-400">Change your password</p>
           </div>
           {passwordError && (
             <div className="mb-4 rounded-lg bg-[#fef2f2] px-4 py-3 text-sm text-[#b91c1c]">

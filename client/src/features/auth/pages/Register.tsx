@@ -5,7 +5,7 @@ import { register } from "../api";
 import type { UserRole } from "../types";
 
 const fieldClassName =
-  "w-full rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-3.5 py-2.5 text-sm text-[#1e293b] outline-none transition-all duration-200 focus:border-[#10b981] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
+  "w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-all duration-200 focus:border-[#10b981] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
 
 function messageFromAxios(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -17,12 +17,12 @@ function messageFromAxios(err: unknown, fallback: string): string {
 
 function RegistrationUnavailable() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[linear-gradient(135deg,#e8edf5_0%,#f0f4fb_50%,#e4eaf4_100%)] px-4 [font-:'Segoe_UI',system-ui,sans-serif]">
-      <div className="w-full max-w-[380px] rounded-2xl bg-white p-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
-        <h1 className="text-xl font-bold text-[#1e293b]">
+    <div className="app-page flex min-h-screen flex-col items-center justify-center px-4">
+      <div className="glass-card w-full max-w-[380px] rounded-2xl p-8 text-center">
+        <h1 className="text-xl font-bold text-slate-100">
           Registration unavailable
         </h1>
-        <p className="mt-3 text-sm text-[#64748b]">
+        <p className="page-subtitle mt-3 text-sm">
           Public registration is disabled. Ask an administrator for an account.
         </p>
         <Link
@@ -68,7 +68,7 @@ function RegisterForm() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[linear-gradient(135deg,#e8edf5_0%,#f0f4fb_50%,#e4eaf4_100%)] py-8 [font-:'Segoe_UI',system-ui,sans-serif]">
+    <div className="app-page flex min-h-screen flex-col items-center justify-center px-4 py-8">
       <div className="mb-8 flex flex-col items-center">
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#10b981] shadow-[0_4px_14px_rgba(16,185,129,0.35)]">
           <svg
@@ -79,23 +79,23 @@ function RegisterForm() {
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#1e293b]">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-100">
           Register Account
         </h1>
-        <p className="mt-1 text-sm text-[#64748b]">
+        <p className="page-subtitle mt-1 text-sm">
           Create a new municipal profile
         </p>
       </div>
 
-      <div className="w-full max-w-[380px] rounded-2xl bg-white p-8 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="glass-card w-full max-w-[420px] rounded-2xl p-8">
         {error && (
-          <p className="mb-4 text-center text-[0.8rem] text-[#ef4444]">
+          <p className="mb-4 text-center text-[0.8rem] text-red-300">
             {error}
           </p>
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-[#374151]">
+            <label className="mb-2 block text-sm font-medium text-slate-300">
               Username
             </label>
             <input
@@ -109,7 +109,7 @@ function RegisterForm() {
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-[#374151]">
+            <label className="mb-2 block text-sm font-medium text-slate-300">
               Email Address
             </label>
             <input
@@ -123,7 +123,7 @@ function RegisterForm() {
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-[#374151]">
+            <label className="mb-2 block text-sm font-medium text-slate-300">
               System Role
             </label>
             <select
@@ -137,7 +137,7 @@ function RegisterForm() {
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-[#374151]">
+            <label className="mb-2 block text-sm font-medium text-slate-300">
               Password
             </label>
             <input
@@ -159,7 +159,7 @@ function RegisterForm() {
           </button>
 
           <Link
-            className="mt-2 block w-full cursor-pointer border-none bg-transparent py-3 text-center text-sm text-[#64748b] no-underline hover:text-[#1e293b]"
+            className="mt-2 block w-full cursor-pointer border-none bg-transparent py-3 text-center text-sm text-slate-400 no-underline hover:text-slate-200"
             to="/login"
           >
             Already have an account? Sign In

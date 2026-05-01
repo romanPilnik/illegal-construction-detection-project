@@ -5,11 +5,10 @@ import { ExportService } from '../services/export.service.js';
 import type { AnalysisReport } from '../services/export.service.js';
 import { Jimp } from 'jimp';
 import { createAnnotatedResultImage } from '../services/image-annotator.service.js';
-import type { BoundingBoxCoordinates } from '../services/ai-inference.service.js';
-//import {
-//  type BoundingBoxCoordinates,
-//  requestAIInference,
-// } from '../services/ai-inference.service.js';
+import {
+  type BoundingBoxCoordinates,
+  requestAIInference,
+} from '../services/ai-inference.service.js';
 import { emitAnalysisUpdated } from '../services/socket.service.js';
 
 type ProcessAnalysisPayload = {
@@ -64,25 +63,14 @@ const logAnalysisFailure = async (
 
 const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
   try {
-    //const inference = await requestAIInference(
-      //payload.beforeImagePath,
-      //payload.afterImagePath
-    //);
-    //const resultImage = await createAnnotatedResultImage(
-      //payload.afterImagePath,
-      //inference.coordinates
-    //);
-    const inference = {
-      anomalyDetected: true,
-      coordinates: { x1: 50, y1: 50, x2: 250, y2: 250 }
-    };
-
-    console.log("🖌️ Drawing red box on image...");
+    const inference = await requestAIInference(
+      payload.beforeImagePath,
+      payload.afterImagePath
+    );
     const resultImage = await createAnnotatedResultImage(
       payload.afterImagePath,
       inference.coordinates
     );
-    console.log("✅ New image created at:", resultImage.filePath);
 
     const analysis = await prisma.$transaction(async (tx) => {
       const imageRecord = await tx.image.create({
@@ -277,6 +265,46 @@ const analysisInclude = {
   after_image: true,
   result_image: true,
 } satisfies Prisma.AnalysisInclude;
+
+const getOutcomeSummary = async (req: Request, res: Response) => {
+  try {
+    const whereBase: Prisma.AnalysisWhereInput = {
+      status: 'Completed',
+      anomaly_detected: { not: null },
+    };
+
+    if (req.user && req.user.role === Role.Inspector) {
+      whereBase.inspector_id = req.user.userId;
+    }
+
+    const [anomalyDetected, noAnomaly] = await Promise.all([
+      prisma.analysis.count({
+        where: { ...whereBase, anomaly_detected: true },
+      }),
+      prisma.analysis.count({
+        where: { ...whereBase, anomaly_detected: false },
+      }),
+    ]);
+
+    const completedWithOutcome = anomalyDetected + noAnomaly;
+    const anomalyRate =
+      completedWithOutcome > 0
+        ? Math.round((anomalyDetected / completedWithOutcome) * 1000) / 1000
+        : null;
+
+    res.status(200).json({
+      data: {
+        completedWithOutcome,
+        anomalyDetected,
+        noAnomaly,
+        anomalyRate,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching outcome summary:', error);
+    res.status(500).json({ message: 'Error fetching outcome summary' });
+  }
+};
 
 const getAnalyses = async (req: Request, res: Response) => {
   try {
@@ -487,6 +515,7 @@ const exportByDateRange = async (
 export const AnalysisController = {
   createAnalysis,
   getAnalyses,
+  getOutcomeSummary,
   getAnalysisById,
   exportById,
   exportByDateRange,

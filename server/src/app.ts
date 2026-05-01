@@ -47,5 +47,4 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/logs', auditLogRoutes);
 app.use('/api/v1/analyses', analysisRoutes);
-
 export default app;

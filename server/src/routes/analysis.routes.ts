@@ -42,6 +42,13 @@ router.get(
   AnalysisController.getAnalyses
 );
 
+/** Must stay above `/:id` so this path is not validated as a UUID. */
+router.get(
+  '/outcome-summary',
+  authenticateToken,
+  AnalysisController.getOutcomeSummary
+);
+
 router.get(
   '/:id',
   authenticateToken,

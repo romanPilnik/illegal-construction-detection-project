@@ -10,7 +10,15 @@ export type BoundingBoxCoordinates = {
 
 type RawInferenceResponse = {
   anomalyDetected: boolean;
-  coordinates?: Partial<BoundingBoxCoordinates> | null;
+  coordinates?:
+    | Partial<BoundingBoxCoordinates>
+    | Array<{
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+      }>
+    | null;
 };
 
 const AI_SERVICE_URL =
@@ -33,6 +41,29 @@ const normalizeCoordinates = (
 ): BoundingBoxCoordinates | null => {
   if (!coordinates) {
     return null;
+  }
+
+  if (Array.isArray(coordinates)) {
+    const first = coordinates[0];
+    if (!first) {
+      return null;
+    }
+
+    const x = toNumericCoordinate(first.x);
+    const y = toNumericCoordinate(first.y);
+    const width = toNumericCoordinate(first.width);
+    const height = toNumericCoordinate(first.height);
+
+    if (x === null || y === null || width === null || height === null) {
+      return null;
+    }
+
+    return {
+      x1: x,
+      y1: y,
+      x2: x + width,
+      y2: y + height,
+    };
   }
 
   const x1 = toNumericCoordinate(coordinates.x1);

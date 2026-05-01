@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-// ודאי שהוספת את הפונקציה הזו לקובץ ה-api.ts שלך
 import { getAnalysisById, exportAnalysisById } from "../api";
 import type { AnalysisDetailData } from "../types";
+
+const API_ORIGIN = (
+  import.meta.env.VITE_API_URL || "http://localhost:5001/api/v1"
+).replace(/\/api\/v1\/?$/, "");
 
 export default function AnalysisDetail() {
     const { analysisId } = useParams<{ analysisId: string }>();
@@ -12,17 +15,17 @@ export default function AnalysisDetail() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
 
-    const [exporting, setExporting] = useState(false);
+    const [exporting, setExporting] = useState<"PDF" | "EXCEL" | null>(null);
 
     const getImageUrl = (path: string | undefined) => {
         if (!path) return "";
         const cleanPath = path.replace(/\\/g, "/");
-        return `http://localhost:5001/${cleanPath}`;
+        return `${API_ORIGIN}/${cleanPath}`;
     };
 
     const handleExport = async (format: 'PDF' | 'EXCEL') => {
         if (!data?.id) return;
-        setExporting(true);
+        setExporting(format);
         try {
             const res = await exportAnalysisById(data.id, format);
 
@@ -34,32 +37,50 @@ export default function AnalysisDetail() {
             link.remove();
         } catch (err) {
             console.error("Export failed", err);
-            alert("הייצוא נכשל. ודאי שהשרת פועל ותיקיית הדיווחים מוגדרת.");
+            alert(
+                "Export failed. Check that the server is running and the reports directory is configured.",
+            );
         } finally {
-            setExporting(false);
+            setExporting(null);
         }
     };
 
     const getAnomalyBadge = (status: string, hasAnomaly: boolean | null) => {
-        const baseClasses = "px-3 py-1 rounded-full text-xs font-bold shadow-sm border";
+        const baseClasses =
+            "inline-flex min-h-[1.5rem] items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm border";
 
-        if (status === 'Pending' || status === 'Processing') {
+        const key = status.toLowerCase();
+        if (key === "pending" || key === "processing") {
             return {
-                classes: `${baseClasses} bg-yellow-100 text-yellow-800 border-yellow-300`,
-                text: "Processing"
+                classes: `${baseClasses} border-amber-300 bg-amber-100 text-amber-900`,
+                text: "Processing",
             };
         }
 
-        if (hasAnomaly) {
+        if (key === "failed") {
             return {
-                classes: `${baseClasses} bg-red-100 text-red-700 border-red-200`,
-                text: "נמצאה חולשה"
+                classes: `${baseClasses} border-slate-400 bg-slate-200 text-slate-900`,
+                text: "Failed",
+            };
+        }
+
+        if (hasAnomaly === true) {
+            return {
+                classes: `${baseClasses} border-red-300 bg-red-100 text-red-900`,
+                text: "Anomaly detected",
+            };
+        }
+
+        if (hasAnomaly === false) {
+            return {
+                classes: `${baseClasses} border-emerald-300 bg-emerald-100 text-emerald-900`,
+                text: "No anomaly detected",
             };
         }
 
         return {
-            classes: `${baseClasses} bg-green-100 text-green-700 border-green-200`,
-            text: "תקין (לא נמצאה חולשה)"
+            classes: `${baseClasses} border-sky-300 bg-sky-100 text-sky-900`,
+            text: "Result pending",
         };
     };
 
@@ -94,12 +115,12 @@ export default function AnalysisDetail() {
     }, [analysisId]);
 
     return (
-        <div className="min-h-screen bg-[#f0f4f8] pt-8 [font-:'Segoe_UI',system-ui,sans-serif]">
+        <div className="app-page pt-8">
             {/* Header Bar */}
-            <div className="mx-auto flex max-w-[900px] items-center justify-between border-b border-t border-[#e2e8f0] bg-white px-8 py-4 shadow-sm">
+            <div className="glass-card mx-auto flex max-w-[900px] items-center justify-between px-8 py-4">
                 <button
                     type="button"
-                    className="cursor-pointer border-none bg-transparent text-sm font-semibold text-[#64748b] hover:text-[#2563eb] transition-colors"
+                    className="cursor-pointer border-none bg-transparent text-sm font-semibold text-slate-300 transition-colors hover:text-[#60a5fa]"
                     onClick={() => navigate("/analyses")}
                 >
                     ← Back to list
@@ -109,47 +130,49 @@ export default function AnalysisDetail() {
                 {!loading && !error && data && (
                     <div className="flex gap-3">
                         <button
-                            disabled={exporting}
+                            type="button"
+                            disabled={exporting !== null}
                             onClick={() => handleExport('PDF')}
-                            className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-100 disabled:opacity-50 transition-all active:scale-95"
+                            className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 transition-all active:scale-95 hover:bg-white/10 disabled:opacity-50"
                         >
-                            {exporting ? 'Generating...' : '📄 PDF Report'}
+                            {exporting === 'PDF' ? 'Generating…' : '📄 PDF Report'}
                         </button>
                         <button
-                            disabled={exporting}
+                            type="button"
+                            disabled={exporting !== null}
                             onClick={() => handleExport('EXCEL')}
-                            className="px-4 py-2 bg-green-50 text-green-600 border border-green-200 rounded-lg text-xs font-bold hover:bg-green-100 disabled:opacity-50 transition-all active:scale-95"
+                            className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 transition-all active:scale-95 hover:bg-white/10 disabled:opacity-50"
                         >
-                            {exporting ? 'Generating...' : '📊 Excel Sheet'}
+                            {exporting === 'EXCEL' ? 'Generating…' : '📊 Excel Sheet'}
                         </button>
                     </div>
                 )}
             </div>
 
             {/* Main Content Area */}
-            <div className="mx-auto my-8 max-w-[900px] rounded-xl border border-[#e2e8f0] bg-white px-8 py-6 shadow-sm">
-                {loading && <p className="p-8 text-center text-[#64748b] animate-pulse">Loading analysis data...</p>}
-                {!loading && error && <p className="text-[#b91c1c] p-4 bg-red-50 rounded-lg border border-red-100">{error}</p>}
+            <div className="glass-card mx-auto my-8 max-w-[900px] rounded-xl px-8 py-6">
+                {loading && <p className="animate-pulse p-8 text-center text-slate-400">Loading analysis data...</p>}
+                {!loading && error && <p className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">{error}</p>}
 
                 {!loading && !error && data && (
                     <>
                         {/* Info Grid */}
-                        <div className="grid grid-cols-2 gap-4 mb-8 pb-6 border-b border-[#f1f5f9]">
+                        <div className="mb-8 grid grid-cols-2 gap-4 border-b border-white/10 pb-6">
                             <div>
-                                <div className="mb-2 text-[0.85rem] font-bold uppercase tracking-wider text-[#94a3b8]">General Info</div>
-                                <div className="mb-1 text-[0.9rem] text-[#334155]"><span className="font-semibold text-[#64748b] mr-2">ID:</span>{data.id}</div>
-                                <div className="mb-1 text-[0.9rem] text-[#334155]"><span className="font-semibold text-[#64748b] mr-2">Status:</span>{data.status}</div>
+                                <div className="mb-2 text-[0.85rem] font-bold uppercase tracking-wider text-slate-500">General Info</div>
+                                <div className="mb-1 text-[0.9rem] text-slate-200"><span className="mr-2 font-semibold text-slate-400">ID:</span>{data.id}</div>
+                                <div className="mb-1 text-[0.9rem] text-slate-200"><span className="mr-2 font-semibold text-slate-400">Status:</span>{data.status}</div>
                             </div>
                             <div>
-                                <div className="mb-2 text-[0.85rem] font-bold uppercase tracking-wider text-[#94a3b8]">History</div>
-                                <div className="mb-1 text-[0.9rem] text-[#334155]"><span className="font-semibold text-[#64748b] mr-2">Created:</span>{new Date(data.created_at).toLocaleString()}</div>
-                                <div className="mb-1 text-[0.9rem] text-[#334155]"><span className="font-semibold text-[#64748b] mr-2">Inspector:</span>{data.issued_by?.username || 'System'}</div>
+                                <div className="mb-2 text-[0.85rem] font-bold uppercase tracking-wider text-slate-500">History</div>
+                                <div className="mb-1 text-[0.9rem] text-slate-200"><span className="mr-2 font-semibold text-slate-400">Created:</span>{new Date(data.created_at).toLocaleString()}</div>
+                                <div className="mb-1 text-[0.9rem] text-slate-200"><span className="mr-2 font-semibold text-slate-400">Inspector:</span>{data.issued_by?.username || 'System'}</div>
                             </div>
                         </div>
 
                         {/* Anomaly Badge */}
-                        <div className="mb-6 p-4 bg-[#f8fafc] rounded-lg border border-[#f1f5f9] flex items-center">
-                            <span className="mr-3 font-bold text-[#1e293b]">Analysis Status:</span>
+                        <div className="mb-6 flex items-center rounded-lg border border-white/10 bg-white/5 p-4">
+                            <span className="mr-3 font-bold text-slate-200">Analysis Status:</span>
 
                             {(() => {
                                 const badge = getAnomalyBadge(data.status, data.anomaly_detected);

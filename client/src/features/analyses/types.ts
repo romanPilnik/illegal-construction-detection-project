@@ -4,6 +4,7 @@ export type AnalysisListRow = {
     id: string
     status: string
     created_at: string
+    anomaly_detected: boolean | null
 }
 
 export type AnalysesListMeta = {

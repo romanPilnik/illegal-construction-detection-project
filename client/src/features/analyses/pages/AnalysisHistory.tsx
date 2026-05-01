@@ -15,6 +15,25 @@ function statusBadgeClasses(status: string) {
     return base;
 }
 
+/** Empty while waiting on AI (pending). */
+function aiResultLabel(status: string, anomalyDetected: boolean | null): string {
+    const key = status.toLowerCase();
+    if (key === "pending" || key === "processing") return "";
+    if (key !== "completed") return "";
+    if (anomalyDetected === true) return "Vulnerability found";
+    if (anomalyDetected === false) return "Normal";
+    return "";
+}
+
+function aiResultCellClass(label: string) {
+    if (!label) return "text-sm text-slate-600";
+    if (label === "Vulnerability found") return "text-sm font-medium text-rose-300";
+    return "text-sm font-medium text-emerald-300";
+}
+
+const ROW_GRID =
+    "grid grid-cols-[minmax(0,1.6fr)_minmax(0,auto)_minmax(0,1.1fr)_minmax(0,1.1fr)_minmax(0,5rem)] items-center gap-x-4 gap-y-1 px-6 py-3.5";
+
 export default function AnalysisHistory() {
     const navigate = useNavigate();
     const [analyses, setAnalyses] = useState([] as AnalysisListRow[]);
@@ -44,7 +63,6 @@ export default function AnalysisHistory() {
                 page: 1,
                 limit: 50,
                 status: statusFilter || undefined,
-                // שליחת התאריכים בצורה נקייה (YYYY-MM-DD)
                 start_date: startDate || undefined,
                 end_date: endDate || undefined
             });
@@ -116,56 +134,56 @@ export default function AnalysisHistory() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f0f4f8] pt-8 [font-:'Segoe_UI',system-ui,sans-serif]">
+        <div className="app-page pt-8">
             <div className="mx-auto mb-8 max-w-[1100px]">
-                <h1 className="mb-6 text-[2rem] font-bold text-[#1e293b]">Analysis History</h1>
+                <h1 className="page-title mb-6 text-[2rem] font-bold">Analysis History</h1>
             </div>
 
             {/* Header Control Bar */}
-            <div className="mx-auto mb-6 max-w-[1100px] border-b border-t border-[#e2e8f0] bg-white px-8 py-4 shadow-sm flex justify-between items-center rounded-lg">
+            <div className="glass-card mx-auto mb-6 flex max-w-[1100px] items-center justify-between rounded-lg px-8 py-4">
                 <button
                     onClick={() => navigate("/")}
-                    className="text-sm font-semibold text-[#64748b] hover:text-sky-600 transition-colors"                >
+                    className="text-sm font-semibold text-slate-300 transition-colors hover:text-sky-300"                >
                     ← Back to Dashboard
                 </button>
                 <div className="text-right">
-                    <h2 className="text-lg font-bold text-[#1e293b]">Record Management</h2>
-                    <p className="text-xs text-[#64748b]">Search and manage historical analysis results</p>
+                    <h2 className="text-lg font-bold text-slate-100">Record Management</h2>
+                    <p className="text-xs text-slate-400">Search and manage historical analysis results</p>
                 </div>
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="mx-auto my-6 max-w-[1100px] rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-sm">
-                <div className="flex flex-wrap items-end gap-4"> {/* הוספתי את המילה div כאן */}
+            <div className="glass-card mx-auto my-6 max-w-[1100px] rounded-xl p-6">
+                <div className="flex flex-wrap items-end gap-4">
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[#94a3b8]">From</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">From</label>
                         <input
                             type="date"
                             max={today}
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
-                            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm focus:ring-2 focus:ring-sky-300 outline-none"
+                            className="rounded-lg border border-white/15 bg-[#0b1220] px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-sky-300"
                         />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[#94a3b8]">To</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">To</label>
                         <input
                             type="date"
                             max={today}
                             min={startDate}
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm focus:ring-2 focus:ring-[#3b82f6] outline-none"
+                            className="rounded-lg border border-white/15 bg-[#0b1220] px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#3b82f6]"
                         />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold uppercase tracking-wider text-[#94a3b8]">Status</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Status</label>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value as StatusType)}
-                            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-[#3b82f6] cursor-pointer"
+                            className="cursor-pointer rounded-lg border border-white/15 bg-[#0b1220] px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#3b82f6]"
                         >
                             <option value="">All Statuses</option>
                             <option value="Pending">Pending</option>
@@ -176,67 +194,131 @@ export default function AnalysisHistory() {
 
                     <button
                         onClick={fetchData}
-                        className="px-6 py-2 bg-sky-50 text-sky-700 border border-sky-200 rounded-lg text-sm font-bold hover:bg-sky-100 transition-all shadow-sm active:scale-95"
+                    className="rounded-lg border border-sky-500/40 bg-sky-500/10 px-6 py-2 text-sm font-bold text-sky-300 shadow-sm transition-all active:scale-95 hover:bg-sky-500/20"
                     >
                         🔍 Search
                     </button>
                     <button
                         onClick={handleReset}
-                        className="px-4 py-2 bg-sky-50 text-sky-700 border border-sky-200 rounded-lg text-sm font-bold hover:bg-sky-100 transition-all shadow-sm active:scale-95"
+                        className="rounded-lg border border-slate-500/40 bg-white/5 px-4 py-2 text-sm font-bold text-slate-300 shadow-sm transition-all active:scale-95 hover:bg-white/10"
                     >
                         ✖ Reset
                     </button>
-                    <div className="flex gap-2 ml-auto">
+                    <div className="ml-auto flex gap-2">
                         <button
+                            type="button"
                             disabled={exporting !== null}
                             onClick={() => handleBulkExport('PDF')}
-                            className="min-w-[140px] px-4 py-2 bg-white text-sky-600 border border-sky-200 rounded-lg text-xs font-bold hover:bg-sky-50 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                            >
-                            {exporting === 'PDF' ? 'Exporting...' : '📄 Export PDF'}
+                            className="flex min-w-[140px] items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 transition-all hover:bg-white/10 disabled:opacity-50"
+                        >
+                            {exporting === 'PDF' ? 'Generating…' : '📄 Export PDF'}
                         </button>
                         <button
+                            type="button"
                             disabled={exporting !== null}
                             onClick={() => handleBulkExport('EXCEL')}
-                            className="min-w-[140px] px-4 py-2 bg-white text-sky-600 border border-sky-200 rounded-lg text-xs font-bold hover:bg-sky-50 disabled:opacity-50 transition-all flex items-center justify-center gap-2"                        >
-                            {exporting === 'EXCEL' ? 'Exporting...' : '📊 Export Excel'}
+                            className="flex min-w-[140px] items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 transition-all hover:bg-white/10 disabled:opacity-50"
+                        >
+                            {exporting === 'EXCEL' ? 'Generating…' : '📊 Export Excel'}
                         </button>
                     </div>
                 </div>
             </div>
 
             {error && (
-                <div className="mx-auto mb-6 max-w-[1100px] rounded-lg bg-red-50 px-4 py-3 text-red-700 border border-red-100 text-sm">
+                <div className="mx-auto mb-6 max-w-[1100px] rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
                     ⚠️ {error}
                 </div>
             )}
 
             <div className="mx-auto my-8 max-w-[1100px]">
                 {loading ? (
-                    <p className="py-20 text-center text-[#64748b] animate-pulse">Fetching records...</p>
+                    <p className="animate-pulse py-20 text-center text-slate-400">Fetching records...</p>
                 ) : analyses.length === 0 ? (
-                    <div className="py-20 text-center bg-white rounded-xl border border-dashed border-[#cbd5e1]">
-                        <p className="text-[#64748b]">No records found for the selected criteria.</p>
+                    <div className="glass-card rounded-xl border border-dashed border-white/20 py-20 text-center">
+                        <p className="text-slate-400">No records found for the selected criteria.</p>
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-3">
-                        {analyses.map((item) => (
+                    <div className="glass-card overflow-hidden rounded-xl border border-white/10">
+                        <div
+                            className={`${ROW_GRID} border-b border-white/10 bg-white/[0.04] text-left`}
+                            role="row"
+                        >
                             <div
-                                key={item.id}
-                                onClick={() => navigate(`/analyses/${item.id}`)}
-                                className="flex cursor-pointer items-center justify-between rounded-xl border border-[#e2e8f0] bg-white px-6 py-4 shadow-sm transition-all hover:border-sky-300 hover:shadow-md group"                            >
-                                <div className="flex items-center gap-6">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-tighter">ID</span>
-                                        <span className="text-sm font-mono text-[#334155]">{item.id.substring(0, 12)}...</span>
+                                className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                                role="columnheader"
+                            >
+                                Analysis ID
+                            </div>
+                            <div
+                                className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                                role="columnheader"
+                            >
+                                Status
+                            </div>
+                            <div
+                                className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                                role="columnheader"
+                            >
+                                Date created
+                            </div>
+                            <div
+                                className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                                role="columnheader"
+                            >
+                                Result
+                            </div>
+                            <div
+                                className="text-right text-xs font-bold uppercase tracking-wider text-slate-500"
+                                role="columnheader"
+                            >
+                                {"\u00a0"}
+                            </div>
+                        </div>
+                        <div className="divide-y divide-white/10" role="list">
+                            {analyses.map((item) => {
+                                const resultText = aiResultLabel(
+                                    item.status,
+                                    item.anomaly_detected,
+                                );
+                                return (
+                                    <div
+                                        key={item.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => navigate(`/analyses/${item.id}`)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                e.preventDefault();
+                                                navigate(`/analyses/${item.id}`);
+                                            }
+                                        }}
+                                        className={`${ROW_GRID} group cursor-pointer text-left transition-colors hover:bg-white/[0.06]`}
+                                    >
+                                        <div
+                                            className="min-w-0 font-mono text-sm text-slate-200"
+                                            title={item.id}
+                                        >
+                                            {item.id.substring(0, 12)}…
+                                        </div>
+                                        <div>
+                                            <span className={statusBadgeClasses(item.status)}>
+                                                {item.status}
+                                            </span>
+                                        </div>
+                                        <div className="min-w-0 text-sm text-slate-400">
+                                            {formatDate(item.created_at)}
+                                        </div>
+                                        <div className={`min-h-[1.25rem] ${aiResultCellClass(resultText)}`}>
+                                            {resultText || "\u00a0"}
+                                        </div>
+                                        <div className="text-right text-sm text-slate-500 transition-all group-hover:translate-x-0.5 group-hover:text-sky-300">
+                                            Details →
+                                        </div>
                                     </div>
-                                    <span className={statusBadgeClasses(item.status)}>{item.status}</span>
-                                    <div className="flex flex-col border-l pl-6 border-[#f1f5f9]">
-                                        <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-tighter">Created At</span>
-                                        <span className="text-sm text-[#64748b]">{formatDate(item.created_at)}</span>
-                                    </div>
-                                </div>
-                                <div className="text-[#94a3b8] group-hover:text-sky-600 transition-all transform group-hover:translate-x-1">Details →</div>                            </div>
-                        ))}
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
             </div>

@@ -5,6 +5,9 @@ export type StoredUser = {
   email?: string
 }
 
+export const LAST_ACTIVITY_KEY = 'lastActivityAt'
+export const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000
+
 export function getStoredUser(): StoredUser | null {
   const raw = localStorage.getItem('user')
   if (!raw) return null
@@ -18,4 +21,28 @@ export function getStoredUser(): StoredUser | null {
 export function clearAuthStorage(): void {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
+  localStorage.removeItem(LAST_ACTIVITY_KEY)
+}
+
+export function markSessionActivity(at = Date.now()): void {
+  localStorage.setItem(LAST_ACTIVITY_KEY, String(at))
+}
+
+export function isSessionExpired(now = Date.now()): boolean {
+  const token = localStorage.getItem('token')
+  if (!token) return false
+
+  const raw = localStorage.getItem(LAST_ACTIVITY_KEY)
+  if (!raw) {
+    markSessionActivity(now)
+    return false
+  }
+
+  const lastActivity = Number(raw)
+  if (Number.isNaN(lastActivity)) {
+    markSessionActivity(now)
+    return false
+  }
+
+  return now - lastActivity >= INACTIVITY_TIMEOUT_MS
 }

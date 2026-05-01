@@ -10,8 +10,9 @@ const PAGE_SIZE = 10;
 function roleBadgeClasses(role: UserRole) {
   const base =
     "inline-block rounded-full px-2.5 py-1 text-[0.7rem] font-semibold";
-  if (role === "Admin") return `${base} bg-[#f3e8ff] text-[#9333ea]`;
-  return `${base} bg-[#e0f2fe] text-[#0284c7]`;
+  if (role === "Admin")
+    return `${base} border border-purple-400/30 bg-purple-500/20 text-purple-200`;
+  return `${base} border border-sky-400/30 bg-sky-500/20 text-sky-200`;
 }
 
 function messageFromAxios(err: unknown, fallback: string): string {
@@ -193,50 +194,50 @@ export default function UserManagement() {
   };
 
   const btnSecondary =
-    "flex cursor-pointer items-center gap-2 rounded-md border border-[#e2e8f0] bg-white px-4 py-2 text-sm font-semibold text-[#475569] hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50";
+    "flex cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50";
   const btnPrimary =
     "flex cursor-pointer items-center gap-2 rounded-md border-none bg-[#2563eb] px-4 py-2 font-semibold text-white hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] pt-8 [font-:'Segoe_UI',system-ui,sans-serif]">
+    <div className="app-page pt-8">
       <div className="mx-auto mb-8 max-w-[1100px]">
-        <h1 className="mb-6 text-[2rem] font-bold text-[#1e293b]">
+        <h1 className="page-title mb-6 text-[2rem] font-bold">
           Admin UserManagement Page:
         </h1>
       </div>
-      <div className="flex items-center gap-8 border-b border-t border-[#e2e8f0] bg-white px-8 py-4">
+      <div className="glass-card flex items-center gap-8 px-8 py-4">
         <button
           type="button"
-          className="flex cursor-pointer items-center gap-2 border-none bg-transparent text-sm font-semibold text-[#64748b] hover:text-[#2563eb]"
+          className="flex cursor-pointer items-center gap-2 border-none bg-transparent text-sm font-semibold text-slate-300 hover:text-[#60a5fa]"
           onClick={() => navigate("/")}
         >
           ← Back to Dashboard
         </button>
         <div>
-          <h2 className="text-lg font-bold text-[#1e293b]">User Management</h2>
-          <p className="text-xs text-[#64748b]">Manage users and permissions</p>
+          <h2 className="text-lg font-bold text-slate-100">User Management</h2>
+          <p className="text-xs text-slate-400">Manage users and permissions</p>
         </div>
       </div>
 
       {error && (
-        <div className="mx-auto mt-4 max-w-[1100px] rounded-lg bg-[#fef2f2] px-4 py-4 text-sm text-[#b91c1c]">
+        <div className="mx-auto mt-4 max-w-[1100px] rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-200">
           {error}
         </div>
       )}
       {actionError && !editing && (
-        <div className="mx-auto mt-4 max-w-[1100px] rounded-lg bg-[#fef2f2] px-4 py-4 text-sm text-[#b91c1c]">
+        <div className="mx-auto mt-4 max-w-[1100px] rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-200">
           {actionError}
         </div>
       )}
 
       <div className="mx-auto my-8 max-w-[1100px]">
-        <div className="rounded-xl border border-[#e2e8f0] bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div className="glass-card rounded-xl p-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h3 className="flex items-center gap-2 text-[1.1rem] text-[#1e293b]">
+              <h3 className="flex items-center gap-2 text-[1.1rem] font-semibold text-slate-100">
                 👥 All Users
               </h3>
-              <p className="mt-1 text-sm text-[#64748b]">
+              <p className="mt-1 text-sm text-slate-400">
                 Manage user accounts and roles
               </p>
             </div>
@@ -248,13 +249,13 @@ export default function UserManagement() {
           <div className="mb-6 flex flex-wrap gap-4">
             <input
               type="text"
-              className="min-w-[200px] flex-1 rounded-lg border border-[#e2e8f0] px-4 py-3 text-sm outline-none focus:border-[#2563eb]"
+              className="min-w-[200px] flex-1 rounded-lg border border-white/15 bg-[#0b1220] px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30"
               placeholder="🔍 Search by username or email..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
             <select
-              className="rounded-lg border border-[#e2e8f0] px-4 py-3 text-sm text-[#1e293b] outline-none focus:border-[#2563eb]"
+              className="cursor-pointer rounded-lg border border-white/15 bg-[#0b1220] px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30"
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value as "" | UserRole);
@@ -266,7 +267,7 @@ export default function UserManagement() {
               <option value="Inspector">Inspector</option>
             </select>
             <select
-              className="rounded-lg border border-[#e2e8f0] px-4 py-3 text-sm text-[#1e293b] outline-none focus:border-[#2563eb]"
+              className="cursor-pointer rounded-lg border border-white/15 bg-[#0b1220] px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value as "active" | "inactive");
@@ -279,9 +280,9 @@ export default function UserManagement() {
           </div>
 
           {loading ? (
-            <p className="py-12 text-center text-[#64748b]">Loading…</p>
+            <p className="py-12 text-center text-slate-400">Loading…</p>
           ) : users.length === 0 ? (
-            <p className="py-12 text-center text-[#64748b]">
+            <p className="py-12 text-center text-slate-400">
               No users match your filters.
             </p>
           ) : (
@@ -289,19 +290,19 @@ export default function UserManagement() {
               <table className="w-full border-collapse text-left">
                 <thead>
                   <tr>
-                    <th className="border-b-2 border-[#e2e8f0] px-4 py-4 text-sm font-semibold text-[#475569]">
+                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
                       Username
                     </th>
-                    <th className="border-b-2 border-[#e2e8f0] px-4 py-4 text-sm font-semibold text-[#475569]">
+                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
                       Email
                     </th>
-                    <th className="border-b-2 border-[#e2e8f0] px-4 py-4 text-sm font-semibold text-[#475569]">
+                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
                       Role
                     </th>
-                    <th className="border-b-2 border-[#e2e8f0] px-4 py-4 text-sm font-semibold text-[#475569]">
+                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
                       Status
                     </th>
-                    <th className="border-b-2 border-[#e2e8f0] px-4 py-4 text-sm font-semibold text-[#475569]">
+                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
                       Actions
                     </th>
                   </tr>
@@ -309,33 +310,33 @@ export default function UserManagement() {
                 <tbody>
                   {users.map((u) => (
                     <tr key={u.id}>
-                      <td className="border-b border-[#e2e8f0] px-4 py-4 text-sm font-semibold text-[#1e293b]">
+                      <td className="border-b border-white/10 px-4 py-4 text-sm font-semibold text-slate-100">
                         {u.username}
                       </td>
-                      <td className="border-b border-[#e2e8f0] px-4 py-4 text-sm text-[#1e293b]">
+                      <td className="border-b border-white/10 px-4 py-4 text-sm text-slate-200">
                         {u.email}
                       </td>
-                      <td className="border-b border-[#e2e8f0] px-4 py-4 text-sm">
+                      <td className="border-b border-white/10 px-4 py-4 text-sm">
                         <span className={roleBadgeClasses(u.role)}>
                           {u.role}
                         </span>
                       </td>
-                      <td className="border-b border-[#e2e8f0] px-4 py-4 text-sm">
+                      <td className="border-b border-white/10 px-4 py-4 text-sm">
                         <span
                           className={
                             u.is_active
-                              ? "font-semibold text-[#166534]"
-                              : "font-semibold text-[#94a3b8]"
+                              ? "font-semibold text-emerald-300"
+                              : "font-semibold text-slate-500"
                           }
                         >
                           {u.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="border-b border-[#e2e8f0] px-4 py-4 text-sm text-[#94a3b8]">
+                      <td className="border-b border-white/10 px-4 py-4 text-sm text-slate-400">
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
-                            className="cursor-pointer border-none bg-transparent p-0 hover:text-[#2563eb]"
+                            className="cursor-pointer border-none bg-transparent p-0 text-slate-400 hover:text-sky-300"
                             title="Edit"
                             onClick={() => openEdit(u)}
                           >
@@ -343,7 +344,7 @@ export default function UserManagement() {
                           </button>
                           <button
                             type="button"
-                            className="cursor-pointer border-none bg-transparent p-0 hover:text-[#ef4444] disabled:cursor-not-allowed disabled:opacity-40"
+                            className="cursor-pointer border-none bg-transparent p-0 text-slate-400 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
                             title={
                               u.id === currentUserId
                                 ? "Cannot deactivate yourself"
@@ -361,8 +362,8 @@ export default function UserManagement() {
                 </tbody>
               </table>
 
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[#e2e8f0] pt-6">
-                <p className="text-sm text-[#64748b]">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
+                <p className="text-sm text-slate-400">
                   {meta.total} user{meta.total !== 1 ? "s" : ""} · Page{" "}
                   {meta.page} of {Math.max(1, meta.totalPages)}
                 </p>

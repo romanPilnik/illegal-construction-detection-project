@@ -33,3 +33,8 @@ logs/
 .vscode/
 .idea/
 .cursor/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyc

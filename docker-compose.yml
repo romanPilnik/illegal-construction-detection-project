@@ -28,6 +28,18 @@ services:
       - DATABASE_PORT=3306
     depends_on:
       - db
+      - ai-service
+
+  ai-service:
+    profiles:
+      - full-stack
+    build: ./ai-service
+    container_name: illegal-construction-ai
+    restart: always
+    ports:
+      - "5002:5002"
+    environment:
+      - AI_SERVICE_API_KEY=change-me
 
 volumes:
   mysql_data:
