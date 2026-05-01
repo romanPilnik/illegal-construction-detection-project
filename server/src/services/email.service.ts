@@ -1,20 +1,35 @@
 import * as nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+
+const transporter =
+  EMAIL_USER && EMAIL_PASS
+    ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS,
+      },
+      // Prevent long registration delays when SMTP is slow/unavailable.
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
+    })
+    : null;
 
 /**
  * Sends a real welcome email to new users
  */
 export const sendWelcomeEmail = async (userEmail: string, username: string) => {
   try {
+    if (!transporter || !EMAIL_USER) {
+      console.warn('Welcome email skipped: EMAIL_USER/EMAIL_PASS is not configured');
+      return;
+    }
+
     const mailOptions = {
-      from: `"Illegal Construction Detection" <${process.env.EMAIL_USER}>`,
+      from: `"Illegal Construction Detection" <${EMAIL_USER}>`,
       to: userEmail,
       subject: 'Welcome to the System! 🏗️',
       html: `

@@ -38,3 +38,7 @@ logs/
 __pycache__/
 *.py[cod]
 *.pyc
+
+# --- AI model artifacts ---
+ai-service/models/*.pth
+!ai-service/models/.gitkeep
