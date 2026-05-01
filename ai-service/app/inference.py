@@ -54,12 +54,12 @@ def _extract_state_dict(ckpt: Any) -> dict[str, torch.Tensor]:
     raise ValueError("Unsupported checkpoint format for FC-Siam-Diff weights")
 
 
-def _build_model() -> nn.Module:
+def _build_model(use_imagenet_weights: bool) -> nn.Module:
     # TorchGeo can bootstrap from ImageNet encoder weights when custom
     # FC-Siam-Diff checkpoints are unavailable.
     return FCSiamDiff(
         encoder_name="resnet34",
-        encoder_weights="imagenet" if USE_IMAGENET_FALLBACK else None,
+        encoder_weights="imagenet" if use_imagenet_weights else None,
         in_channels=3,
         classes=1,
     )
@@ -100,10 +100,11 @@ def load_model() -> nn.Module:
     # Ensure deterministic initialization for any layers not loaded from checkpoint.
     torch.manual_seed(MODEL_INIT_SEED)
     np.random.seed(MODEL_INIT_SEED)
-    model = _build_model().to(DEVICE)
-    model_version = "torchgeo-imagenet"
-
     has_checkpoint = _ensure_checkpoint_from_url_if_needed()
+    use_imagenet_fallback = USE_IMAGENET_FALLBACK and not has_checkpoint
+    model = _build_model(use_imagenet_fallback).to(DEVICE)
+    model_version = "torchgeo-imagenet" if use_imagenet_fallback else "random-init"
+
     if has_checkpoint:
         checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
         state_dict = _extract_state_dict(checkpoint)
