@@ -154,14 +154,12 @@ export default function Login() {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
-          {import.meta.env.DEV && (
-            <Link
-              className="mt-3 box-border block w-full rounded-lg border border-white/15 bg-white/5 py-3 text-center text-[0.9rem] font-semibold text-slate-200 no-underline transition-all duration-200 hover:border-[#94a3b8] hover:bg-white/10 active:scale-[0.99]"
-              to="/register"
-            >
-              Sign Up
-            </Link>
-          )}
+          <Link
+            className="mt-3 box-border block w-full rounded-lg border border-white/15 bg-white/5 py-3 text-center text-[0.9rem] font-semibold text-slate-200 no-underline transition-all duration-200 hover:border-[#94a3b8] hover:bg-white/10 active:scale-[0.99]"
+            to="/register"
+          >
+            Create account
+          </Link>
           <p className="mt-4 text-center text-[0.8rem] text-slate-400">
             Authorized personnel only
           </p>

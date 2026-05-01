@@ -15,27 +15,6 @@ function messageFromAxios(err: unknown, fallback: string): string {
   return fallback;
 }
 
-function RegistrationUnavailable() {
-  return (
-    <div className="app-page flex min-h-screen flex-col items-center justify-center px-4">
-      <div className="glass-card w-full max-w-[380px] rounded-2xl p-8 text-center">
-        <h1 className="text-xl font-bold text-slate-100">
-          Registration unavailable
-        </h1>
-        <p className="page-subtitle mt-3 text-sm">
-          Public registration is disabled. Ask an administrator for an account.
-        </p>
-        <Link
-          className="mt-6 inline-block rounded-lg bg-[#2563eb] px-6 py-3 text-sm font-semibold text-white no-underline hover:bg-[#1d4ed8]"
-          to="/login"
-        >
-          Back to sign in
-        </Link>
-      </div>
-    </div>
-  );
-}
-
 function RegisterForm() {
   const navigate = useNavigate();
 
@@ -171,8 +150,7 @@ function RegisterForm() {
 }
 
 export default function Register() {
-  if (import.meta.env.PROD) {
-    return <RegistrationUnavailable />;
-  }
+  // Public signup is enforced on the server (ALLOW_PUBLIC_REGISTRATION + NODE_ENV).
+  // Keep the form here so production builds are not hard-blocked in the UI.
   return <RegisterForm />;
 }
