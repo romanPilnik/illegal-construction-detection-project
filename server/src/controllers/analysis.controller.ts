@@ -4,18 +4,23 @@ import { prisma } from '../lib/prisma.js';
 import { ExportService } from '../services/export.service.js';
 import type { AnalysisReport } from '../services/export.service.js';
 import { Jimp } from 'jimp';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { createAnnotatedResultImage } from '../services/image-annotator.service.js';
 import {
   type BoundingBoxCoordinates,
   requestAIInference,
 } from '../services/ai-inference.service.js';
 import { emitAnalysisUpdated } from '../services/socket.service.js';
+import { uploadImageAsset } from '../services/asset-storage.service.js';
 
 type ProcessAnalysisPayload = {
   analysisId: string;
   inspectorId: string;
-  beforeImagePath: string;
-  afterImagePath: string;
+  beforeImageBuffer: Buffer;
+  beforeImageName: string;
+  afterImageBuffer: Buffer;
+  afterImageName: string;
   requesterIp: string;
 };
 
@@ -64,20 +69,29 @@ const logAnalysisFailure = async (
 const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
   try {
     const inference = await requestAIInference(
-      payload.beforeImagePath,
-      payload.afterImagePath
+      payload.beforeImageBuffer,
+      payload.afterImageBuffer,
+      payload.beforeImageName,
+      payload.afterImageName
     );
     const resultImage = await createAnnotatedResultImage(
-      payload.afterImagePath,
+      payload.afterImageBuffer,
+      payload.afterImageName,
       inference.coordinates
     );
+    const uploadedResultImage = await uploadImageAsset({
+      buffer: resultImage.buffer,
+      mimeType: resultImage.mimeType,
+      originalName: resultImage.fileName,
+      category: 'result',
+    });
 
     const analysis = await prisma.$transaction(async (tx) => {
       const imageRecord = await tx.image.create({
         data: {
-          file_path: resultImage.filePath,
-          file_size_bytes: resultImage.fileSizeBytes,
-          mime_type: resultImage.mimeType,
+          file_path: uploadedResultImage.filePath,
+          file_size_bytes: uploadedResultImage.fileSizeBytes,
+          mime_type: uploadedResultImage.mimeType,
           width: resultImage.width,
           height: resultImage.height,
         },
@@ -126,7 +140,7 @@ const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
       status: 'Completed',
       anomalyDetected: inference.anomalyDetected,
       coordinates: socketCoordinates,
-      resultImagePath: resultImage.filePath,
+      resultImagePath: uploadedResultImage.filePath,
     });
   } catch (error) {
     const message =
@@ -136,12 +150,23 @@ const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
   }
 };
 
-const getImageDimensions = async (filePath: string) => {
-  const image = await Jimp.read(filePath);
+const getImageDimensions = async (buffer: Buffer) => {
+  const image = await Jimp.read(buffer);
   return {
     width: image.bitmap.width,
     height: image.bitmap.height,
   };
+};
+
+const readUploadedFileBuffer = async (file: Express.Multer.File) => {
+  if (file.buffer) return file.buffer;
+  if (file.path) {
+    const absolutePath = path.isAbsolute(file.path)
+      ? file.path
+      : path.resolve(process.cwd(), file.path);
+    return fs.readFile(absolutePath);
+  }
+  throw new Error('Uploaded file is missing both buffer and path');
 };
 
 const createAnalysis = async (req: Request, res: Response) => {
@@ -169,9 +194,27 @@ const createAnalysis = async (req: Request, res: Response) => {
       return;
     }
 
+    const [beforeBuffer, afterBuffer] = await Promise.all([
+      readUploadedFileBuffer(beforeFile),
+      readUploadedFileBuffer(afterFile),
+    ]);
     const [beforeDimensions, afterDimensions] = await Promise.all([
-      getImageDimensions(beforeFile.path),
-      getImageDimensions(afterFile.path),
+      getImageDimensions(beforeBuffer),
+      getImageDimensions(afterBuffer),
+    ]);
+    const [beforeStored, afterStored] = await Promise.all([
+      uploadImageAsset({
+        buffer: beforeBuffer,
+        mimeType: beforeFile.mimetype,
+        originalName: beforeFile.originalname,
+        category: 'before',
+      }),
+      uploadImageAsset({
+        buffer: afterBuffer,
+        mimeType: afterFile.mimetype,
+        originalName: afterFile.originalname,
+        category: 'after',
+      }),
     ]);
 
 
@@ -179,9 +222,9 @@ const createAnalysis = async (req: Request, res: Response) => {
       async (tx: Prisma.TransactionClient) => {
         const beforeImg = await tx.image.create({
           data: {
-            file_path: beforeFile.path,
-            file_size_bytes: beforeFile.size,
-            mime_type: beforeFile.mimetype,
+            file_path: beforeStored.filePath,
+            file_size_bytes: beforeStored.fileSizeBytes,
+            mime_type: beforeStored.mimeType,
             width: beforeDimensions.width,
             height: beforeDimensions.height,
           },
@@ -189,9 +232,9 @@ const createAnalysis = async (req: Request, res: Response) => {
 
         const afterImg = await tx.image.create({
           data: {
-            file_path: afterFile.path,
-            file_size_bytes: afterFile.size,
-            mime_type: afterFile.mimetype,
+            file_path: afterStored.filePath,
+            file_size_bytes: afterStored.fileSizeBytes,
+            mime_type: afterStored.mimeType,
             width: afterDimensions.width,
             height: afterDimensions.height,
           },
@@ -247,8 +290,10 @@ const createAnalysis = async (req: Request, res: Response) => {
     void processAnalysisInBackground({
       analysisId: analysis.id,
       inspectorId,
-      beforeImagePath: beforeFile.path,
-      afterImagePath: afterFile.path,
+      beforeImageBuffer: beforeBuffer,
+      beforeImageName: beforeFile.originalname,
+      afterImageBuffer: afterBuffer,
+      afterImageName: afterFile.originalname,
       requesterIp: req.ip || 'unknown',
     });
   } catch (error) {

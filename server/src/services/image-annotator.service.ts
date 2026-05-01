@@ -1,12 +1,11 @@
-import path from 'path';
-import { promises as fs } from 'fs';
 import { Jimp, rgbaToInt } from 'jimp';
 import type { BoundingBoxCoordinates } from './ai-inference.service.js';
 
 type JimpImage = Awaited<ReturnType<typeof Jimp.read>>;
 
 type AnnotatedImageResult = {
-  filePath: string;
+  buffer: Buffer;
+  fileName: string;
   fileSizeBytes: number;
   mimeType: string;
   width: number;
@@ -15,18 +14,27 @@ type AnnotatedImageResult = {
 
 const BORDER_THICKNESS = 4;
 
-const resolveStoredPath = (filePath: string) =>
-  path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
+const getMimeTypeByExtension = (fileName: string) => {
+  const extension = fileName.toLowerCase().split('.').pop();
+  if (extension === 'png') return 'image/png';
+  if (extension === 'jpg' || extension === 'jpeg') return 'image/jpeg';
+  if (extension === 'bmp') return 'image/bmp';
+  if (extension === 'tiff' || extension === 'tif') return 'image/tiff';
+  return 'image/png';
+};
 
-const toStoredPath = (absolutePath: string) =>
-  path.relative(process.cwd(), absolutePath);
+const ensureResultFileName = (sourceFileName: string) => {
+  const extension = sourceFileName.includes('.')
+    ? `.${sourceFileName.split('.').pop()?.toLowerCase()}`
+    : '.png';
+  const baseName = sourceFileName.replace(/\.[^/.]+$/, '') || 'analysis-image';
+  return `${baseName}-result-${Date.now()}${extension}`;
+};
 
-const getMimeTypeByExtension = (filePath: string) => {
-  const extension = path.extname(filePath).toLowerCase();
-  if (extension === '.png') return 'image/png';
-  if (extension === '.jpg' || extension === '.jpeg') return 'image/jpeg';
-  if (extension === '.bmp') return 'image/bmp';
-  if (extension === '.tiff' || extension === '.tif') return 'image/tiff';
+const getJimpOutputFormat = (mimeType: string) => {
+  if (mimeType === 'image/jpeg') return 'image/jpeg';
+  if (mimeType === 'image/bmp') return 'image/bmp';
+  if (mimeType === 'image/tiff') return 'image/tiff';
   return 'image/png';
 };
 
@@ -71,49 +79,35 @@ const drawRectangle = (
   }
 };
 
-const getResultPath = (afterImagePath: string) => {
-  const afterImageFileName = path.basename(afterImagePath);
-  const extension = path.extname(afterImageFileName);
-  const fileNameWithoutExt = path.basename(afterImageFileName, extension);
-  const resultFileName = `${fileNameWithoutExt}-result-${Date.now()}${extension || '.png'}`;
-  const resultsDir = path.resolve(process.cwd(), 'uploads', 'results');
-  const absoluteResultPath = path.join(resultsDir, resultFileName);
-
-  return { resultsDir, absoluteResultPath };
-};
-
 export const createAnnotatedResultImage = async (
-  afterImagePath: string,
+  afterImageBuffer: Buffer,
+  afterImageFileName: string,
   coordinates: BoundingBoxCoordinates | null
 ): Promise<AnnotatedImageResult> => {
-  const absoluteAfterPath = resolveStoredPath(afterImagePath);
-  const { resultsDir, absoluteResultPath } = getResultPath(afterImagePath);
-  await fs.mkdir(resultsDir, { recursive: true });
+  const image = await Jimp.read(afterImageBuffer);
+  const resultFileName = ensureResultFileName(afterImageFileName);
+  const mimeType = getMimeTypeByExtension(resultFileName);
 
   if (!coordinates) {
-    await fs.copyFile(absoluteAfterPath, absoluteResultPath);
-    const fileStats = await fs.stat(absoluteResultPath);
-    const originalImage = await Jimp.read(absoluteAfterPath);
-
     return {
-      filePath: toStoredPath(absoluteResultPath),
-      fileSizeBytes: fileStats.size,
-      mimeType: getMimeTypeByExtension(absoluteResultPath),
-      width: originalImage.bitmap.width,
-      height: originalImage.bitmap.height,
+      buffer: afterImageBuffer,
+      fileName: resultFileName,
+      fileSizeBytes: afterImageBuffer.length,
+      mimeType,
+      width: image.bitmap.width,
+      height: image.bitmap.height,
     };
   }
 
-  const image = await Jimp.read(absoluteAfterPath);
   const borderColor = rgbaToInt(255, 0, 0, 255);
   drawRectangle(image, coordinates, borderColor);
-  await image.write(absoluteResultPath as `${string}.${string}`);
-
-  const fileStats = await fs.stat(absoluteResultPath);
+  const outputMime = getJimpOutputFormat(mimeType);
+  const outputBuffer = await image.getBuffer(outputMime);
   return {
-    filePath: toStoredPath(absoluteResultPath),
-    fileSizeBytes: fileStats.size,
-    mimeType: getMimeTypeByExtension(absoluteResultPath),
+    buffer: outputBuffer,
+    fileName: resultFileName,
+    fileSizeBytes: outputBuffer.length,
+    mimeType,
     width: image.bitmap.width,
     height: image.bitmap.height,
   };

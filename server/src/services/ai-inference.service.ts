@@ -1,5 +1,4 @@
 import path from 'path';
-import { promises as fs } from 'fs';
 
 export type BoundingBoxCoordinates = {
   x1: number;
@@ -24,9 +23,6 @@ type RawInferenceResponse = {
 const AI_SERVICE_URL =
   process.env.AI_SERVICE_URL || 'http://localhost:5002/predict';
 const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;
-
-const resolveStoredPath = (filePath: string) =>
-  path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
 
 const toNumericCoordinate = (value: unknown) => {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -79,24 +75,21 @@ const normalizeCoordinates = (
 };
 
 export const requestAIInference = async (
-  beforeImagePath: string,
-  afterImagePath: string
+  beforeImageBuffer: Buffer,
+  afterImageBuffer: Buffer,
+  beforeImageName: string,
+  afterImageName: string
 ) => {
-  const [beforeImageBuffer, afterImageBuffer] = await Promise.all([
-    fs.readFile(resolveStoredPath(beforeImagePath)),
-    fs.readFile(resolveStoredPath(afterImagePath)),
-  ]);
-
   const formData = new FormData();
   formData.append(
     'beforeImage',
-    new Blob([beforeImageBuffer]),
-    path.basename(beforeImagePath)
+    new Blob([new Uint8Array(beforeImageBuffer)]),
+    path.basename(beforeImageName)
   );
   formData.append(
     'afterImage',
-    new Blob([afterImageBuffer]),
-    path.basename(afterImagePath)
+    new Blob([new Uint8Array(afterImageBuffer)]),
+    path.basename(afterImageName)
   );
 
   const headers: Record<string, string> = {};

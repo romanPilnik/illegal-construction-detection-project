@@ -1,25 +1,6 @@
 import type { Request } from 'express';
 import multer from 'multer';
 import type { FileFilterCallback } from 'multer';
-import path from 'path';
-import fs from 'fs';
-
-const uploadsDir = path.resolve(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req: Request, _file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (_req: Request, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const extension = path.extname(file.originalname);
-
-    cb(null, file.fieldname + '-' + uniqueSuffix + extension);
-  },
-});
 
 const fileFilter = (
   _req: Request,
@@ -34,7 +15,7 @@ const fileFilter = (
 };
 
 export const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   fileFilter: fileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024,

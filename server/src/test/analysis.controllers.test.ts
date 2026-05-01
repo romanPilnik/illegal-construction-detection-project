@@ -15,6 +15,7 @@ const mockExportPdf = jest.fn<() => Promise<string>>();
 const mockRequestAIInference = jest.fn<() => Promise<any>>();
 const mockCreateAnnotatedResultImage = jest.fn<() => Promise<any>>();
 const mockEmitAnalysisUpdated = jest.fn<() => void>();
+const mockUploadImageAsset = jest.fn<() => Promise<any>>();
 
 jest.unstable_mockModule('../lib/prisma.js', () => ({
   prisma: {
@@ -53,6 +54,10 @@ jest.unstable_mockModule('../services/socket.service.js', () => ({
   emitAnalysisUpdated: mockEmitAnalysisUpdated,
 }));
 
+jest.unstable_mockModule('../services/asset-storage.service.js', () => ({
+  uploadImageAsset: mockUploadImageAsset,
+}));
+
 const { AnalysisController } = await import('../controllers/analysis.controller.js');
 /* eslint-disable @typescript-eslint/no-explicit-any */
 describe('AnalysisController', () => {
@@ -74,8 +79,8 @@ describe('AnalysisController', () => {
       req = {
         body: { location_address: 'Main St 1, Lod' },
         files: {
-          beforeImage: [{ path: 'path/to/before.jpg', size: 100, mimetype: 'image/jpeg', originalname: 'b.jpg' }],
-          afterImage: [{ path: 'path/to/after.jpg', size: 120, mimetype: 'image/jpeg', originalname: 'a.jpg' }],
+          beforeImage: [{ buffer: Buffer.from('before-image'), size: 100, mimetype: 'image/jpeg', originalname: 'b.jpg' }],
+          afterImage: [{ buffer: Buffer.from('after-image'), size: 120, mimetype: 'image/jpeg', originalname: 'a.jpg' }],
         } as any,
         user: { userId: 'user-123', role: 'Inspector' },
         ip: '127.0.0.1',
@@ -89,11 +94,17 @@ describe('AnalysisController', () => {
       });
 
       mockCreateAnnotatedResultImage.mockResolvedValue({
-        filePath: 'path/to/result.jpg',
-        fileSizeBytes: 100,
+        buffer: Buffer.from('result-image'),
+        fileName: 'result.jpg',
+        fileSizeBytes: 12,
         mimeType: 'image/jpeg',
         width: 800,
         height: 600,
+      });
+      mockUploadImageAsset.mockResolvedValue({
+        filePath: 'https://example.s3.amazonaws.com/uploads/result/result.jpg',
+        fileSizeBytes: 12,
+        mimeType: 'image/jpeg',
       });
 
       mockTransaction.mockImplementation(async (callback: any) => {

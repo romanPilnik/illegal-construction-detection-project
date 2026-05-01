@@ -20,6 +20,7 @@ export default function AnalysisDetail() {
     const getImageUrl = (path: string | undefined) => {
         if (!path) return "";
         const cleanPath = path.replace(/\\/g, "/");
+        if (/^https?:\/\//i.test(cleanPath)) return cleanPath;
         return `${API_ORIGIN}/${cleanPath}`;
     };
 
