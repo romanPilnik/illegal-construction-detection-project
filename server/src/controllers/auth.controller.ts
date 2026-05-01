@@ -7,11 +7,59 @@ import * as jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_123';
 
-function isPublicRegistrationAllowed(): boolean {
-  return (
-    process.env.ALLOW_PUBLIC_REGISTRATION === 'true' ||
-    process.env.NODE_ENV !== 'production'
-  );
+type RegistrationPolicy = {
+  allowed: boolean;
+  reason: string;
+  usersCount: number;
+  allowPublicRegistration: string | undefined;
+  nodeEnv: string | undefined;
+};
+
+async function getRegistrationPolicy(): Promise<RegistrationPolicy> {
+  const allowPublicRegistration = process.env.ALLOW_PUBLIC_REGISTRATION;
+  const nodeEnv = process.env.NODE_ENV;
+  const usersCount = await prisma.user.count();
+
+  if (allowPublicRegistration === 'false') {
+    if (usersCount === 0) {
+      return {
+        allowed: true,
+        reason: 'bootstrap mode (no users in database)',
+        usersCount,
+        allowPublicRegistration,
+        nodeEnv,
+      };
+    }
+
+    return {
+      allowed: false,
+      reason: 'ALLOW_PUBLIC_REGISTRATION=false with existing users',
+      usersCount,
+      allowPublicRegistration,
+      nodeEnv,
+    };
+  }
+
+  if (allowPublicRegistration === 'true') {
+    return {
+      allowed: true,
+      reason: 'ALLOW_PUBLIC_REGISTRATION=true',
+      usersCount,
+      allowPublicRegistration,
+      nodeEnv,
+    };
+  }
+
+  return {
+    allowed: true,
+    reason:
+      allowPublicRegistration === undefined
+        ? 'ALLOW_PUBLIC_REGISTRATION is unset (default allow)'
+        : 'ALLOW_PUBLIC_REGISTRATION value is not "false"',
+    usersCount,
+    allowPublicRegistration,
+    nodeEnv,
+  };
 }
 
 /**
@@ -22,7 +70,9 @@ const register = async (
   res: Response   // was: res: Partial<e.Response>
 ): Promise<void> => {
   try {
-    if (!isPublicRegistrationAllowed()) {
+    const policy = await getRegistrationPolicy();
+    if (!policy.allowed) {
+      console.warn('Registration denied by policy', policy);
       res.status(403).json({
         message:
           'Public registration is disabled. Contact an administrator.',
@@ -63,6 +113,22 @@ const register = async (
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Error creating user' });
+  }
+};
+
+const registrationStatus = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const policy = await getRegistrationPolicy();
+    res.status(200).json({
+      registrationAllowed: policy.allowed,
+      reason: policy.reason,
+      usersCount: policy.usersCount,
+      nodeEnv: policy.nodeEnv,
+      allowPublicRegistration: policy.allowPublicRegistration ?? '(unset)',
+    });
+  } catch (error) {
+    console.error('Registration status error:', error);
+    res.status(500).json({ message: 'Error retrieving registration status' });
   }
 };
 
@@ -191,6 +257,7 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
 
 export const AuthController = {
   register,
+  registrationStatus,
   login,
   changePassword,
 };

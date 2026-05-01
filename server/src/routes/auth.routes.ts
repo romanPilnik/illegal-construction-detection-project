@@ -10,6 +10,7 @@ import {
 
 const router = Router();
 
+router.get('/registration-status', AuthController.registrationStatus);
 router.post(
   '/register',
   validateRequest({ body: registerBodySchema }),

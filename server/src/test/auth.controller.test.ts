@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 const mockFindUnique = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
 const mockCreate = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
 const mockUpdate = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
+const mockCount = jest.fn<() => Promise<number>>().mockResolvedValue(0);
 const mockSendWelcomeEmail = jest.fn<() => Promise<void>>();
 const mockGenSalt = jest.fn<() => Promise<string>>().mockResolvedValue('fake_salt');
 const mockHash = jest.fn<() => Promise<string>>().mockResolvedValue('hashed_password');
@@ -17,6 +18,7 @@ jest.unstable_mockModule('../lib/prisma.js', () => ({
       findUnique: mockFindUnique,
       create: mockCreate,
       update: mockUpdate,
+      count: mockCount,
     },
   },
 }));
@@ -55,6 +57,7 @@ describe('AuthController - register', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCount.mockResolvedValue(0);
     req = {
       body: {
         username: 'shirelTest',
@@ -97,16 +100,61 @@ describe('AuthController - register', () => {
     expect(res.status).toHaveBeenCalledWith(500);
   });
 
-  it('should return 403 when public registration is disabled in production', async () => {
+  it('should return 403 when ALLOW_PUBLIC_REGISTRATION is explicitly false and users exist', async () => {
     const prevEnv = process.env.NODE_ENV;
     const prevAllow = process.env.ALLOW_PUBLIC_REGISTRATION;
     process.env.NODE_ENV = 'production';
-    delete process.env.ALLOW_PUBLIC_REGISTRATION;
+    process.env.ALLOW_PUBLIC_REGISTRATION = 'false';
+    mockCount.mockResolvedValue(1);
 
     await AuthController.register(req as Request, res as Response);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(mockCreate).not.toHaveBeenCalled();
+
+    process.env.NODE_ENV = prevEnv;
+    if (prevAllow === undefined) {
+      delete process.env.ALLOW_PUBLIC_REGISTRATION;
+    } else {
+      process.env.ALLOW_PUBLIC_REGISTRATION = prevAllow;
+    }
+  });
+
+  it('should allow first user bootstrap when ALLOW_PUBLIC_REGISTRATION is false and no users exist', async () => {
+    const prevEnv = process.env.NODE_ENV;
+    const prevAllow = process.env.ALLOW_PUBLIC_REGISTRATION;
+    process.env.NODE_ENV = 'production';
+    process.env.ALLOW_PUBLIC_REGISTRATION = 'false';
+    mockCount.mockResolvedValue(0);
+    mockFindUnique.mockResolvedValue(null);
+    mockCreate.mockResolvedValue({ id: 1, username: 'shirelTest', email: 'shirel@test.com' });
+
+    await AuthController.register(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(mockCreate).toHaveBeenCalled();
+
+    process.env.NODE_ENV = prevEnv;
+    if (prevAllow === undefined) {
+      delete process.env.ALLOW_PUBLIC_REGISTRATION;
+    } else {
+      process.env.ALLOW_PUBLIC_REGISTRATION = prevAllow;
+    }
+  });
+
+  it('should allow registration in production when ALLOW_PUBLIC_REGISTRATION is unset', async () => {
+    const prevEnv = process.env.NODE_ENV;
+    const prevAllow = process.env.ALLOW_PUBLIC_REGISTRATION;
+    process.env.NODE_ENV = 'production';
+    delete process.env.ALLOW_PUBLIC_REGISTRATION;
+    mockCount.mockResolvedValue(5);
+    mockFindUnique.mockResolvedValue(null);
+    mockCreate.mockResolvedValue({ id: 2, username: 'shirelTest', email: 'shirel@test.com' });
+
+    await AuthController.register(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(mockCreate).toHaveBeenCalled();
 
     process.env.NODE_ENV = prevEnv;
     if (prevAllow === undefined) {
