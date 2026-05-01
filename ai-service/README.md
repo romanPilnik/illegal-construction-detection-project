@@ -38,9 +38,13 @@ It receives a pair of images (`beforeImage`, `afterImage`) and returns change-de
 From `ai-service/`:
 
 ```bash
+# PyTorch first (CPU wheels below; for NVIDIA GPU use https://download.pytorch.org/whl/cu124 etc.)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 5002
 ```
+
+Docker builds install CPU-only PyTorch automatically (see `Dockerfile`).
 
 Health check:
 
