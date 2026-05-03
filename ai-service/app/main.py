@@ -7,7 +7,7 @@ from uuid import uuid4
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from .inference import get_runtime_inference_info, load_model, predict_change_mask
 from .postprocess import mask_to_boxes
@@ -44,6 +44,12 @@ app = FastAPI(title="AI Inference Service", version="1.0.0", lifespan=lifespan)
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.head("/health")
+async def health_head() -> Response:
+    """Render and some probes use HEAD; without this they get 405 on GET-only routes."""
+    return Response(status_code=200)
 
 
 @app.middleware("http")

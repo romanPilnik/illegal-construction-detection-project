@@ -4,9 +4,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getAnalysisById, exportAnalysisById } from "../api";
 import type { AnalysisDetailData } from "../types";
 
-const API_ORIGIN = (
-  import.meta.env.VITE_API_URL || "http://localhost:5001/api/v1"
-).replace(/\/api\/v1\/?$/, "");
+const viteApiUrl =
+  import.meta.env.VITE_API_URL || "http://localhost:5001/api/v1";
+const API_ORIGIN = viteApiUrl.startsWith("/")
+  ? ""
+  : viteApiUrl.replace(/\/api\/v1\/?$/, "");
 
 export default function AnalysisDetail() {
     const { analysisId } = useParams<{ analysisId: string }>();
@@ -19,9 +21,12 @@ export default function AnalysisDetail() {
 
     const getImageUrl = (path: string | undefined) => {
         if (!path) return "";
-        const cleanPath = path.replace(/\\/g, "/");
+        const cleanPath = path.replace(/\\/g, "/").replace(/^\//, "");
         if (/^https?:\/\//i.test(cleanPath)) return cleanPath;
-        return `${API_ORIGIN}/${cleanPath}`;
+        if (API_ORIGIN === "") {
+            return `/${cleanPath}`;
+        }
+        return `${API_ORIGIN.replace(/\/$/, "")}/${cleanPath}`;
     };
 
     const handleExport = async (format: 'PDF' | 'EXCEL') => {
