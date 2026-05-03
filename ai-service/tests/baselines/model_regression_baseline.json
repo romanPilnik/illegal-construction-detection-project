@@ -12,7 +12,7 @@
           "y": 0
         }
       ],
-      "maskPositivePixels": 65530
+      "maskPositivePixels": 65511
     },
     "hard_change_patch": {
       "anomalyDetected": true,
@@ -26,7 +26,7 @@
           "y": 0
         }
       ],
-      "maskPositivePixels": 65532
+      "maskPositivePixels": 65525
     },
     "no_change": {
       "anomalyDetected": true,
