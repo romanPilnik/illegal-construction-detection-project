@@ -9,8 +9,17 @@ dotenv.config({
       : '.env.development',
 });
 
+/** Avoid Windows resolving localhost to ::1 when MySQL only listens on IPv4. */
+const resolveDatabaseHost = (host: string | undefined): string => {
+  const value = host?.trim();
+  if (!value || value === 'localhost') {
+    return '127.0.0.1';
+  }
+  return value;
+};
+
 const adapter = new PrismaMariaDb({
-  host: process.env.DATABASE_HOST!,
+  host: resolveDatabaseHost(process.env.DATABASE_HOST),
   port: Number(process.env.DATABASE_PORT) || 3306,
   user: process.env.DATABASE_USER!,
   password: process.env.DATABASE_PASSWORD!,

@@ -9,7 +9,12 @@ const fieldClassName =
 
 function messageFromAxios(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
-    const data = err.response?.data as { message?: string } | undefined;
+    const data = err.response?.data as
+      | { message?: string; errors?: Array<{ field?: string; message?: string }> }
+      | undefined;
+    if (data?.errors?.length) {
+      return data.errors.map((e) => e.message ?? e.field).join("; ");
+    }
     return data?.message ?? fallback;
   }
   return fallback;

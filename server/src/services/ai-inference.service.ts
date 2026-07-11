@@ -24,6 +24,25 @@ const AI_SERVICE_URL =
   process.env.AI_SERVICE_URL || 'http://localhost:5002/predict';
 const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;
 
+/** Default wait for AI forward pass + transfer; override with AI_SERVICE_TIMEOUT_MS. */
+const DEFAULT_AI_SERVICE_TIMEOUT_MS = 180_000;
+const MAX_AI_SERVICE_TIMEOUT_MS = 3_600_000;
+
+const getAiServiceTimeoutMs = (): number | null => {
+  const raw = process.env.AI_SERVICE_TIMEOUT_MS?.trim();
+  if (raw === undefined || raw === '') {
+    return DEFAULT_AI_SERVICE_TIMEOUT_MS;
+  }
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) {
+    return DEFAULT_AI_SERVICE_TIMEOUT_MS;
+  }
+  if (n === 0) {
+    return null;
+  }
+  return Math.min(n, MAX_AI_SERVICE_TIMEOUT_MS);
+};
+
 const toNumericCoordinate = (value: unknown) => {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value;
@@ -97,11 +116,35 @@ export const requestAIInference = async (
     headers['x-internal-api-key'] = AI_SERVICE_API_KEY;
   }
 
-  const response = await fetch(AI_SERVICE_URL, {
+  const timeoutMs = getAiServiceTimeoutMs();
+  const fetchInit: RequestInit = {
     method: 'POST',
     body: formData,
     headers,
-  });
+  };
+
+  let response: Response;
+  if (timeoutMs === null) {
+    response = await fetch(AI_SERVICE_URL, fetchInit);
+  } else {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      response = await fetch(AI_SERVICE_URL, {
+        ...fetchInit,
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(
+          `AI service request timed out after ${timeoutMs}ms (configure AI_SERVICE_TIMEOUT_MS)`
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
 
   if (!response.ok) {
     throw new Error(`AI service failed with status ${response.status}`);
