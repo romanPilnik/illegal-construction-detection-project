@@ -38,3 +38,20 @@ export type ChangePasswordBody = {
 export type ChangePasswordResponse = {
     message: string
 }
+
+export type ForgotPasswordBody = {
+    email: string
+}
+
+export type ForgotPasswordResponse = {
+    message: string
+}
+
+export type ResetPasswordBody = {
+    token: string
+    newPassword: string
+}
+
+export type ResetPasswordResponse = {
+    message: string
+}

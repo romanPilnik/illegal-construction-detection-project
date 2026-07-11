@@ -2,10 +2,12 @@ import { jest } from '@jest/globals';
 import type { Request, Response } from 'express';
 
 const mockFindUnique = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
+const mockFindFirst = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
 const mockCreate = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
 const mockUpdate = jest.fn<() => Promise<unknown>>().mockResolvedValue(null);
 const mockCount = jest.fn<() => Promise<number>>().mockResolvedValue(0);
 const mockSendWelcomeEmail = jest.fn<() => Promise<void>>();
+const mockSendPasswordResetEmail = jest.fn<() => Promise<void>>();
 const mockGenSalt = jest.fn<() => Promise<string>>().mockResolvedValue('fake_salt');
 const mockHash = jest.fn<() => Promise<string>>().mockResolvedValue('hashed_password');
 const mockCompare = jest.fn<() =>Promise<boolean>>().mockResolvedValue(true);
@@ -16,6 +18,7 @@ jest.unstable_mockModule('../lib/prisma.js', () => ({
   prisma: {
     user: {
       findUnique: mockFindUnique,
+      findFirst: mockFindFirst,
       create: mockCreate,
       update: mockUpdate,
       count: mockCount,
@@ -25,6 +28,7 @@ jest.unstable_mockModule('../lib/prisma.js', () => ({
 
 jest.unstable_mockModule('../services/email.service.js', () => ({
   sendWelcomeEmail: mockSendWelcomeEmail,
+  sendPasswordResetEmail: mockSendPasswordResetEmail,
 }));
 
 jest.unstable_mockModule('bcryptjs', () => ({
@@ -312,5 +316,90 @@ describe('AuthController - changePassword', () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(mockFindUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthController - forgotPassword', () => {
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    req = { body: { email: 'user@test.com' } };
+    res = {
+      status: jest.fn().mockReturnThis() as unknown as Response['status'],
+      json: jest.fn() as unknown as Response['json'],
+    };
+  });
+
+  it('returns generic success even when user is not found', async () => {
+    mockFindUnique.mockResolvedValue(null);
+
+    await AuthController.forgotPassword(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockSendPasswordResetEmail).not.toHaveBeenCalled();
+  });
+
+  it('stores token and sends email for active users', async () => {
+    mockFindUnique.mockResolvedValue({
+      id: 'user-1',
+      email: 'user@test.com',
+      username: 'user',
+      is_active: true,
+    });
+
+    await AuthController.forgotPassword(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(mockSendPasswordResetEmail).toHaveBeenCalled();
+  });
+});
+
+describe('AuthController - resetPassword', () => {
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    req = { body: { token: 'raw-token', newPassword: 'NewPassword456' } };
+    res = {
+      status: jest.fn().mockReturnThis() as unknown as Response['status'],
+      json: jest.fn() as unknown as Response['json'],
+    };
+  });
+
+  it('returns 400 for invalid or expired token', async () => {
+    mockFindFirst.mockResolvedValue(null);
+
+    await AuthController.resetPassword(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('updates password and clears reset token on success', async () => {
+    mockFindFirst.mockResolvedValue({
+      id: 'user-1',
+      email: 'user@test.com',
+      is_active: true,
+    });
+    mockHash.mockResolvedValue('new_hashed');
+
+    await AuthController.resetPassword(req as Request, res as Response);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'user-1' },
+        data: expect.objectContaining({
+          password_hash: 'new_hashed',
+          reset_password_token: null,
+          reset_password_expires: null,
+        }),
+      })
+    );
   });
 });

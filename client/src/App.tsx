@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Login from './features/auth/pages/Login'
 import Register from './features/auth/pages/Register'
+import ForgotPassword from './features/auth/pages/ForgotPassword'
+import ResetPassword from './features/auth/pages/ResetPassword'
 import Dashboard from './features/dashboard/pages/Dashboard'
 import SubmitAnalysis from './features/analyses/pages/SubmitAnalysis'
 import Profile from './features/users/pages/Profile'
@@ -21,6 +23,8 @@ function App() {
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
         <Route element={<RequireAuth />}>

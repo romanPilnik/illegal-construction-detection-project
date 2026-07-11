@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../api";
 import { markSessionActivity } from "../../../lib/stored-user";
+import { PasswordInput } from "../../../components/PasswordInput";
 
 const inputClassName =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-slate-500 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(96,165,250,0.15)]";
@@ -25,6 +26,9 @@ export default function Login() {
       ?.pathname ?? "/";
   const registered = Boolean(
     (location.state as { registered?: boolean } | null)?.registered,
+  );
+  const passwordReset = Boolean(
+    (location.state as { passwordReset?: boolean } | null)?.passwordReset,
   );
   const [showSessionExpired, setShowSessionExpired] = useState(
     () =>
@@ -97,6 +101,11 @@ export default function Login() {
             Account created. Sign in with your email and password.
           </p>
         )}
+        {passwordReset && (
+          <p className="mb-4 text-center text-[0.8rem] text-emerald-300">
+            Password reset successfully. Sign in with your new password.
+          </p>
+        )}
         {showSessionExpired && (
           <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.8rem] text-amber-200">
             <p className="m-0 text-left">
@@ -135,17 +144,24 @@ export default function Login() {
             />
           </div>
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Password
-            </label>
-            <input
-              className={inputClassName}
-              type="password"
-              placeholder="Enter your password"
+            <PasswordInput
+              id="login-password"
+              label="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
+              placeholder="Enter your password"
+              autoComplete="current-password"
               required
+              inputClassName={inputClassName + " pr-11"}
             />
+          </div>
+          <div className="mb-1 text-right">
+            <Link
+              className="text-[0.8rem] text-[#60a5fa] no-underline hover:underline"
+              to="/forgot-password"
+            >
+              Forgot password?
+            </Link>
           </div>
           <button
             type="submit"

@@ -8,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(uuid())
-  username      String
-  email         String     @unique
-  password_hash String
-  role          Role
-  is_active     Boolean
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
-  analyses      Analysis[]
-  auditLogs     AuditLog[]
+  id                     String     @id @default(uuid())
+  username               String
+  email                  String     @unique
+  password_hash          String
+  reset_password_token   String?    @unique
+  reset_password_expires DateTime?
+  role                   Role
+  is_active              Boolean
+  created_at             DateTime   @default(now())
+  updated_at             DateTime   @updatedAt
+  analyses               Analysis[]
+  auditLogs              AuditLog[]
 }
 
 model Image {

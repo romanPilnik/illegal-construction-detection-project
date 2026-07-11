@@ -4,8 +4,10 @@ import { authenticateToken } from '../middlewares/auth.middleware.js';
 import { validateRequest } from '../middlewares/validate-request.middleware.js';
 import {
   changePasswordBodySchema,
+  forgotPasswordBodySchema,
   loginBodySchema,
   registerBodySchema,
+  resetPasswordBodySchema,
 } from '../validation/auth.validation.js';
 
 const router = Router();
@@ -26,6 +28,16 @@ router.post(
   authenticateToken,
   validateRequest({ body: changePasswordBodySchema }),
   AuthController.changePassword
+);
+router.post(
+  '/forgot-password',
+  validateRequest({ body: forgotPasswordBodySchema }),
+  AuthController.forgotPassword
+);
+router.post(
+  '/reset-password',
+  validateRequest({ body: resetPasswordBodySchema }),
+  AuthController.resetPassword
 );
 
 export default router;

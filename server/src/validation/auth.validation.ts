@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
 const nonEmptyString = z.string().trim().min(1);
+const passwordMinEight = z
+  .string()
+  .trim()
+  .min(8, 'Password must be at least 8 characters');
 const normalizedEmail = z
   .transform((value) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value
@@ -22,7 +26,7 @@ export const loginBodySchema = z.strictObject({
 export const changePasswordBodySchema = z
   .strictObject({
     currentPassword: nonEmptyString,
-    newPassword: z.string().trim().min(8, 'New password must be at least 8 characters'),
+    newPassword: passwordMinEight,
   })
   .refine(
     ({ currentPassword, newPassword }) => currentPassword !== newPassword,
@@ -31,3 +35,12 @@ export const changePasswordBodySchema = z
       path: ['newPassword'],
     }
   );
+
+export const forgotPasswordBodySchema = z.strictObject({
+  email: normalizedEmail,
+});
+
+export const resetPasswordBodySchema = z.strictObject({
+  token: nonEmptyString,
+  newPassword: passwordMinEight,
+});

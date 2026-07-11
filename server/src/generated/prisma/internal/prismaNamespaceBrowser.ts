@@ -78,6 +78,8 @@ export const UserScalarFieldEnum = {
   username: 'username',
   email: 'email',
   password_hash: 'password_hash',
+  reset_password_token: 'reset_password_token',
+  reset_password_expires: 'reset_password_expires',
   role: 'role',
   is_active: 'is_active',
   created_at: 'created_at',
@@ -149,11 +151,20 @@ export const NullableJsonNullValueInput = {
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
 export const UserOrderByRelevanceFieldEnum = {
   id: 'id',
   username: 'username',
   email: 'email',
-  password_hash: 'password_hash'
+  password_hash: 'password_hash',
+  reset_password_token: 'reset_password_token'
 } as const
 
 export type UserOrderByRelevanceFieldEnum = (typeof UserOrderByRelevanceFieldEnum)[keyof typeof UserOrderByRelevanceFieldEnum]
@@ -166,14 +177,6 @@ export const ImageOrderByRelevanceFieldEnum = {
 } as const
 
 export type ImageOrderByRelevanceFieldEnum = (typeof ImageOrderByRelevanceFieldEnum)[keyof typeof ImageOrderByRelevanceFieldEnum]
-
-
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 export const AnalysisOrderByRelevanceFieldEnum = {

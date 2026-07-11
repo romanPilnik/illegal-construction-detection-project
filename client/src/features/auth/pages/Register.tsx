@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api";
 import type { UserRole } from "../types";
+import { PasswordInput } from "../../../components/PasswordInput";
 
 const fieldClassName =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-all duration-200 focus:border-[#10b981] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
@@ -121,16 +122,15 @@ function RegisterForm() {
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Password
-            </label>
-            <input
-              className={fieldClassName}
-              type="password"
-              placeholder="Min. 8 characters"
+            <PasswordInput
+              id="register-password"
+              label="Password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
+              placeholder="Min. 8 characters"
+              autoComplete="new-password"
               required
+              inputClassName={fieldClassName + " pr-11 focus:border-[#10b981] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]"}
             />
           </div>
 
