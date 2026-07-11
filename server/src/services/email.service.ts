@@ -1,5 +1,13 @@
 import dotenv from 'dotenv';
 import * as nodemailer from 'nodemailer';
+import {
+  buildPasswordResetEmailHtml,
+  buildWelcomeEmailHtml,
+} from '../lib/email-templates.js';
+import {
+  getFrontendBaseUrl,
+  RESET_TOKEN_TTL_MINUTES,
+} from './password-reset.service.js';
 
 dotenv.config({
   path:
@@ -40,7 +48,7 @@ const createTransporter = () => {
 };
 
 /**
- * Sends a real welcome email to new users
+ * Sends a branded welcome email to new users.
  */
 export const sendWelcomeEmail = async (userEmail: string, username: string) => {
   try {
@@ -51,19 +59,13 @@ export const sendWelcomeEmail = async (userEmail: string, username: string) => {
       return;
     }
 
+    const loginUrl = `${getFrontendBaseUrl()}/login`;
+
     const mailOptions = {
       from: `"Illegal Construction Detection" <${config.user}>`,
       to: userEmail,
-      subject: 'Welcome to the System! 🏗️',
-      html: `
-        <div style="font-family: Arial, sans-serif; direction: ltr;">
-          <h1 style="color: #2c3e50;">Hi ${username}!</h1>
-          <p>Your registration to the construction detection system was successful.</p>
-          <p>From now on, you can upload imagery and analyze construction status.</p>
-          <hr>
-          <p>Best regards,<br><strong>System Administration Team</strong></p>
-        </div>
-      `,
+      subject: 'Welcome to Illegal Construction Detection',
+      html: buildWelcomeEmailHtml(username, loginUrl),
     };
 
     await transporter.sendMail(mailOptions);
@@ -74,7 +76,7 @@ export const sendWelcomeEmail = async (userEmail: string, username: string) => {
 };
 
 /**
- * Sends a password reset link (valid for 1 hour).
+ * Sends a branded password reset link (valid for RESET_TOKEN_TTL_MINUTES).
  */
 export const sendPasswordResetEmail = async (
   userEmail: string,
@@ -95,16 +97,11 @@ export const sendPasswordResetEmail = async (
       from: `"Illegal Construction Detection" <${config.user}>`,
       to: userEmail,
       subject: 'Reset your password',
-      html: `
-        <div style="font-family: Arial, sans-serif; direction: ltr;">
-          <h1 style="color: #2c3e50;">Hi ${username},</h1>
-          <p>We received a request to reset your password.</p>
-          <p><a href="${resetUrl}" style="color: #2563eb;">Click here to set a new password</a></p>
-          <p>This link expires in 1 hour. If you did not request a reset, you can ignore this email.</p>
-          <hr>
-          <p style="font-size: 12px; color: #666;">Or copy this URL into your browser:<br>${resetUrl}</p>
-        </div>
-      `,
+      html: buildPasswordResetEmailHtml(
+        username,
+        resetUrl,
+        RESET_TOKEN_TTL_MINUTES
+      ),
     };
 
     await transporter.sendMail(mailOptions);

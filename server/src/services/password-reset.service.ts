@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 
 const RESET_TOKEN_BYTES = 32;
-const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+export const RESET_TOKEN_TTL_MINUTES = 10;
+const RESET_TOKEN_TTL_MS = RESET_TOKEN_TTL_MINUTES * 60 * 1000;
 
 export const hashResetToken = (token: string): string =>
   crypto.createHash('sha256').update(token).digest('hex');

@@ -4,6 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { createUser, deactivateUser, getUsers, updateUser } from "../api";
 import type { UserListRow, UserRole } from "../types";
 import { getStoredUser } from "../../../lib/stored-user";
+import { PasswordInput } from "../../../components/PasswordInput";
+import {
+  isPasswordLongEnough,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MIN_LENGTH_MESSAGE,
+  PASSWORD_PLACEHOLDER,
+} from "../../../lib/password-rules";
 
 const PAGE_SIZE = 10;
 
@@ -129,6 +136,10 @@ export default function UserManagement() {
     const password = createPassword;
     if (!username || !email || !password) {
       setCreateError("Username, email, and password are required.");
+      return;
+    }
+    if (!isPasswordLongEnough(password)) {
+      setCreateError(PASSWORD_MIN_LENGTH_MESSAGE);
       return;
     }
     setCreateSaving(true);
@@ -440,15 +451,15 @@ export default function UserManagement() {
               />
             </div>
             <div className="mb-4">
-              <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                Initial password
-              </label>
-              <input
-                type="password"
-                className="w-full rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm outline-none focus:border-[#2563eb]"
+              <PasswordInput
+                id="create-user-password"
+                label="Initial password"
                 value={createPassword}
-                onChange={(e) => setCreatePassword(e.target.value)}
+                onChange={setCreatePassword}
+                placeholder={PASSWORD_PLACEHOLDER}
                 autoComplete="new-password"
+                minLength={PASSWORD_MIN_LENGTH}
+                inputClassName="w-full rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm text-[#1e293b] outline-none focus:border-[#2563eb]"
               />
             </div>
             <div className="mb-6">

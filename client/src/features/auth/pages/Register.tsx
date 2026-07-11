@@ -4,6 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api";
 import type { UserRole } from "../types";
 import { PasswordInput } from "../../../components/PasswordInput";
+import {
+  isPasswordLongEnough,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MIN_LENGTH_MESSAGE,
+  PASSWORD_PLACEHOLDER,
+} from "../../../lib/password-rules";
 
 const fieldClassName =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-all duration-200 focus:border-[#10b981] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
@@ -35,6 +41,12 @@ function RegisterForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (!isPasswordLongEnough(password)) {
+      setError(PASSWORD_MIN_LENGTH_MESSAGE);
+      setLoading(false);
+      return;
+    }
 
     try {
       const data = await register({ username, email, password, role });
@@ -127,10 +139,11 @@ function RegisterForm() {
               label="Password"
               value={password}
               onChange={setPassword}
-              placeholder="Min. 8 characters"
+              placeholder={PASSWORD_PLACEHOLDER}
               autoComplete="new-password"
               required
-              inputClassName={fieldClassName + " pr-11 focus:border-[#10b981] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]"}
+              minLength={PASSWORD_MIN_LENGTH}
+              inputClassName={fieldClassName}
             />
           </div>
 

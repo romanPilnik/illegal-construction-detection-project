@@ -5,11 +5,18 @@ import { changePassword } from "../../auth/api";
 import { getUserById } from "../api";
 import type { UserByIdData, UserRole } from "../types";
 import { getStoredUser } from "../../../lib/stored-user";
+import { PasswordInput } from "../../../components/PasswordInput";
+import {
+  isPasswordLongEnough,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MIN_LENGTH_MESSAGE,
+  PASSWORD_PLACEHOLDER,
+} from "../../../lib/password-rules";
 
 const readOnlyInput =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] p-3 text-sm text-slate-200 read-only:cursor-not-allowed read-only:text-slate-400 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:outline-none";
 
-const passwordInput =
+const profilePasswordInputClass =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] p-3 text-sm text-slate-200 outline-none focus:border-[#60a5fa] focus:ring-2 focus:ring-[rgba(96,165,250,0.15)]";
 
 export default function Profile() {
@@ -73,8 +80,8 @@ export default function Profile() {
   const handleChangePassword = async () => {
     setPasswordError("");
     setPasswordSuccess("");
-    if (newPassword.length < 8) {
-      setPasswordError("New password must be at least 8 characters.");
+    if (!isPasswordLongEnough(newPassword)) {
+      setPasswordError(PASSWORD_MIN_LENGTH_MESSAGE);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -210,42 +217,38 @@ export default function Profile() {
             </div>
           )}
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-semibold text-[#475569]">
-              Current Password
-            </label>
-            <input
-              type="password"
-              className={passwordInput}
-              placeholder="Enter current password"
+            <PasswordInput
+              id="current-password"
+              label="Current Password"
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
+              onChange={setCurrentPassword}
+              placeholder="Enter current password"
               autoComplete="current-password"
+              inputClassName={profilePasswordInputClass}
             />
           </div>
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-semibold text-[#475569]">
-              New Password
-            </label>
-            <input
-              type="password"
-              className={passwordInput}
-              placeholder="At least 8 characters"
+            <PasswordInput
+              id="new-password"
+              label="New Password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={setNewPassword}
+              placeholder={PASSWORD_PLACEHOLDER}
               autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
+              inputClassName={profilePasswordInputClass}
             />
           </div>
           <div className="mb-6">
-            <label className="mb-2 block text-sm font-semibold text-[#475569]">
-              Confirm New Password
-            </label>
-            <input
-              type="password"
-              className={passwordInput}
-              placeholder="Confirm new password"
+            <PasswordInput
+              id="confirm-password"
+              label="Confirm New Password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={setConfirmPassword}
+              placeholder="Confirm new password"
               autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
+              inputClassName={profilePasswordInputClass}
             />
           </div>
           <button

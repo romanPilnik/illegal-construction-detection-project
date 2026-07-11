@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { newPasswordSchema } from './password.validation';
 
 const optionalTrimmedString = z
   .transform((value) => {
@@ -58,6 +59,6 @@ const normalizedEmail = z
 export const createUserBodySchema = z.strictObject({
   username: nonEmptyString,
   email: normalizedEmail,
-  password: nonEmptyString,
+  password: newPasswordSchema,
   role: z.enum(['Admin', 'Inspector']),
 });

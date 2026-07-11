@@ -113,7 +113,7 @@ describe('UserController', () => {
       req.body = {
         username: 'x',
         email: 'x@test.com',
-        password: 'p',
+        password: 'secret123',
         role: Role.Inspector,
       };
       mockFindUnique.mockResolvedValue(null);

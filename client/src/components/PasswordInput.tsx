@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 type PasswordInputProps = {
   id: string;
@@ -52,9 +52,10 @@ export function PasswordInput({
   autoComplete,
   required,
   minLength,
-  inputClassName = 'w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 pr-11 text-sm text-slate-100 outline-none transition-all duration-200 placeholder:text-slate-500 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(96,165,250,0.15)]',
+  inputClassName = 'w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-all duration-200 placeholder:text-slate-500 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(96,165,250,0.15)]',
 }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
+  const showToggle = value.length > 0;
 
   return (
     <div>
@@ -64,7 +65,7 @@ export function PasswordInput({
       <div className="relative">
         <input
           id={id}
-          className={inputClassName}
+          className={`${inputClassName}${showToggle ? ' pr-11' : ''}`}
           type={visible ? 'text' : 'password'}
           placeholder={placeholder}
           value={value}
@@ -73,15 +74,17 @@ export function PasswordInput({
           required={required}
           minLength={minLength}
         />
-        <button
-          type="button"
-          className="absolute inset-y-0 right-0 flex w-10 cursor-pointer items-center justify-center border-none bg-transparent text-slate-400 transition-colors hover:text-slate-200"
-          onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? 'Hide password' : 'Show password'}
-          aria-pressed={visible}
-        >
-          <EyeIcon hidden={visible} />
-        </button>
+        {showToggle && (
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 flex w-10 cursor-pointer items-center justify-center border-none bg-transparent text-slate-400 transition-colors hover:text-slate-200"
+            onClick={() => setVisible((v) => !v)}
+            aria-label={visible ? 'Hide password' : 'Show password'}
+            aria-pressed={visible}
+          >
+            <EyeIcon hidden={visible} />
+          </button>
+        )}
       </div>
     </div>
   );

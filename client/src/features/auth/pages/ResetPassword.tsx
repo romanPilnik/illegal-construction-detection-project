@@ -3,6 +3,12 @@ import { isAxiosError } from 'axios';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { resetPassword } from '../api';
 import { PasswordInput } from '../../../components/PasswordInput';
+import {
+  isPasswordLongEnough,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MIN_LENGTH_MESSAGE,
+  PASSWORD_PLACEHOLDER,
+} from '../../../lib/password-rules';
 
 function messageFromAxios(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -35,8 +41,8 @@ export default function ResetPassword() {
       setError('Invalid reset link. Please request a new one.');
       return;
     }
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters.');
+    if (!isPasswordLongEnough(newPassword)) {
+      setError(PASSWORD_MIN_LENGTH_MESSAGE);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -96,10 +102,10 @@ export default function ResetPassword() {
               label="New password"
               value={newPassword}
               onChange={setNewPassword}
-              placeholder="Min. 8 characters"
+              placeholder={PASSWORD_PLACEHOLDER}
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={PASSWORD_MIN_LENGTH}
             />
           </div>
           <div className="mb-5">
@@ -111,7 +117,7 @@ export default function ResetPassword() {
               placeholder="Re-enter your password"
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={PASSWORD_MIN_LENGTH}
             />
           </div>
           <button

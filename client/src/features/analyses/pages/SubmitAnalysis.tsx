@@ -75,13 +75,13 @@ export default function SubmitAnalysis() {
   const canSubmit = Boolean(beforeImage && afterImage) && !submitting;
 
   const dropCardClass =
-    "group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-blue-500/35 bg-blue-950/50 transition-[border-color,background-color] hover:border-blue-400/55 hover:bg-blue-950/70";
+    "group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-blue-200 bg-blue-50 transition-[border-color,background-color] hover:border-blue-300 hover:bg-blue-100/80";
 
   const footerStripClass =
-    "w-full border-t border-blue-500/30 bg-blue-600/25 px-4 py-3 text-center text-sm font-semibold text-blue-100 transition-colors group-hover:bg-blue-600/35";
+    "w-full border-t border-blue-200 bg-blue-100 px-4 py-3 text-center text-sm font-semibold text-blue-700 transition-colors group-hover:bg-blue-200/70";
 
   const dropZoneInnerClass =
-    "flex min-h-[240px] flex-col items-center justify-center bg-blue-950/40 px-4 py-6";
+    "flex min-h-[240px] flex-col items-center justify-center bg-blue-50 px-4 py-6";
 
   return (
     <div className="app-page pt-8">
@@ -117,17 +117,17 @@ export default function SubmitAnalysis() {
                   <img
                     src={beforePreview}
                     alt=""
-                    className="max-h-44 max-w-full rounded-lg border border-blue-400/25 object-contain shadow-sm"
+                    className="max-h-44 max-w-full rounded-lg border border-blue-200 object-contain shadow-sm"
                   />
                 ) : (
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-900/70 text-sky-300 shadow-[0_2px_8px_rgba(37,99,235,0.25)]">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-200 text-blue-600 shadow-[0_2px_8px_rgba(37,99,235,0.12)]">
                     ↑
                   </div>
                 )}
-                <p className="text-sm font-semibold text-slate-100">
+                <p className="text-sm font-semibold text-slate-700">
                   {beforeImage ? beforeImage.name : "No image uploaded"}
                 </p>
-                <span className="mt-1 text-center text-xs text-slate-400">
+                <span className="mt-1 text-center text-xs text-slate-500">
                   Upload the initial state image
                 </span>
               </div>
@@ -160,17 +160,17 @@ export default function SubmitAnalysis() {
                   <img
                     src={afterPreview}
                     alt=""
-                    className="max-h-44 max-w-full rounded-lg border border-blue-400/25 object-contain shadow-sm"
+                    className="max-h-44 max-w-full rounded-lg border border-blue-200 object-contain shadow-sm"
                   />
                 ) : (
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-900/70 text-sky-300 shadow-[0_2px_8px_rgba(37,99,235,0.25)]">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-200 text-blue-600 shadow-[0_2px_8px_rgba(37,99,235,0.12)]">
                     ↑
                   </div>
                 )}
-                <p className="text-sm font-semibold text-slate-100">
+                <p className="text-sm font-semibold text-slate-700">
                   {afterImage ? afterImage.name : "No image uploaded"}
                 </p>
-                <span className="mt-1 text-center text-xs text-slate-400">
+                <span className="mt-1 text-center text-xs text-slate-500">
                   Upload the current state image
                 </span>
               </div>
