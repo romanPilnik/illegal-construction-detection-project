@@ -183,17 +183,6 @@ export default function Profile() {
                     readOnly
                   />
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                    User ID
-                  </label>
-                  <input
-                    type="text"
-                    className={readOnlyInput}
-                    value={user?.id ?? ""}
-                    readOnly
-                  />
-                </div>
               </div>
             </>
           )}

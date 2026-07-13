@@ -752,6 +752,7 @@ export const AnalysisScalarFieldEnum = {
   bbox_x2: 'bbox_x2',
   bbox_y2: 'bbox_y2',
   location_address: 'location_address',
+  request_title: 'request_title',
   created_at: 'created_at'
 } as const
 
@@ -822,7 +823,8 @@ export const AnalysisOrderByRelevanceFieldEnum = {
   before_image_id: 'before_image_id',
   after_image_id: 'after_image_id',
   result_image_id: 'result_image_id',
-  location_address: 'location_address'
+  location_address: 'location_address',
+  request_title: 'request_title'
 } as const
 
 export type AnalysisOrderByRelevanceFieldEnum = (typeof AnalysisOrderByRelevanceFieldEnum)[keyof typeof AnalysisOrderByRelevanceFieldEnum]

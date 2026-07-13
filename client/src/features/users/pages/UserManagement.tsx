@@ -104,6 +104,16 @@ export default function UserManagement() {
     void loadUsers();
   }, [loadUsers]);
 
+  const hasActiveFilters =
+    debouncedSearch !== "" || roleFilter !== "" || statusFilter !== "active";
+
+  const handleResetFilters = () => {
+    setSearchInput("");
+    setRoleFilter("");
+    setStatusFilter("active");
+    setPage(1);
+  };
+
   const openEdit = (u: UserListRow) => {
     setActionError("");
     setEditing(u);
@@ -288,6 +298,14 @@ export default function UserManagement() {
               <option value="active">Active only</option>
               <option value="inactive">Inactive only</option>
             </select>
+            <button
+              type="button"
+              disabled={!hasActiveFilters || loading}
+              onClick={handleResetFilters}
+              className="rounded-lg border border-slate-500/40 bg-white/5 px-4 py-3 text-sm font-bold text-slate-300 transition-all hover:enabled:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Reset
+            </button>
           </div>
 
           {loading ? (

@@ -5,6 +5,7 @@ import userRoutes from './routes/user.routes.js';
 import auditLogRoutes from './routes/log.routes.js';
 import analysisRoutes from './routes/analysis.routes.js';
 import { prisma } from './lib/prisma.js';
+import { isEmailConfigured } from './services/email.service.js';
 
 const app = express();
 
@@ -31,7 +32,12 @@ const corsOptions: CorsOptions = {
 app.get('/api/v1/health', async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    res.status(200).json({ status: 'OK', message: 'Server and DB are alive! 🚀' });
+    res.status(200).json({
+      status: 'OK',
+      message: 'Server and DB are alive! 🚀',
+      emailConfigured: isEmailConfigured(),
+      frontendUrlSet: Boolean(process.env.FRONTEND_URL?.trim()),
+    });
   } catch (error) {
     console.error('Health check failed:', error);
     res.status(500).json({ status: 'ERROR', message: 'DB connection failed' });

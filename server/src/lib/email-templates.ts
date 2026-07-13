@@ -123,3 +123,38 @@ export function buildPasswordResetEmailHtml(
     footerNote: `<strong style="color:${SLATE_700};">This link is valid for ${expiryMinutes} minutes only.</strong> If you did not request a password reset, you can safely ignore this email — your password will remain unchanged.`,
   });
 }
+
+export function buildAnalysisCompleteEmailHtml(options: {
+  username: string;
+  requestTitle: string;
+  completedAt: string;
+  anomalyDetected: boolean;
+  resultsUrl: string;
+}): string {
+  const safeUsername = escapeHtml(options.username);
+  const safeTitle = escapeHtml(options.requestTitle);
+  const safeTimestamp = escapeHtml(options.completedAt);
+  const findingSummary = options.anomalyDetected
+    ? `<strong style="color:#b91c1c;">Potential unauthorized construction or structural change detected.</strong> Review the annotated result image and bounding-box details in the report.`
+    : `<strong style="color:#047857;">No significant anomaly detected.</strong> The compared imagery appears consistent with normal conditions.`;
+
+  return emailLayout({
+    preheader: `Analysis "${safeTitle}" is complete — ${options.anomalyDetected ? 'review recommended' : 'no anomaly detected'}.`,
+    heading: 'Your analysis is ready',
+    bodyHtml: `
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:${SLATE_700};">
+        Hi ${safeUsername}, your construction analysis <strong>${safeTitle}</strong> finished successfully on ${safeTimestamp}.
+      </p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:${SLATE_700};">
+        ${findingSummary}
+      </p>
+      <table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;margin:0 0 8px;border-collapse:collapse;">
+        <tr>
+          <td style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px 0 0 8px;font-size:13px;color:${SLATE_500};">Request</td>
+          <td style="padding:10px 12px;background:#ffffff;border:1px solid #e2e8f0;border-left:none;border-radius:0 8px 8px 0;font-size:14px;font-weight:600;color:${SLATE_700};">${safeTitle}</td>
+        </tr>
+      </table>`,
+    ctaLabel: 'View Full Results',
+    ctaUrl: options.resultsUrl,
+  });
+}

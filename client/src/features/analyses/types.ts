@@ -4,6 +4,7 @@ export type AnalysisListRow = {
     id: string
     status: string
     created_at: string
+    request_title?: string | null
     anomaly_detected: boolean | null
 }
 
@@ -24,12 +25,14 @@ export type CreateAnalysisResponse = {
     message: string
     analysisId: string
     location_address?: string
+    request_title?: string
 }
 
 export type AnalysisDetailData = {
     id: string
     status: string
     created_at: string
+    request_title?: string | null
     anomaly_detected: boolean | null
     inspector_id: string
     issued_by?: { id: string; username: string }

@@ -16,6 +16,8 @@ const mockRequestAIInference = jest.fn<() => Promise<any>>();
 const mockCreateAnnotatedResultImage = jest.fn<() => Promise<any>>();
 const mockEmitAnalysisUpdated = jest.fn<() => void>();
 const mockUploadImageAsset = jest.fn<() => Promise<any>>();
+const mockSendAnalysisCompleteEmail = jest.fn<() => Promise<void>>();
+const mockUserFindUnique = jest.fn<() => Promise<any>>();
 
 jest.unstable_mockModule('../lib/prisma.js', () => ({
   prisma: {
@@ -28,6 +30,7 @@ jest.unstable_mockModule('../lib/prisma.js', () => ({
     },
     image: { create: mockImageCreate },
     auditLog: { create: mockAuditLogCreate },
+    user: { findUnique: mockUserFindUnique },
   },
 }));
 
@@ -58,6 +61,10 @@ jest.unstable_mockModule('../services/asset-storage.service.js', () => ({
   uploadImageAsset: mockUploadImageAsset,
 }));
 
+jest.unstable_mockModule('../services/email.service.js', () => ({
+  sendAnalysisCompleteEmail: mockSendAnalysisCompleteEmail,
+}));
+
 const { AnalysisController } = await import('../controllers/analysis.controller.js');
 /* eslint-disable @typescript-eslint/no-explicit-any */
 describe('AnalysisController', () => {
@@ -77,7 +84,10 @@ describe('AnalysisController', () => {
   describe('createAnalysis', () => {
     it('should return 201 and create analysis when files are valid', async () => {
       req = {
-        body: { location_address: 'Main St 1, Lod' },
+        body: {
+          location_address: 'Main St 1, Lod',
+          request_title: 'Roof extension check',
+        },
         files: {
           beforeImage: [{ buffer: Buffer.from('before-image'), size: 100, mimetype: 'image/jpeg', originalname: 'b.jpg' }],
           afterImage: [{ buffer: Buffer.from('after-image'), size: 120, mimetype: 'image/jpeg', originalname: 'a.jpg' }],
@@ -111,12 +121,24 @@ describe('AnalysisController', () => {
         const tx = {
           image: { create: mockImageCreate.mockResolvedValue({ id: 'img-id' }) },
           analysis: {
-            create: mockAnalysisCreate.mockResolvedValue({ id: 'analysis-id', status: 'Pending' }),
-            update: jest.fn<() => Promise<any>>().mockResolvedValue({ id: 'analysis-id' }),
+            create: mockAnalysisCreate.mockResolvedValue({
+              id: 'analysis-id',
+              status: 'Pending',
+              request_title: 'Roof extension check',
+            }),
+            update: jest.fn<() => Promise<any>>().mockResolvedValue({
+              id: 'analysis-id',
+              request_title: 'Roof extension check',
+            }),
           },
           auditLog: { create: mockAuditLogCreate.mockResolvedValue({}) },
         };
         return callback(tx);
+      });
+
+      mockUserFindUnique.mockResolvedValue({
+        email: 'inspector@test.com',
+        username: 'inspector',
       });
 
       await AnalysisController.createAnalysis(req as Request, res as Response);
@@ -125,6 +147,7 @@ describe('AnalysisController', () => {
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         analysisId: 'analysis-id',
         location_address: 'Main St 1, Lod',
+        request_title: 'Roof extension check',
       }));
     });
 

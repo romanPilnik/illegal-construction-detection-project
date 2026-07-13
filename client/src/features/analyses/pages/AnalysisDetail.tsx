@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { getAnalysisById, exportAnalysisById } from "../api";
 import type { AnalysisDetailData } from "../types";
+import { AnalysisSubmitLoader } from "../../../components/AnalysisSubmitLoader";
 
 const viteApiUrl =
   import.meta.env.VITE_API_URL || "http://localhost:5001/api/v1";
@@ -120,8 +121,32 @@ export default function AnalysisDetail() {
         };
     }, [analysisId]);
 
+    useEffect(() => {
+        if (!analysisId || !data || data.status !== "Pending") return;
+
+        const poll = window.setInterval(() => {
+            void getAnalysisById(analysisId)
+                .then((payload) => setData(payload.data))
+                .catch(() => undefined);
+        }, 3000);
+
+        return () => window.clearInterval(poll);
+    }, [analysisId, data?.status]);
+
+    const isProcessing = data?.status === "Pending";
+
     return (
         <div className="app-page pt-8">
+            {(loading || isProcessing) && (
+                <AnalysisSubmitLoader
+                    title={loading ? "Loading analysis" : "AI analysis in progress"}
+                    subtitle={
+                        loading
+                            ? "Fetching your submission details…"
+                            : "Our detection model is comparing before/after imagery. This may take a minute."
+                    }
+                />
+            )}
             {/* Header Bar */}
             <div className="glass-card mx-auto flex max-w-[900px] items-center justify-between px-8 py-4">
                 <button
@@ -166,7 +191,7 @@ export default function AnalysisDetail() {
                         <div className="mb-8 grid grid-cols-2 gap-4 border-b border-white/10 pb-6">
                             <div>
                                 <div className="mb-2 text-[0.85rem] font-bold uppercase tracking-wider text-slate-500">General Info</div>
-                                <div className="mb-1 text-[0.9rem] text-slate-200"><span className="mr-2 font-semibold text-slate-400">ID:</span>{data.id}</div>
+                                <div className="mb-1 text-[0.9rem] text-slate-200"><span className="mr-2 font-semibold text-slate-400">Request:</span>{data.request_title?.trim() || "Untitled"}</div>
                                 <div className="mb-1 text-[0.9rem] text-slate-200"><span className="mr-2 font-semibold text-slate-400">Status:</span>{data.status}</div>
                             </div>
                             <div>

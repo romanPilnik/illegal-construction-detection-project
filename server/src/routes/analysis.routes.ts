@@ -7,6 +7,7 @@ import { AnalysisController } from '../controllers/analysis.controller.js';
 import { validateRequest } from '../middlewares/validate-request.middleware.js';
 import {
   analysisIdParamsSchema,
+  createAnalysisBodySchema,
   exportByDateRangeBodySchema,
   exportByIdBodySchema,
   exportByIdParamsSchema,
@@ -60,6 +61,7 @@ router.post(
   '/analyse',
   authenticateToken,
   handleAnalyzeUpload,
+  validateRequest({ body: createAnalysisBodySchema }),
   AnalysisController.createAnalysis
 );
 

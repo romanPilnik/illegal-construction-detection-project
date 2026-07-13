@@ -18,8 +18,14 @@ const resolveDatabaseHost = (host: string | undefined): string => {
   return value;
 };
 
+/** Use SSL for remote managed MySQL (e.g. Aiven) even in local dev. */
+const databaseHost = resolveDatabaseHost(process.env.DATABASE_HOST);
+const useDatabaseSsl =
+  process.env.NODE_ENV === 'production' ||
+  databaseHost.includes('aivencloud.com');
+
 const adapter = new PrismaMariaDb({
-  host: resolveDatabaseHost(process.env.DATABASE_HOST),
+  host: databaseHost,
   port: Number(process.env.DATABASE_PORT) || 3306,
   user: process.env.DATABASE_USER!,
   password: process.env.DATABASE_PASSWORD!,
@@ -27,10 +33,7 @@ const adapter = new PrismaMariaDb({
   allowPublicKeyRetrieval: true,
   connectionLimit: 2,
   connectTimeout: 30000,
-  ssl:
-    process.env.NODE_ENV === 'production'
-      ? { rejectUnauthorized: false }
-      : false,
+  ssl: useDatabaseSsl ? { rejectUnauthorized: false } : false,
 });
 
 export const prisma = new PrismaClient({ adapter });

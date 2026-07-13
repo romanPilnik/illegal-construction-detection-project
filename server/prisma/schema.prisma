@@ -52,6 +52,7 @@ model Analysis {
   bbox_x2          Int?
   bbox_y2          Int?
   location_address String?
+  request_title    String?        @db.VarChar(120)
   created_at       DateTime       @default(now())
 }
 

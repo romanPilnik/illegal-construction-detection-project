@@ -287,7 +287,20 @@ const forgotPassword = async (req: Request, res: Response): Promise<void> => {
       });
 
       const resetUrl = `${getFrontendBaseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
-      void sendPasswordResetEmail(user.email, user.username, resetUrl);
+      const sent = await sendPasswordResetEmail(
+        user.email,
+        user.username,
+        resetUrl
+      );
+      if (!sent) {
+        console.error(
+          `Password reset: token saved for ${user.email} but email delivery failed`
+        );
+      }
+    } else if (user && !user.is_active) {
+      console.info('Password reset: user exists but account is inactive');
+    } else {
+      console.info('Password reset: no matching active user for request');
     }
 
     res.status(200).json(FORGOT_PASSWORD_RESPONSE);

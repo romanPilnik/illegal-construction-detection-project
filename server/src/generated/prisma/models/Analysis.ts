@@ -53,6 +53,7 @@ export type AnalysisMinAggregateOutputType = {
   bbox_x2: number | null
   bbox_y2: number | null
   location_address: string | null
+  request_title: string | null
   created_at: Date | null
 }
 
@@ -69,6 +70,7 @@ export type AnalysisMaxAggregateOutputType = {
   bbox_x2: number | null
   bbox_y2: number | null
   location_address: string | null
+  request_title: string | null
   created_at: Date | null
 }
 
@@ -85,6 +87,7 @@ export type AnalysisCountAggregateOutputType = {
   bbox_x2: number
   bbox_y2: number
   location_address: number
+  request_title: number
   created_at: number
   _all: number
 }
@@ -117,6 +120,7 @@ export type AnalysisMinAggregateInputType = {
   bbox_x2?: true
   bbox_y2?: true
   location_address?: true
+  request_title?: true
   created_at?: true
 }
 
@@ -133,6 +137,7 @@ export type AnalysisMaxAggregateInputType = {
   bbox_x2?: true
   bbox_y2?: true
   location_address?: true
+  request_title?: true
   created_at?: true
 }
 
@@ -149,6 +154,7 @@ export type AnalysisCountAggregateInputType = {
   bbox_x2?: true
   bbox_y2?: true
   location_address?: true
+  request_title?: true
   created_at?: true
   _all?: true
 }
@@ -252,6 +258,7 @@ export type AnalysisGroupByOutputType = {
   bbox_x2: number | null
   bbox_y2: number | null
   location_address: string | null
+  request_title: string | null
   created_at: Date
   _count: AnalysisCountAggregateOutputType | null
   _avg: AnalysisAvgAggregateOutputType | null
@@ -291,6 +298,7 @@ export type AnalysisWhereInput = {
   bbox_x2?: Prisma.IntNullableFilter<"Analysis"> | number | null
   bbox_y2?: Prisma.IntNullableFilter<"Analysis"> | number | null
   location_address?: Prisma.StringNullableFilter<"Analysis"> | string | null
+  request_title?: Prisma.StringNullableFilter<"Analysis"> | string | null
   created_at?: Prisma.DateTimeFilter<"Analysis"> | Date | string
   issued_by?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   before_image?: Prisma.XOR<Prisma.ImageScalarRelationFilter, Prisma.ImageWhereInput>
@@ -311,6 +319,7 @@ export type AnalysisOrderByWithRelationInput = {
   bbox_x2?: Prisma.SortOrderInput | Prisma.SortOrder
   bbox_y2?: Prisma.SortOrderInput | Prisma.SortOrder
   location_address?: Prisma.SortOrderInput | Prisma.SortOrder
+  request_title?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   issued_by?: Prisma.UserOrderByWithRelationInput
   before_image?: Prisma.ImageOrderByWithRelationInput
@@ -335,6 +344,7 @@ export type AnalysisWhereUniqueInput = Prisma.AtLeast<{
   bbox_x2?: Prisma.IntNullableFilter<"Analysis"> | number | null
   bbox_y2?: Prisma.IntNullableFilter<"Analysis"> | number | null
   location_address?: Prisma.StringNullableFilter<"Analysis"> | string | null
+  request_title?: Prisma.StringNullableFilter<"Analysis"> | string | null
   created_at?: Prisma.DateTimeFilter<"Analysis"> | Date | string
   issued_by?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   before_image?: Prisma.XOR<Prisma.ImageScalarRelationFilter, Prisma.ImageWhereInput>
@@ -355,6 +365,7 @@ export type AnalysisOrderByWithAggregationInput = {
   bbox_x2?: Prisma.SortOrderInput | Prisma.SortOrder
   bbox_y2?: Prisma.SortOrderInput | Prisma.SortOrder
   location_address?: Prisma.SortOrderInput | Prisma.SortOrder
+  request_title?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   _count?: Prisma.AnalysisCountOrderByAggregateInput
   _avg?: Prisma.AnalysisAvgOrderByAggregateInput
@@ -379,6 +390,7 @@ export type AnalysisScalarWhereWithAggregatesInput = {
   bbox_x2?: Prisma.IntNullableWithAggregatesFilter<"Analysis"> | number | null
   bbox_y2?: Prisma.IntNullableWithAggregatesFilter<"Analysis"> | number | null
   location_address?: Prisma.StringNullableWithAggregatesFilter<"Analysis"> | string | null
+  request_title?: Prisma.StringNullableWithAggregatesFilter<"Analysis"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"Analysis"> | Date | string
 }
 
@@ -391,6 +403,7 @@ export type AnalysisCreateInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
   issued_by: Prisma.UserCreateNestedOneWithoutAnalysesInput
   before_image: Prisma.ImageCreateNestedOneWithoutUsed_as_before_inInput
@@ -411,6 +424,7 @@ export type AnalysisUncheckedCreateInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -423,6 +437,7 @@ export type AnalysisUpdateInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   issued_by?: Prisma.UserUpdateOneRequiredWithoutAnalysesNestedInput
   before_image?: Prisma.ImageUpdateOneRequiredWithoutUsed_as_before_inNestedInput
@@ -443,6 +458,7 @@ export type AnalysisUncheckedUpdateInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -459,6 +475,7 @@ export type AnalysisCreateManyInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -471,6 +488,7 @@ export type AnalysisUpdateManyMutationInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -487,6 +505,7 @@ export type AnalysisUncheckedUpdateManyInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -519,6 +538,7 @@ export type AnalysisCountOrderByAggregateInput = {
   bbox_x2?: Prisma.SortOrder
   bbox_y2?: Prisma.SortOrder
   location_address?: Prisma.SortOrder
+  request_title?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -542,6 +562,7 @@ export type AnalysisMaxOrderByAggregateInput = {
   bbox_x2?: Prisma.SortOrder
   bbox_y2?: Prisma.SortOrder
   location_address?: Prisma.SortOrder
+  request_title?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -558,6 +579,7 @@ export type AnalysisMinOrderByAggregateInput = {
   bbox_x2?: Prisma.SortOrder
   bbox_y2?: Prisma.SortOrder
   location_address?: Prisma.SortOrder
+  request_title?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -761,6 +783,7 @@ export type AnalysisCreateWithoutIssued_byInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
   before_image: Prisma.ImageCreateNestedOneWithoutUsed_as_before_inInput
   after_image: Prisma.ImageCreateNestedOneWithoutUsed_as_after_inInput
@@ -779,6 +802,7 @@ export type AnalysisUncheckedCreateWithoutIssued_byInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -824,6 +848,7 @@ export type AnalysisScalarWhereInput = {
   bbox_x2?: Prisma.IntNullableFilter<"Analysis"> | number | null
   bbox_y2?: Prisma.IntNullableFilter<"Analysis"> | number | null
   location_address?: Prisma.StringNullableFilter<"Analysis"> | string | null
+  request_title?: Prisma.StringNullableFilter<"Analysis"> | string | null
   created_at?: Prisma.DateTimeFilter<"Analysis"> | Date | string
 }
 
@@ -836,6 +861,7 @@ export type AnalysisCreateWithoutBefore_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
   issued_by: Prisma.UserCreateNestedOneWithoutAnalysesInput
   after_image: Prisma.ImageCreateNestedOneWithoutUsed_as_after_inInput
@@ -854,6 +880,7 @@ export type AnalysisUncheckedCreateWithoutBefore_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -876,6 +903,7 @@ export type AnalysisCreateWithoutAfter_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
   issued_by: Prisma.UserCreateNestedOneWithoutAnalysesInput
   before_image: Prisma.ImageCreateNestedOneWithoutUsed_as_before_inInput
@@ -894,6 +922,7 @@ export type AnalysisUncheckedCreateWithoutAfter_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -916,6 +945,7 @@ export type AnalysisCreateWithoutResult_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
   issued_by: Prisma.UserCreateNestedOneWithoutAnalysesInput
   before_image: Prisma.ImageCreateNestedOneWithoutUsed_as_before_inInput
@@ -934,6 +964,7 @@ export type AnalysisUncheckedCreateWithoutResult_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -1007,6 +1038,7 @@ export type AnalysisCreateManyIssued_byInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -1019,6 +1051,7 @@ export type AnalysisUpdateWithoutIssued_byInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   before_image?: Prisma.ImageUpdateOneRequiredWithoutUsed_as_before_inNestedInput
   after_image?: Prisma.ImageUpdateOneRequiredWithoutUsed_as_after_inNestedInput
@@ -1037,6 +1070,7 @@ export type AnalysisUncheckedUpdateWithoutIssued_byInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1052,6 +1086,7 @@ export type AnalysisUncheckedUpdateManyWithoutIssued_byInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1067,6 +1102,7 @@ export type AnalysisCreateManyBefore_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -1082,6 +1118,7 @@ export type AnalysisCreateManyAfter_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -1097,6 +1134,7 @@ export type AnalysisCreateManyResult_imageInput = {
   bbox_x2?: number | null
   bbox_y2?: number | null
   location_address?: string | null
+  request_title?: string | null
   created_at?: Date | string
 }
 
@@ -1109,6 +1147,7 @@ export type AnalysisUpdateWithoutBefore_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   issued_by?: Prisma.UserUpdateOneRequiredWithoutAnalysesNestedInput
   after_image?: Prisma.ImageUpdateOneRequiredWithoutUsed_as_after_inNestedInput
@@ -1127,6 +1166,7 @@ export type AnalysisUncheckedUpdateWithoutBefore_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1142,6 +1182,7 @@ export type AnalysisUncheckedUpdateManyWithoutBefore_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1154,6 +1195,7 @@ export type AnalysisUpdateWithoutAfter_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   issued_by?: Prisma.UserUpdateOneRequiredWithoutAnalysesNestedInput
   before_image?: Prisma.ImageUpdateOneRequiredWithoutUsed_as_before_inNestedInput
@@ -1172,6 +1214,7 @@ export type AnalysisUncheckedUpdateWithoutAfter_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1187,6 +1230,7 @@ export type AnalysisUncheckedUpdateManyWithoutAfter_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1199,6 +1243,7 @@ export type AnalysisUpdateWithoutResult_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   issued_by?: Prisma.UserUpdateOneRequiredWithoutAnalysesNestedInput
   before_image?: Prisma.ImageUpdateOneRequiredWithoutUsed_as_before_inNestedInput
@@ -1217,6 +1262,7 @@ export type AnalysisUncheckedUpdateWithoutResult_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1232,6 +1278,7 @@ export type AnalysisUncheckedUpdateManyWithoutResult_imageInput = {
   bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1250,6 +1297,7 @@ export type AnalysisSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   bbox_x2?: boolean
   bbox_y2?: boolean
   location_address?: boolean
+  request_title?: boolean
   created_at?: boolean
   issued_by?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   before_image?: boolean | Prisma.ImageDefaultArgs<ExtArgs>
@@ -1272,10 +1320,11 @@ export type AnalysisSelectScalar = {
   bbox_x2?: boolean
   bbox_y2?: boolean
   location_address?: boolean
+  request_title?: boolean
   created_at?: boolean
 }
 
-export type AnalysisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "inspector_id" | "before_image_id" | "after_image_id" | "result_image_id" | "status" | "anomaly_detected" | "bbox_x1" | "bbox_y1" | "bbox_x2" | "bbox_y2" | "location_address" | "created_at", ExtArgs["result"]["analysis"]>
+export type AnalysisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "inspector_id" | "before_image_id" | "after_image_id" | "result_image_id" | "status" | "anomaly_detected" | "bbox_x1" | "bbox_y1" | "bbox_x2" | "bbox_y2" | "location_address" | "request_title" | "created_at", ExtArgs["result"]["analysis"]>
 export type AnalysisInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   issued_by?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   before_image?: boolean | Prisma.ImageDefaultArgs<ExtArgs>
@@ -1304,6 +1353,7 @@ export type $AnalysisPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     bbox_x2: number | null
     bbox_y2: number | null
     location_address: string | null
+    request_title: string | null
     created_at: Date
   }, ExtArgs["result"]["analysis"]>
   composites: {}
@@ -1690,6 +1740,7 @@ export interface AnalysisFieldRefs {
   readonly bbox_x2: Prisma.FieldRef<"Analysis", 'Int'>
   readonly bbox_y2: Prisma.FieldRef<"Analysis", 'Int'>
   readonly location_address: Prisma.FieldRef<"Analysis", 'String'>
+  readonly request_title: Prisma.FieldRef<"Analysis", 'String'>
   readonly created_at: Prisma.FieldRef<"Analysis", 'DateTime'>
 }
     

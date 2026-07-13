@@ -32,7 +32,7 @@ function aiResultCellClass(label: string) {
 }
 
 const ROW_GRID =
-    "grid grid-cols-[minmax(0,1.6fr)_minmax(0,auto)_minmax(0,1.1fr)_minmax(0,1.1fr)_minmax(0,5rem)] items-center gap-x-4 gap-y-1 px-6 py-3.5";
+    "grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,auto)_minmax(0,1fr)_minmax(0,1fr)_5rem] items-center gap-x-4 gap-y-1 px-6 py-3.5";
 
 export default function AnalysisHistory() {
     const navigate = useNavigate();
@@ -47,6 +47,8 @@ export default function AnalysisHistory() {
     const [endDate, setEndDate] = useState("");
 
     const today = new Date().toISOString().split('T')[0];
+
+    const hasActiveFilters = Boolean(statusFilter || startDate || endDate);
 
     const fetchData = useCallback(async () => {
         if (startDate && endDate && startDate > endDate) {
@@ -200,7 +202,8 @@ export default function AnalysisHistory() {
                     </button>
                     <button
                         onClick={handleReset}
-                        className="rounded-lg border border-slate-500/40 bg-white/5 px-4 py-2 text-sm font-bold text-slate-300 shadow-sm transition-all active:scale-95 hover:bg-white/10"
+                        disabled={!hasActiveFilters || loading}
+                        className="rounded-lg border border-slate-500/40 bg-white/5 px-4 py-2 text-sm font-bold text-slate-300 shadow-sm transition-all active:scale-95 hover:enabled:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         ✖ Reset
                     </button>
@@ -244,6 +247,12 @@ export default function AnalysisHistory() {
                             className={`${ROW_GRID} border-b border-white/10 bg-white/[0.04] text-left`}
                             role="row"
                         >
+                            <div
+                                className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                                role="columnheader"
+                            >
+                                Request Name
+                            </div>
                             <div
                                 className="text-xs font-bold uppercase tracking-wider text-slate-500"
                                 role="columnheader"
@@ -296,7 +305,13 @@ export default function AnalysisHistory() {
                                         className={`${ROW_GRID} group cursor-pointer text-left transition-colors hover:bg-white/[0.06]`}
                                     >
                                         <div
-                                            className="min-w-0 font-mono text-sm text-slate-200"
+                                            className="min-w-0 truncate text-sm font-medium text-slate-100"
+                                            title={item.request_title ?? "Untitled"}
+                                        >
+                                            {item.request_title?.trim() || "Untitled"}
+                                        </div>
+                                        <div
+                                            className="min-w-0 font-mono text-sm text-slate-400"
                                             title={item.id}
                                         >
                                             {item.id.substring(0, 12)}…

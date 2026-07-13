@@ -39,6 +39,15 @@ export const exportByDateRangeBodySchema = z
     }
   );
 
+export const createAnalysisBodySchema = z.strictObject({
+  location_address: z.string().trim().optional(),
+  request_title: z
+    .string()
+    .trim()
+    .min(1, 'Request title is required')
+    .max(120, 'Request title must be at most 120 characters'),
+});
+
 // Kept for compatibility with legacy imports.
 export const exportAnalysesSchema = z.object({
   body: exportByDateRangeBodySchema,

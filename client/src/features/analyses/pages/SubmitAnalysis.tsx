@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { createAnalysis } from "../api";
+import { AnalysisSubmitLoader } from "../../../components/AnalysisSubmitLoader";
 
 function submitErrorMessage(err: unknown): string {
   if (isAxiosError(err)) {
@@ -22,6 +23,7 @@ export default function SubmitAnalysis() {
   const [quickView, setQuickView] = useState<"before" | "after" | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [requestTitle, setRequestTitle] = useState("");
 
   const beforeInputRef = useRef<HTMLInputElement>(null);
   const afterInputRef = useRef<HTMLInputElement>(null);
@@ -57,11 +59,17 @@ export default function SubmitAnalysis() {
 
   const handleSubmit = async () => {
     if (!beforeImage || !afterImage) return;
+    const title = requestTitle.trim();
+    if (!title) {
+      setError("Please enter a request title.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     const formData = new FormData();
     formData.append("beforeImage", beforeImage);
     formData.append("afterImage", afterImage);
+    formData.append("request_title", title);
     try {
       const res = await createAnalysis(formData);
       navigate(`/analyses/${res.analysisId}`, { replace: true });
@@ -73,6 +81,8 @@ export default function SubmitAnalysis() {
   };
 
   const canSubmit = Boolean(beforeImage && afterImage) && !submitting;
+
+  const missingTitle = Boolean(beforeImage && afterImage && !requestTitle.trim());
 
   const dropCardClass =
     "group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-blue-200 bg-blue-50 transition-[border-color,background-color] hover:border-blue-300 hover:bg-blue-100/80";
@@ -108,6 +118,29 @@ export default function SubmitAnalysis() {
       </div>
 
       <div className="glass-card mx-auto max-w-[1000px] rounded-xl p-8">
+        <div className="mb-8">
+          <label htmlFor="request-title" className="mb-2 block font-semibold text-slate-100">
+            Request Title
+          </label>
+          <input
+            id="request-title"
+            type="text"
+            maxLength={120}
+            placeholder="e.g. Main Street building inspection — March 2026"
+            value={requestTitle}
+            onChange={(e) => setRequestTitle(e.target.value)}
+            className="w-full rounded-lg border border-white/15 bg-[#0b1220] px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400/50 focus:ring-2 focus:ring-sky-400/20"
+          />
+          <p className="mt-1.5 text-xs text-slate-400">
+            Give this analysis a name so you can find it easily in your history.
+          </p>
+          {missingTitle && (
+            <p className="mt-1.5 text-xs font-medium text-amber-300">
+              Enter a request title to enable submission.
+            </p>
+          )}
+        </div>
+
         <div className="mb-8 grid grid-cols-2 gap-8">
           <div className="flex flex-col gap-3">
             <div className="font-semibold text-slate-100">Before Image</div>
@@ -205,16 +238,20 @@ export default function SubmitAnalysis() {
         <button
           type="button"
           className={`w-full rounded-lg border-none p-4 font-semibold text-white transition-[background-color,transform] duration-200 ${
-            canSubmit
+            canSubmit && requestTitle.trim()
               ? "cursor-pointer bg-[#2563eb] hover:bg-[#1d4ed8] active:scale-[0.99]"
-              : "cursor-not-allowed bg-slate-600/50 text-slate-400"
+              : canSubmit
+                ? "cursor-pointer bg-amber-600 hover:bg-amber-700 active:scale-[0.99]"
+                : "cursor-not-allowed bg-slate-600/50 text-slate-400"
           }`}
-          disabled={!beforeImage || !afterImage || submitting}
+          disabled={!canSubmit}
           onClick={() => void handleSubmit()}
         >
           {submitting ? "Submitting…" : "Submit for Analysis"}
         </button>
       </div>
+
+      {submitting && <AnalysisSubmitLoader />}
 
       {quickView && (
         <div

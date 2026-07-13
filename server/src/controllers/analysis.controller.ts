@@ -13,6 +13,7 @@ import {
 } from '../services/ai-inference.service.js';
 import { emitAnalysisUpdated } from '../services/socket.service.js';
 import { uploadImageAsset } from '../services/asset-storage.service.js';
+import { sendAnalysisCompleteEmail } from '../services/email.service.js';
 
 type ProcessAnalysisPayload = {
   analysisId: string;
@@ -142,6 +143,22 @@ const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
       coordinates: socketCoordinates,
       resultImagePath: uploadedResultImage.filePath,
     });
+
+    const inspector = await prisma.user.findUnique({
+      where: { id: payload.inspectorId },
+      select: { email: true, username: true },
+    });
+
+    if (inspector?.email) {
+      void sendAnalysisCompleteEmail({
+        userEmail: inspector.email,
+        username: inspector.username,
+        requestTitle: analysis.request_title ?? 'Untitled analysis',
+        completedAt: new Date(),
+        anomalyDetected: inference.anomalyDetected,
+        analysisId: analysis.id,
+      });
+    }
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Unknown processing error';
@@ -174,7 +191,10 @@ const createAnalysis = async (req: Request, res: Response) => {
   console.log('req.files:', req.files);
   console.log('req.user:', req.user);
 
-  const { location_address } = req.body;
+  const { location_address, request_title } = req.body as {
+    location_address?: string;
+    request_title: string;
+  };
 
   try {
     const files = req.files as { [fieldnames: string]: Express.Multer.File[] };
@@ -246,7 +266,8 @@ const createAnalysis = async (req: Request, res: Response) => {
             before_image_id: beforeImg.id,
             after_image_id: afterImg.id,
             status: 'Pending',
-            location_address
+            location_address,
+            request_title,
           },
         });
 
@@ -285,6 +306,7 @@ const createAnalysis = async (req: Request, res: Response) => {
       message: 'Analysis created successfully and sent to processing',
       analysisId: analysis.id,
       location_address: location_address,
+      request_title,
     });
 
     void processAnalysisInBackground({
