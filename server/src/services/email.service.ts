@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import dns from 'node:dns';
 import * as nodemailer from 'nodemailer';
 import {
   buildAnalysisCompleteEmailHtml,
@@ -28,6 +29,19 @@ const getMailConfig = () => {
 
 export const isEmailConfigured = (): boolean => getMailConfig() !== null;
 
+/** Render cannot reach Gmail SMTP over IPv6; force DNS to return IPv4 only. */
+const smtpIpv4Lookup = (
+  hostname: string,
+  _options: dns.LookupOptions,
+  callback: (
+    err: NodeJS.ErrnoException | null,
+    address: string,
+    family: number
+  ) => void
+) => {
+  dns.lookup(hostname, { family: 4 }, callback);
+};
+
 const createTransporter = () => {
   const config = getMailConfig();
   if (!config) {
@@ -45,17 +59,17 @@ const createTransporter = () => {
       user: config.user,
       pass: config.pass,
     },
-    // Render has no route to Gmail SMTP over IPv6 (ENETUNREACH on 2a00:1450:...).
+    lookup: smtpIpv4Lookup,
     family: 4,
-    // Render → Gmail can be slow; short timeouts caused ETIMEDOUT in production logs.
     connectionTimeout: 30_000,
     greetingTimeout: 30_000,
     socketTimeout: 60_000,
     ...(port === 587 ? { requireTLS: true } : {}),
     tls: {
       minVersion: 'TLSv1.2',
+      servername: host,
     },
-  });
+  } as nodemailer.TransportOptions);
 };
 
 /** Call once at startup to surface SMTP misconfiguration in Render logs. */
