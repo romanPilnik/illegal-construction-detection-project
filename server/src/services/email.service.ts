@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
-import dns from 'node:dns';
+import dns from 'node:dns/promises';
 import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import {
   buildAnalysisCompleteEmailHtml,
   buildPasswordResetEmailHtml,
@@ -18,7 +19,9 @@ dotenv.config({
       : '.env.development',
 });
 
-const getMailConfig = () => {
+export type EmailProvider = 'resend' | 'smtp' | 'none';
+
+const getSmtpConfig = () => {
   const user = process.env.EMAIL_USER?.trim();
   const pass = process.env.EMAIL_PASS?.trim().replace(/\s+/g, '');
   if (!user || !pass) {
@@ -27,140 +30,237 @@ const getMailConfig = () => {
   return { user, pass };
 };
 
-export const isEmailConfigured = (): boolean => getMailConfig() !== null;
+const getResendApiKey = (): string | null =>
+  process.env.RESEND_API_KEY?.trim() || null;
 
-/** Render cannot reach Gmail SMTP over IPv6; force DNS to return IPv4 only. */
-const smtpIpv4Lookup = (
-  hostname: string,
-  _options: dns.LookupOptions,
-  callback: (
-    err: NodeJS.ErrnoException | null,
-    address: string,
-    family: number
-  ) => void
-) => {
-  dns.lookup(hostname, { family: 4 }, callback);
+/** Resend uses HTTPS (port 443) — required on Render free tier, which blocks SMTP. */
+export const getEmailProvider = (): EmailProvider => {
+  if (getResendApiKey()) {
+    return 'resend';
+  }
+  if (getSmtpConfig()) {
+    return 'smtp';
+  }
+  return 'none';
 };
 
-const createTransporter = () => {
-  const config = getMailConfig();
+export const isEmailConfigured = (): boolean => getEmailProvider() !== 'none';
+
+const getFromAddress = (): string => {
+  const configured = process.env.EMAIL_FROM?.trim();
+  if (configured) {
+    return configured;
+  }
+
+  const user = process.env.EMAIL_USER?.trim();
+  if (user) {
+    return `"Illegal Construction Detection" <${user}>`;
+  }
+
+  return '"Illegal Construction Detection" <onboarding@resend.dev>';
+};
+
+const getSmtpSettings = () => {
+  const port = Number(process.env.EMAIL_PORT) || 587;
+  const hostname = process.env.EMAIL_HOST?.trim() || 'smtp.gmail.com';
+  return { port, hostname };
+};
+
+const ipv4ByHostname = new Map<string, string>();
+
+const resolveSmtpIpv4 = async (hostname: string): Promise<string> => {
+  const cached = ipv4ByHostname.get(hostname);
+  if (cached) {
+    return cached;
+  }
+
+  const { address } = await dns.lookup(hostname, { family: 4 });
+  ipv4ByHostname.set(hostname, address);
+  console.log(`📧 SMTP resolved ${hostname} -> ${address} (IPv4)`);
+  return address;
+};
+
+const createSmtpTransporter = async () => {
+  const config = getSmtpConfig();
   if (!config) {
     return null;
   }
 
-  const port = Number(process.env.EMAIL_PORT) || 465;
-  const host = process.env.EMAIL_HOST?.trim() || 'smtp.gmail.com';
+  const { port, hostname } = getSmtpSettings();
+  const connectHost = await resolveSmtpIpv4(hostname);
 
   return nodemailer.createTransport({
-    host,
+    host: connectHost,
     port,
     secure: port === 465,
     auth: {
       user: config.user,
       pass: config.pass,
     },
-    lookup: smtpIpv4Lookup,
-    family: 4,
     connectionTimeout: 30_000,
     greetingTimeout: 30_000,
     socketTimeout: 60_000,
     ...(port === 587 ? { requireTLS: true } : {}),
     tls: {
       minVersion: 'TLSv1.2',
-      servername: host,
+      servername: hostname,
     },
-  } as nodemailer.TransportOptions);
+  });
 };
 
-/** Call once at startup to surface SMTP misconfiguration in Render logs. */
+let resendClient: Resend | null = null;
+
+const getResendClient = (): Resend | null => {
+  const apiKey = getResendApiKey();
+  if (!apiKey) {
+    return null;
+  }
+  if (!resendClient) {
+    resendClient = new Resend(apiKey);
+  }
+  return resendClient;
+};
+
+/** Call once at startup to surface email misconfiguration in Render logs. */
 export const verifyEmailTransport = async (): Promise<boolean> => {
-  const config = getMailConfig();
-  const transporter = createTransporter();
-  if (!transporter || !config) {
+  const provider = getEmailProvider();
+  if (provider === 'none') {
     return false;
   }
 
-  const port = Number(process.env.EMAIL_PORT) || 465;
-  const host = process.env.EMAIL_HOST?.trim() || 'smtp.gmail.com';
+  if (provider === 'resend') {
+    console.log(
+      `📧 Email provider: Resend (HTTPS) — from ${getFromAddress()}`
+    );
+    return true;
+  }
+
+  const config = getSmtpConfig();
+  if (!config) {
+    return false;
+  }
+
+  const { port, hostname } = getSmtpSettings();
 
   try {
+    const transporter = await createSmtpTransporter();
+    if (!transporter) {
+      return false;
+    }
+
     await transporter.verify();
+    const ipv4 = ipv4ByHostname.get(hostname);
     console.log(
-      `📧 SMTP verified for ${config.user} via ${host}:${port}`
+      `📧 SMTP verified for ${config.user} via ${hostname}:${port} (IPv4 ${ipv4 ?? 'unknown'})`
     );
     return true;
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Unknown SMTP verify error';
     console.error(
-      `📧 SMTP verification failed for ${config.user} via ${host}:${port}: ${message}`
+      `📧 SMTP verification failed for ${config.user} via ${hostname}:${port}: ${message}`
     );
-    if (port === 465) {
-      console.error(
-        '📧 Tip: On Render, try EMAIL_PORT=587 with EMAIL_HOST=smtp.gmail.com'
-      );
-    }
+    console.error(
+      '📧 On Render free tier SMTP ports are blocked — set RESEND_API_KEY instead.'
+    );
     return false;
   }
 };
 
 const sendMail = async (
   logLabel: string,
-  mailOptions: nodemailer.SendMailOptions
+  mailOptions: { to: string; subject: string; html: string }
 ): Promise<boolean> => {
-  const config = getMailConfig();
-  const transporter = createTransporter();
-  if (!transporter || !config) {
-    console.warn(`${logLabel} skipped: EMAIL_USER/EMAIL_PASS is not configured`);
+  const provider = getEmailProvider();
+  if (provider === 'none') {
+    console.warn(
+      `${logLabel} skipped: set RESEND_API_KEY (Render) or EMAIL_USER/EMAIL_PASS (local SMTP)`
+    );
+    return false;
+  }
+
+  const from = getFromAddress();
+
+  if (provider === 'resend') {
+    try {
+      const client = getResendClient();
+      if (!client) {
+        return false;
+      }
+
+      const { error } = await client.emails.send({
+        from,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+      });
+
+      if (error) {
+        console.error(`${logLabel} failed (Resend): ${error.message}`);
+        return false;
+      }
+
+      console.log(`${logLabel} sent to ${mailOptions.to} (Resend)`);
+      return true;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unknown Resend error';
+      console.error(`${logLabel} failed (Resend): ${message}`);
+      return false;
+    }
+  }
+
+  const config = getSmtpConfig();
+  if (!config) {
     return false;
   }
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`${logLabel} sent to ${String(mailOptions.to)}`);
+    const transporter = await createSmtpTransporter();
+    if (!transporter) {
+      return false;
+    }
+
+    await transporter.sendMail({
+      from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      html: mailOptions.html,
+    });
+    console.log(`${logLabel} sent to ${mailOptions.to} (SMTP)`);
     return true;
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : 'Unknown send error';
-    console.error(`${logLabel} failed: ${message}`);
+      error instanceof Error ? error.message : 'Unknown SMTP send error';
+    console.error(`${logLabel} failed (SMTP): ${message}`);
     return false;
   }
 };
 
-/**
- * Sends a branded welcome email to new users.
- */
 export const sendWelcomeEmail = async (userEmail: string, username: string) => {
-  const config = getMailConfig();
-  if (!config) {
+  if (!isEmailConfigured()) {
     return;
   }
 
   const loginUrl = `${getFrontendBaseUrl()}/login`;
 
   await sendMail('Welcome email', {
-    from: `"Illegal Construction Detection" <${config.user}>`,
     to: userEmail,
     subject: 'Welcome to Illegal Construction Detection',
     html: buildWelcomeEmailHtml(username, loginUrl),
   });
 };
 
-/**
- * Sends a branded password reset link (valid for RESET_TOKEN_TTL_MINUTES).
- */
 export const sendPasswordResetEmail = async (
   userEmail: string,
   username: string,
   resetUrl: string
 ): Promise<boolean> => {
-  const config = getMailConfig();
-  if (!config) {
+  if (!isEmailConfigured()) {
     return false;
   }
 
   return sendMail('Password reset email', {
-    from: `"Illegal Construction Detection" <${config.user}>`,
     to: userEmail,
     subject: 'Reset your password',
     html: buildPasswordResetEmailHtml(
@@ -171,9 +271,6 @@ export const sendPasswordResetEmail = async (
   });
 };
 
-/**
- * Sends a branded analysis completion summary to the submitting user.
- */
 export const sendAnalysisCompleteEmail = async (options: {
   userEmail: string;
   username: string;
@@ -182,8 +279,7 @@ export const sendAnalysisCompleteEmail = async (options: {
   anomalyDetected: boolean;
   analysisId: string;
 }) => {
-  const config = getMailConfig();
-  if (!config) {
+  if (!isEmailConfigured()) {
     return;
   }
 
@@ -194,7 +290,6 @@ export const sendAnalysisCompleteEmail = async (options: {
   });
 
   await sendMail('Analysis complete email', {
-    from: `"Illegal Construction Detection" <${config.user}>`,
     to: options.userEmail,
     subject: `Analysis complete: ${options.requestTitle}`,
     html: buildAnalysisCompleteEmailHtml({

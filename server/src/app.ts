@@ -5,7 +5,10 @@ import userRoutes from './routes/user.routes.js';
 import auditLogRoutes from './routes/log.routes.js';
 import analysisRoutes from './routes/analysis.routes.js';
 import { prisma } from './lib/prisma.js';
-import { isEmailConfigured } from './services/email.service.js';
+import {
+  getEmailProvider,
+  isEmailConfigured,
+} from './services/email.service.js';
 
 const app = express();
 
@@ -36,6 +39,7 @@ app.get('/api/v1/health', async (_req, res) => {
       status: 'OK',
       message: 'Server and DB are alive! 🚀',
       emailConfigured: isEmailConfigured(),
+      emailProvider: getEmailProvider(),
       frontendUrlSet: Boolean(process.env.FRONTEND_URL?.trim()),
     });
   } catch (error) {

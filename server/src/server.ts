@@ -1,7 +1,11 @@
 import config from './config.js';
 import app from './app.js';
 import { prisma } from './lib/prisma.js';
-import { isEmailConfigured, verifyEmailTransport } from './services/email.service.js';
+import {
+  getEmailProvider,
+  isEmailConfigured,
+  verifyEmailTransport,
+} from './services/email.service.js';
 import http from 'http';
 import { initWebSocket } from './services/socket.service.js';
 
@@ -18,10 +22,11 @@ server.listen(config.port, async () => {
   console.log('🌍 Environment:', process.env.NODE_ENV);
   console.log('💾 DB Host:', dbDisplay); // כאן יודפס "הפורט בדיקות"
   console.log('🔢 DB Port:', process.env.DATABASE_PORT || '3306');
+  const emailProvider = getEmailProvider();
   console.log(
     isEmailConfigured()
-      ? '📧 Email: configured (SMTP ready)'
-      : '📧 Email: NOT configured — set EMAIL_USER and EMAIL_PASS on Render / in .env.development'
+      ? `📧 Email: configured (${emailProvider === 'resend' ? 'Resend HTTPS' : 'SMTP'})`
+      : '📧 Email: NOT configured — set RESEND_API_KEY on Render, or EMAIL_USER/EMAIL_PASS locally'
   );
   console.log('🔗 FRONTEND_URL:', process.env.FRONTEND_URL || '(not set)');
 
