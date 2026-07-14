@@ -1,17 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { createAnalysis } from "../api";
 import { AnalysisSubmitLoader } from "../../../components/AnalysisSubmitLoader";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
 function submitErrorMessage(err: unknown): string {
-  if (isAxiosError(err)) {
-    const data = err.response?.data as
-      | { error?: string; message?: string }
-      | undefined;
-    return data?.error ?? data?.message ?? "Failed to submit analysis";
-  }
-  return "Failed to submit analysis";
+  return getApiErrorMessage(err, "Failed to submit analysis.");
 }
 
 export default function SubmitAnalysis() {
@@ -72,7 +66,7 @@ export default function SubmitAnalysis() {
     formData.append("request_title", title);
     try {
       const res = await createAnalysis(formData);
-      navigate(`/analyses/${res.analysisId}`, { replace: true });
+      navigate(`/analyses/${res.data.id}`, { replace: true });
     } catch (err) {
       setError(submitErrorMessage(err));
     } finally {

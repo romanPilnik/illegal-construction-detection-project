@@ -10,7 +10,7 @@ const fileFilter = (
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Only images are allowed!') as unknown as null, false);
+    cb(new Error('UNSUPPORTED_IMAGE_TYPE'));
   }
 };
 

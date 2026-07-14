@@ -3,6 +3,7 @@ import PDFDocument from 'pdfkit';
 import path from 'path';
 import fs from 'fs';
 import { Jimp } from 'jimp';
+import type { AnalysisStatus } from '../generated/prisma/client.js';
 
 interface ImageInfo {
   file_path: string;
@@ -11,12 +12,12 @@ interface ImageInfo {
 export interface AnalysisReport {
   id: string;
   created_at: Date;
-  status: string;
+  status: AnalysisStatus;
   anomaly_detected: boolean | null;
   issued_by: { username: string };
-  before_image?: ImageInfo | null;
-  after_image?: ImageInfo | null;
-  result_image?: ImageInfo | null;
+  before_image: ImageInfo;
+  after_image: ImageInfo;
+  result_image: ImageInfo | null;
 }
 
 type PdfDoc = InstanceType<typeof PDFDocument>;

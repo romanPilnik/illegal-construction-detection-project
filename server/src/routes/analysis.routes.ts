@@ -13,8 +13,20 @@ import {
   exportByIdParamsSchema,
   getAnalysesQuerySchema,
 } from '../validation/analysis.validation.js';
+import type { GetAnalysesQuery } from '../validation/analysis.validation.js';
 
 const router = Router();
+
+const multerErrorMessage = (error: multer.MulterError): string => {
+  if (error.code === 'LIMIT_FILE_SIZE') {
+    return 'Each image must be 5 MB or smaller.';
+  }
+  if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+    return 'Upload exactly one before image and one after image.';
+  }
+  return 'The image upload could not be processed.';
+};
+
 const handleAnalyzeUpload = (
   req: Request,
   res: Response,
@@ -25,18 +37,23 @@ const handleAnalyzeUpload = (
     { name: 'afterImage', maxCount: 1 },
   ])(req, res, (err) => {
     if (err instanceof multer.MulterError) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json({ message: multerErrorMessage(err) });
       return;
     }
     if (err) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json({
+        message:
+          err.message === 'UNSUPPORTED_IMAGE_TYPE'
+            ? 'Only supported image files can be uploaded.'
+            : 'The image upload could not be processed.',
+      });
       return;
     }
     next();
   });
 };
 
-router.get(
+router.get<unknown, unknown, unknown, GetAnalysesQuery>(
   '/',
   authenticateToken,
   validateRequest({ query: getAnalysesQuerySchema }),

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { isAxiosError } from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { getAnalysisById, exportAnalysisById } from "../api";
-import type { AnalysisDetailData } from "../types";
+import type { AnalysisDetailData, AnalysisStatus } from "../types";
 import { AnalysisSubmitLoader } from "../../../components/AnalysisSubmitLoader";
+import { subscribeToAnalysisUpdates } from "../socket";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
 const viteApiUrl =
   import.meta.env.VITE_API_URL || "http://localhost:5001/api/v1";
@@ -16,6 +17,7 @@ export default function AnalysisDetail() {
     const navigate = useNavigate();
     const [data, setData] = useState(null as AnalysisDetailData | null);
     const [error, setError] = useState("");
+    const [refreshWarning, setRefreshWarning] = useState("");
     const [loading, setLoading] = useState(true);
 
     const [exporting, setExporting] = useState<"PDF" | "EXCEL" | null>(null);
@@ -44,15 +46,13 @@ export default function AnalysisDetail() {
             link.remove();
         } catch (err) {
             console.error("Export failed", err);
-            alert(
-                "Export failed. Check that the server is running and the reports directory is configured.",
-            );
+            alert(getApiErrorMessage(err, "Failed to export analysis."));
         } finally {
             setExporting(null);
         }
     };
 
-    const getAnomalyBadge = (status: string, hasAnomaly: boolean | null) => {
+    const getAnomalyBadge = (status: AnalysisStatus, hasAnomaly: boolean | null) => {
         const baseClasses =
             "inline-flex min-h-[1.5rem] items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm border";
 
@@ -104,12 +104,7 @@ export default function AnalysisDetail() {
                 if (!cancelled) setData(payload.data);
             } catch (err) {
                 if (!cancelled) {
-                    if (isAxiosError(err)) {
-                        const data = err.response?.data as { message?: string } | undefined;
-                        setError(data?.message ?? "Could not load analysis");
-                    } else {
-                        setError("Could not load analysis");
-                    }
+                    setError(getApiErrorMessage(err, "Could not load analysis."));
                 }
             } finally {
                 if (!cancelled) setLoading(false);
@@ -121,19 +116,55 @@ export default function AnalysisDetail() {
         };
     }, [analysisId]);
 
+    const analysisStatus = data?.status;
+
     useEffect(() => {
-        if (!analysisId || !data || data.status !== "Pending") return;
+        if (!analysisId || analysisStatus !== "Pending") return;
 
         const poll = window.setInterval(() => {
             void getAnalysisById(analysisId)
-                .then((payload) => setData(payload.data))
-                .catch(() => undefined);
+                .then((payload) => {
+                    setData(payload.data);
+                    setRefreshWarning("");
+                })
+                .catch((err) => {
+                    setRefreshWarning(getApiErrorMessage(err, "Could not refresh analysis status."));
+                });
         }, 3000);
 
         return () => window.clearInterval(poll);
-    }, [analysisId, data?.status]);
+    }, [analysisId, analysisStatus]);
 
     const isProcessing = data?.status === "Pending";
+
+    useEffect(() => {
+        if (!analysisId) return;
+
+        let cancelled = false;
+        const refresh = async () => {
+            try {
+                const payload = await getAnalysisById(analysisId);
+                if (!cancelled) {
+                    setData(payload.data);
+                    setRefreshWarning("");
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setRefreshWarning(getApiErrorMessage(err, "Could not refresh analysis."));
+                }
+            }
+        };
+
+        const unsubscribe = subscribeToAnalysisUpdates(
+            analysisId,
+            () => void refresh(),
+            setRefreshWarning,
+        );
+        return () => {
+            cancelled = true;
+            unsubscribe();
+        };
+    }, [analysisId]);
 
     return (
         <div className="app-page pt-8">
@@ -185,7 +216,13 @@ export default function AnalysisDetail() {
                 {loading && <p className="animate-pulse p-8 text-center text-slate-400">Loading analysis data...</p>}
                 {!loading && error && <p className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">{error}</p>}
 
-                {!loading && !error && data && (
+                {!loading && data && refreshWarning && (
+                    <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
+                        {refreshWarning}
+                    </p>
+                )}
+
+                {!loading && data && (
                     <>
                         {/* Info Grid */}
                         <div className="mb-8 grid grid-cols-2 gap-4 border-b border-white/10 pb-6">
@@ -214,6 +251,12 @@ export default function AnalysisDetail() {
                                 );
                             })()}
                         </div>
+
+                        {data.status === "Failed" && data.failure_reason && (
+                            <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+                                {data.failure_reason}
+                            </div>
+                        )}
 
                         {/* Images Stack */}
                         <div className="space-y-10">

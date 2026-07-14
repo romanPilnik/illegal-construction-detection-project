@@ -1,8 +1,9 @@
 import { api } from '../../services/api'
 import type { AnalysesListMeta } from './types'
+import type { AnalysisStatus } from '../analyses/types'
 
 export async function getAnalysesMeta(params: {
-    status?: 'Pending' | 'Completed' | 'Failed'
+    status?: AnalysisStatus
 }): Promise<AnalysesListMeta> {
     const res = await api.get<{ meta: AnalysesListMeta }>('/analyses', {
         params: {

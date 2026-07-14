@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { getAnalyses, exportAnalysesByDate } from "../api";
-import type { AnalysisListRow } from "../types";
+import type { AnalysisListRow, AnalysisStatus } from "../types";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
-type StatusType = 'Pending' | 'Completed' | 'Failed' | "";
+type StatusType = AnalysisStatus | "";
 
-function statusBadgeClasses(status: string) {
+function statusBadgeClasses(status: AnalysisStatus) {
     const key = status.toLowerCase();
     const base = "rounded-full px-3 py-1 text-xs font-semibold";
     if (key === "completed") return `${base} bg-[#dcfce3] text-[#166534]`;
@@ -16,7 +16,7 @@ function statusBadgeClasses(status: string) {
 }
 
 /** Empty while waiting on AI (pending). */
-function aiResultLabel(status: string, anomalyDetected: boolean | null): string {
+function aiResultLabel(status: AnalysisStatus, anomalyDetected: boolean | null): string {
     const key = status.toLowerCase();
     if (key === "pending" || key === "processing") return "";
     if (key !== "completed") return "";
@@ -70,15 +70,7 @@ export default function AnalysisHistory() {
             });
             setAnalyses(payload.data ?? []);
         } catch (err) {
-            if (isAxiosError(err)) {
-                if (err.response?.status === 400 || err.response?.data?.message?.includes('Validation')) {
-                    setError("");
-                } else {
-                    setError(err.response?.data?.message ?? "Failed to load analyses");
-                }
-            } else {
-                setError("Failed to load analyses");
-            }
+            setError(getApiErrorMessage(err, "Failed to load analyses."));
             setAnalyses([]);
         } finally {
             setLoading(false);
@@ -87,6 +79,8 @@ export default function AnalysisHistory() {
 
     useEffect(() => {
         void fetchData();
+        // Filters are applied explicitly with the Search button.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleReset = async () => {
@@ -99,8 +93,8 @@ export default function AnalysisHistory() {
         try {
             const payload = await getAnalyses({ page: 1, limit: 50 });
             setAnalyses(payload.data ?? []);
-        } catch {
-            setError("Failed to reset list");
+        } catch (err) {
+            setError(getApiErrorMessage(err, "Failed to reset the analysis list."));
             setAnalyses([]);
         } finally {
             setLoading(false);
@@ -122,8 +116,8 @@ export default function AnalysisHistory() {
             document.body.appendChild(link);
             link.click();
             link.remove();
-        } catch {
-            alert("Export failed");
+        } catch (err) {
+            alert(getApiErrorMessage(err, "Failed to export analyses."));
         } finally {
             setExporting(null);
         }

@@ -3,16 +3,18 @@ import type {
     AnalysesListResponse,
     AnalysisDetailResponse,
     CreateAnalysisResponse,
+    ExportAnalysesByDateBody,
+    ExportAnalysisResponse,
+    ExportFormat,
+    GetAnalysesQuery,
 } from './types'
 
-export async function getAnalyses(params: {
-    page: number
-    limit: number
-    status?: 'Pending' | 'Completed' | 'Failed';
-    start_date?: string;
-    end_date?: string;
-}): Promise<AnalysesListResponse> {
-    const res = await api.get<AnalysesListResponse>('/analyses', { params })
+const LOCAL_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+export async function getAnalyses(params: GetAnalysesQuery): Promise<AnalysesListResponse> {
+    const res = await api.get<AnalysesListResponse>('/analyses', {
+        params: { ...params, time_zone: LOCAL_TIME_ZONE },
+    })
     return res.data
 }
 
@@ -30,20 +32,20 @@ export async function createAnalysis(formData: FormData): Promise<CreateAnalysis
     return res.data
 }
 
-export async function exportAnalysisById(id: string, format: 'PDF' | 'EXCEL') {
-    const res = await api.post<{ downloadUrl: string }>(`/analyses/${id}/export`, { format });
+export async function exportAnalysisById(
+    id: string,
+    format: ExportFormat,
+): Promise<ExportAnalysisResponse> {
+    const res = await api.post<ExportAnalysisResponse>(`/analyses/${id}/export`, { format });
     return res.data;
 }
 
-export async function exportAnalysesByDate(params: {
-    start_date?: string;
-    end_date?: string;
-    format: 'PDF' | 'EXCEL'
-}) {
-    const res = await api.post<{ downloadUrl: string }>('/analyses/export', params);
+export async function exportAnalysesByDate(
+    params: ExportAnalysesByDateBody,
+): Promise<ExportAnalysisResponse> {
+    const res = await api.post<ExportAnalysisResponse>('/analyses/export', {
+        ...params,
+        time_zone: LOCAL_TIME_ZONE,
+    });
     return res.data;
 }
-//export async function createAnalysis(formData: FormData): Promise<CreateAnalysisResponse> {
-//    const res = await api.post<CreateAnalysisResponse>('/analyses/analyse', formData)
-//    return res.data
-//}

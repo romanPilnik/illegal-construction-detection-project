@@ -8,12 +8,20 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { createAnnotatedResultImage } from '../services/image-annotator.service.js';
 import {
-  type BoundingBoxCoordinates,
   requestAIInference,
 } from '../services/ai-inference.service.js';
 import { emitAnalysisUpdated } from '../services/socket.service.js';
 import { uploadImageAsset } from '../services/asset-storage.service.js';
 import { sendAnalysisCompleteEmail } from '../services/email.service.js';
+import { buildLocalDateRange } from '../lib/date-range.js';
+import type {
+  AnalysisIdParams,
+  CreateAnalysisBody,
+  ExportByDateRangeBody,
+  ExportByIdBody,
+  ExportByIdParams,
+  GetAnalysesQuery,
+} from '../validation/analysis.validation.js';
 
 type ProcessAnalysisPayload = {
   analysisId: string;
@@ -25,51 +33,131 @@ type ProcessAnalysisPayload = {
   requesterIp: string;
 };
 
-const logAnalysisFailure = async (
-  payload: ProcessAnalysisPayload,
-  reason: string
+class InvalidUploadedImageError extends Error {}
+
+const processingFailureMessage = (error: unknown): string => {
+  const message = error instanceof Error ? error.message.toLowerCase() : '';
+  if (message.includes('timed out')) {
+    return 'Analysis timed out while processing. Please try again.';
+  }
+  if (
+    message.includes('image') ||
+    message.includes('jimp') ||
+    message.includes('bitmap')
+  ) {
+    return 'One or both uploaded images could not be processed.';
+  }
+  if (
+    message.includes('ai service') ||
+    message.includes('fetch') ||
+    message.includes('network')
+  ) {
+    return 'The analysis service is temporarily unavailable. Please try again later.';
+  }
+  return 'Analysis could not be completed. Please try again.';
+};
+
+const DEFAULT_PROCESSING_FAILURE_MESSAGE =
+  'Analysis could not be completed. Please try again.';
+
+const writeAuditLog = async (data: Prisma.AuditLogCreateArgs['data']) => {
+  try {
+    await prisma.auditLog.create({ data });
+  } catch (error) {
+    console.error('Failed to write analysis audit log:', error);
+  }
+};
+
+const notifyAnalysisUpdated = (
+  inspectorId: string,
+  payload: Parameters<typeof emitAnalysisUpdated>[1]
 ) => {
-  await prisma.$transaction(async (tx) => {
-    await tx.analysis.update({
+  try {
+    emitAnalysisUpdated(inspectorId, payload);
+  } catch (error) {
+    console.error(
+      `Failed to emit analysis update for ${payload.analysisId}:`,
+      error
+    );
+  }
+};
+
+const recordAnalysisFailure = async (
+  payload: ProcessAnalysisPayload,
+  error: unknown
+) => {
+  const rawReason =
+    error instanceof Error ? error.message : 'Unknown processing error';
+  const publicReason = processingFailureMessage(error);
+
+  try {
+    await prisma.analysis.update({
       where: { id: payload.analysisId },
       data: {
         status: 'Failed',
         anomaly_detected: null,
-        bbox_x1: null,
-        bbox_y1: null,
-        bbox_x2: null,
-        bbox_y2: null,
+        result_image_id: null,
       },
     });
+  } catch (persistenceError) {
+    console.error(
+      `Failed to persist failure state for analysis ${payload.analysisId}:`,
+      persistenceError
+    );
+  }
 
-    await tx.auditLog.create({
-      data: {
-        user_id: payload.inspectorId,
-        action: 'ANALYSIS_PROCESSING_FAILED',
-        ip_address: payload.requesterIp,
-        status: 'Failure',
-        details: reason,
-        metadata: { analysisId: payload.analysisId },
-      },
-    });
-    },
-    {
-      timeout: 30000,
-      maxWait: 10000,
+  await writeAuditLog({
+    user_id: payload.inspectorId,
+    action: 'ANALYSIS_PROCESSING_FAILED',
+    ip_address: payload.requesterIp,
+    status: 'Failure',
+    details: rawReason,
+    metadata: { analysisId: payload.analysisId, publicReason },
   });
 
-  emitAnalysisUpdated(payload.inspectorId, {
+  notifyAnalysisUpdated(payload.inspectorId, {
     analysisId: payload.analysisId,
     status: 'Failed',
-    anomalyDetected: null,
-    coordinates: {},
-    error: reason,
   });
 };
 
-const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
+const sendCompletionNotification = async (
+  payload: ProcessAnalysisPayload,
+  analysis: { id: string; request_title: string | null },
+  anomalyDetected: boolean
+) => {
   try {
-    const inference = await requestAIInference(
+    const inspector = await prisma.user.findUnique({
+      where: { id: payload.inspectorId },
+      select: { email: true, username: true },
+    });
+
+    if (inspector?.email) {
+      await sendAnalysisCompleteEmail({
+        userEmail: inspector.email,
+        username: inspector.username,
+        requestTitle: analysis.request_title ?? 'Untitled analysis',
+        completedAt: new Date(),
+        anomalyDetected,
+        analysisId: analysis.id,
+      });
+    }
+  } catch (error) {
+    console.error(
+      `Failed to send completion notification for analysis ${analysis.id}:`,
+      error
+    );
+  }
+};
+
+export const processAnalysisInBackground = async (
+  payload: ProcessAnalysisPayload
+) => {
+  let inference: Awaited<ReturnType<typeof requestAIInference>>;
+  let analysis: { id: string; request_title: string | null };
+
+  try {
+    inference = await requestAIInference(
       payload.beforeImageBuffer,
       payload.afterImageBuffer,
       payload.beforeImageName,
@@ -87,92 +175,57 @@ const processAnalysisInBackground = async (payload: ProcessAnalysisPayload) => {
       category: 'result',
     });
 
-    const analysis = await prisma.$transaction(async (tx) => {
+    analysis = await prisma.$transaction(async (tx) => {
       const imageRecord = await tx.image.create({
         data: {
           file_path: uploadedResultImage.filePath,
-          file_size_bytes: uploadedResultImage.fileSizeBytes,
-          mime_type: uploadedResultImage.mimeType,
-          width: resultImage.width,
-          height: resultImage.height,
         },
       });
 
-      const updatedAnalysis = await tx.analysis.update({
+      return tx.analysis.update({
         where: { id: payload.analysisId },
         data: {
           status: 'Completed',
           anomaly_detected: inference.anomalyDetected,
           result_image_id: imageRecord.id,
-          bbox_x1: inference.coordinates?.x1 ?? null,
-          bbox_y1: inference.coordinates?.y1 ?? null,
-          bbox_x2: inference.coordinates?.x2 ?? null,
-          bbox_y2: inference.coordinates?.y2 ?? null,
         },
       });
-
-      await tx.auditLog.create({
-        data: {
-          user_id: payload.inspectorId,
-          action: 'ANALYSIS_PROCESSING_COMPLETED',
-          ip_address: payload.requesterIp,
-          status: 'Success',
-          details: `Analysis ${payload.analysisId} completed successfully.`,
-          metadata: {
-            analysisId: payload.analysisId,
-            anomalyDetected: inference.anomalyDetected,
-          },
-        },
-      });
-
-      return updatedAnalysis;
-      },
-      {
-        timeout: 30000,
-        maxWait: 10000,
-      });
-
-
-    // TODO: Keep empty coordinates for "no anomaly" response; revisit if product contract changes.
-    const socketCoordinates: BoundingBoxCoordinates | Record<string, never> =
-      inference.coordinates ?? {};
-    emitAnalysisUpdated(payload.inspectorId, {
-      analysisId: analysis.id,
-      status: 'Completed',
-      anomalyDetected: inference.anomalyDetected,
-      coordinates: socketCoordinates,
-      resultImagePath: uploadedResultImage.filePath,
+    },
+    {
+      timeout: 30000,
+      maxWait: 10000,
     });
-
-    const inspector = await prisma.user.findUnique({
-      where: { id: payload.inspectorId },
-      select: { email: true, username: true },
-    });
-
-    if (inspector?.email) {
-      void sendAnalysisCompleteEmail({
-        userEmail: inspector.email,
-        username: inspector.username,
-        requestTitle: analysis.request_title ?? 'Untitled analysis',
-        completedAt: new Date(),
-        anomalyDetected: inference.anomalyDetected,
-        analysisId: analysis.id,
-      });
-    }
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown processing error';
     console.error(`Analysis ${payload.analysisId} failed:`, error);
-    await logAnalysisFailure(payload, message);
+    await recordAnalysisFailure(payload, error);
+    return;
   }
+
+  await writeAuditLog({
+    user_id: payload.inspectorId,
+    action: 'ANALYSIS_PROCESSING_COMPLETED',
+    ip_address: payload.requesterIp,
+    status: 'Success',
+    details: `Analysis ${payload.analysisId} completed successfully.`,
+    metadata: {
+      analysisId: payload.analysisId,
+      anomalyDetected: inference.anomalyDetected,
+    },
+  });
+
+  notifyAnalysisUpdated(payload.inspectorId, {
+    analysisId: analysis.id,
+    status: 'Completed',
+  });
+  await sendCompletionNotification(payload, analysis, inference.anomalyDetected);
 };
 
-const getImageDimensions = async (buffer: Buffer) => {
-  const image = await Jimp.read(buffer);
-  return {
-    width: image.bitmap.width,
-    height: image.bitmap.height,
-  };
+const validateUploadedImage = async (buffer: Buffer) => {
+  try {
+    await Jimp.read(buffer);
+  } catch {
+    throw new InvalidUploadedImageError('Invalid uploaded image');
+  }
 };
 
 const readUploadedFileBuffer = async (file: Express.Multer.File) => {
@@ -186,15 +239,11 @@ const readUploadedFileBuffer = async (file: Express.Multer.File) => {
   throw new Error('Uploaded file is missing both buffer and path');
 };
 
-const createAnalysis = async (req: Request, res: Response) => {
-  console.log('=== createAnalysis hit ===');
-  console.log('req.files:', req.files);
-  console.log('req.user:', req.user);
-
-  const { location_address, request_title } = req.body as {
-    location_address?: string;
-    request_title: string;
-  };
+const createAnalysis = async (
+  req: Request<unknown, unknown, CreateAnalysisBody>,
+  res: Response
+) => {
+  const { request_title } = req.body;
 
   try {
     const files = req.files as { [fieldnames: string]: Express.Multer.File[] };
@@ -203,14 +252,14 @@ const createAnalysis = async (req: Request, res: Response) => {
 
     if (!beforeFile || !afterFile) {
       res.status(400).json({
-        error: 'Missing images. Both before and after images are required.',
+        message: 'Missing images. Both before and after images are required.',
       });
       return;
     }
 
     const inspectorId = req.user?.userId;
     if (!inspectorId) {
-      res.status(401).json({ error: 'Unauthorized: Inspector ID not found' });
+      res.status(401).json({ message: 'Unauthorized: Inspector ID not found' });
       return;
     }
 
@@ -218,9 +267,9 @@ const createAnalysis = async (req: Request, res: Response) => {
       readUploadedFileBuffer(beforeFile),
       readUploadedFileBuffer(afterFile),
     ]);
-    const [beforeDimensions, afterDimensions] = await Promise.all([
-      getImageDimensions(beforeBuffer),
-      getImageDimensions(afterBuffer),
+    await Promise.all([
+      validateUploadedImage(beforeBuffer),
+      validateUploadedImage(afterBuffer),
     ]);
     const [beforeStored, afterStored] = await Promise.all([
       uploadImageAsset({
@@ -243,20 +292,12 @@ const createAnalysis = async (req: Request, res: Response) => {
         const beforeImg = await tx.image.create({
           data: {
             file_path: beforeStored.filePath,
-            file_size_bytes: beforeStored.fileSizeBytes,
-            mime_type: beforeStored.mimeType,
-            width: beforeDimensions.width,
-            height: beforeDimensions.height,
           },
         });
 
         const afterImg = await tx.image.create({
           data: {
             file_path: afterStored.filePath,
-            file_size_bytes: afterStored.fileSizeBytes,
-            mime_type: afterStored.mimeType,
-            width: afterDimensions.width,
-            height: afterDimensions.height,
           },
         });
 
@@ -266,19 +307,7 @@ const createAnalysis = async (req: Request, res: Response) => {
             before_image_id: beforeImg.id,
             after_image_id: afterImg.id,
             status: 'Pending',
-            location_address,
             request_title,
-          },
-        });
-
-        await tx.auditLog.create({
-          data: {
-            user_id: inspectorId,
-            action: 'UPLOAD_IMAGES',
-            ip_address: req.ip || 'unknown',
-            status: 'Success',
-            details: `Inspector uploaded images for analysis. Files: ${beforeFile.originalname}, ${afterFile.originalname}`,
-            metadata: { analysisId: newAnalysis.id },
           },
         });
 
@@ -288,25 +317,19 @@ const createAnalysis = async (req: Request, res: Response) => {
         timeout: 30000,
         maxWait: 10000,
       });
-
-
-
-    console.log(`
-      📸 New Upload Success!
-      -----------------------
-      Inspector ID: ${inspectorId}
-      Analysis ID:  ${analysis.id}
-      Status:       ${analysis.status}
-      location_address:     ${location_address}
-      Timestamp:    ${new Date().toLocaleString()}
-      -----------------------
-    `);
-
+    void writeAuditLog({
+      user_id: inspectorId,
+      action: 'UPLOAD_IMAGES',
+      ip_address: req.ip || 'unknown',
+      status: 'Success',
+      details: `Inspector uploaded images for analysis. Files: ${beforeFile.originalname}, ${afterFile.originalname}`,
+      metadata: { analysisId: analysis.id },
+    });
     res.status(201).json({
       message: 'Analysis created successfully and sent to processing',
       analysisId: analysis.id,
-      location_address: location_address,
       request_title,
+      data: { id: analysis.id },
     });
 
     void processAnalysisInBackground({
@@ -317,21 +340,69 @@ const createAnalysis = async (req: Request, res: Response) => {
       afterImageBuffer: afterBuffer,
       afterImageName: afterFile.originalname,
       requesterIp: req.ip || 'unknown',
+    }).catch((error) => {
+      console.error(`Unexpected background failure for analysis ${analysis.id}:`, error);
     });
   } catch (error) {
     console.error('Error creating analysis:', error);
+    if (error instanceof InvalidUploadedImageError) {
+      res.status(400).json({
+        message: 'One or both uploaded files are not valid supported images.',
+      });
+      return;
+    }
     res
       .status(500)
-      .json({ error: 'Internal server error during analysis creation' });
+      .json({ message: 'Internal server error during analysis creation' });
   }
 };
 
-const analysisInclude = {
-  issued_by: { select: { id: true, username: true } },
-  before_image: true,
-  after_image: true,
-  result_image: true,
-} satisfies Prisma.AnalysisInclude;
+const analysisListSelect = {
+  id: true,
+  status: true,
+  created_at: true,
+  request_title: true,
+  anomaly_detected: true,
+} satisfies Prisma.AnalysisSelect;
+
+const analysisDetailSelect = {
+  id: true,
+  inspector_id: true,
+  status: true,
+  created_at: true,
+  request_title: true,
+  anomaly_detected: true,
+  issued_by: { select: { username: true } },
+  before_image: { select: { file_path: true } },
+  after_image: { select: { file_path: true } },
+  result_image: { select: { file_path: true } },
+} satisfies Prisma.AnalysisSelect;
+
+const getAnalysisFailureReason = async (analysisId: string) => {
+  try {
+    const failureLog = await prisma.auditLog.findFirst({
+      where: {
+        action: 'ANALYSIS_PROCESSING_FAILED',
+        metadata: { path: '$.analysisId', equals: analysisId },
+      },
+      select: { metadata: true },
+      orderBy: { timestamp: 'desc' },
+    });
+    const metadata = failureLog?.metadata;
+    if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
+      const publicReason = (metadata as Record<string, unknown>).publicReason;
+      if (typeof publicReason === 'string' && publicReason.trim()) {
+        return publicReason;
+      }
+    }
+  } catch (error) {
+    console.error(
+      `Failed to read failure reason for analysis ${analysisId}:`,
+      error
+    );
+  }
+  return DEFAULT_PROCESSING_FAILURE_MESSAGE;
+};
 
 const getOutcomeSummary = async (req: Request, res: Response) => {
   try {
@@ -373,15 +444,12 @@ const getOutcomeSummary = async (req: Request, res: Response) => {
   }
 };
 
-const getAnalyses = async (req: Request, res: Response) => {
+const getAnalyses = async (
+  req: Request<unknown, unknown, unknown, GetAnalysesQuery>,
+  res: Response
+) => {
   try {
-    const { page, limit, status, start_date, end_date } = req.query as unknown as {
-      page: number;
-      limit: number;
-      status?: AnalysisStatus;
-      start_date?: string;
-      end_date?: string;
-    };
+    const { page, limit, status, start_date, end_date, time_zone } = req.query;
 
     const where: Prisma.AnalysisWhereInput = {};
 
@@ -392,17 +460,11 @@ const getAnalyses = async (req: Request, res: Response) => {
       where.status = status;
     }
     if (start_date || end_date) {
-      where.created_at = {};
-
-      if (start_date) {
-        where.created_at.gte = new Date(start_date);
-      }
-
-      if (end_date) {
-        const endOfDay = new Date(end_date);
-        endOfDay.setUTCHours(23, 59, 59, 999);
-        where.created_at.lte = endOfDay;
-      }
+      where.created_at = buildLocalDateRange({
+        startDate: start_date,
+        endDate: end_date,
+        timeZone: time_zone,
+      });
     }
 
     const skip = (page - 1) * limit;
@@ -411,7 +473,7 @@ const getAnalyses = async (req: Request, res: Response) => {
 
     const analyses = await prisma.analysis.findMany({
       where,
-      include: analysisInclude,
+      select: analysisListSelect,
       orderBy: { created_at: 'desc' },
       skip,
       take: limit,
@@ -427,14 +489,7 @@ const getAnalyses = async (req: Request, res: Response) => {
   }
 };
 
-type AnalysisIdParams = { id: string };
-type ExportFormat = 'EXCEL' | 'PDF';
-type ExportByIdBody = { format: ExportFormat };
-type ExportByDateRangeBody = {
-  format: ExportFormat;
-  start_date?: string;
-  end_date?: string;
-};
+type ExportFormat = ExportByIdBody['format'];
 
 const exportAnalysisInclude = {
   issued_by: { select: { username: true } },
@@ -472,7 +527,7 @@ const getAnalysisById = async (
 
     const analysis = await prisma.analysis.findUnique({
       where: { id },
-      include: analysisInclude,
+      select: analysisDetailSelect,
     });
 
     if (!analysis) {
@@ -489,7 +544,25 @@ const getAnalysisById = async (
       return;
     }
 
-    res.status(200).json({ data: analysis });
+    const failureReason =
+      analysis.status === AnalysisStatus.Failed
+        ? await getAnalysisFailureReason(analysis.id)
+        : null;
+
+    res.status(200).json({
+      data: {
+        id: analysis.id,
+        status: analysis.status,
+        failure_reason: failureReason,
+        created_at: analysis.created_at,
+        request_title: analysis.request_title,
+        anomaly_detected: analysis.anomaly_detected,
+        issued_by: analysis.issued_by,
+        before_image: analysis.before_image,
+        after_image: analysis.after_image,
+        result_image: analysis.result_image,
+      },
+    });
   } catch (error) {
     console.error('Error fetching analysis:', error);
     res.status(500).json({ message: 'Error fetching analysis' });
@@ -497,7 +570,7 @@ const getAnalysisById = async (
 };
 
 const exportById = async (
-  req: Request<AnalysisIdParams, unknown, ExportByIdBody>,
+  req: Request<ExportByIdParams, unknown, ExportByIdBody>,
   res: Response
 ) => {
   try {
@@ -524,18 +597,16 @@ const exportById = async (
     }
 
     const fileName = await generateReportFile(format, [
-      analysis as unknown as AnalysisReport,
+      analysis,
     ]);
 
     res.status(200).json({
       message: 'Report generated successfully',
       downloadUrl: buildReportDownloadUrl(req, fileName),
-      format,
-      recordCount: 1,
     });
   } catch (error) {
     console.error('Error exporting analysis by id:', error);
-    res.status(500).json({ error: 'Failed to process export request.' });
+    res.status(500).json({ message: 'Failed to process export request.' });
   }
 };
 
@@ -544,12 +615,16 @@ const exportByDateRange = async (
   res: Response
 ) => {
   try {
-    const { format, start_date, end_date } = req.body;
+    const { format, start_date, end_date, time_zone } = req.body;
     const where: Prisma.AnalysisWhereInput = {
-      created_at: {
-        ...(start_date && { gte: new Date(start_date) }),
-        ...(end_date && { lte: new Date(end_date) }),
-      },
+      status: 'Completed',
+      ...((start_date || end_date) && {
+        created_at: buildLocalDateRange({
+          startDate: start_date,
+          endDate: end_date,
+          timeZone: time_zone,
+        }),
+      }),
     };
 
     if (req.user?.role === Role.Inspector) {
@@ -562,20 +637,22 @@ const exportByDateRange = async (
       orderBy: { created_at: 'desc' },
     });
 
-    const fileName = await generateReportFile(
-      format,
-      analyses as unknown as AnalysisReport[]
-    );
+    if (analyses.length === 0) {
+      res.status(400).json({
+        message: 'No completed analyses match the selected date range',
+      });
+      return;
+    }
+
+    const fileName = await generateReportFile(format, analyses);
 
     res.status(200).json({
       message: 'Report generated successfully',
       downloadUrl: buildReportDownloadUrl(req, fileName),
-      format,
-      recordCount: analyses.length,
     });
   } catch (error) {
     console.error('Error exporting analyses by date range:', error);
-    res.status(500).json({ error: 'Failed to process export request.' });
+    res.status(500).json({ message: 'Failed to process export request.' });
   }
 };
 

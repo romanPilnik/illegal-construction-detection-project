@@ -20,6 +20,19 @@ type RawInferenceResponse = {
     | null;
 };
 
+const parseInferenceResponse = (value: unknown): RawInferenceResponse => {
+  if (!value || typeof value !== 'object') {
+    throw new Error('AI service returned an invalid response');
+  }
+
+  const payload = value as Record<string, unknown>;
+  if (typeof payload.anomalyDetected !== 'boolean') {
+    throw new Error('AI service returned an invalid anomaly result');
+  }
+
+  return payload as RawInferenceResponse;
+};
+
 const AI_SERVICE_URL =
   process.env.AI_SERVICE_URL || 'http://localhost:5002/predict';
 const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;
@@ -150,11 +163,27 @@ export const requestAIInference = async (
     throw new Error(`AI service failed with status ${response.status}`);
   }
 
-  const payload = (await response.json()) as RawInferenceResponse;
+  let rawPayload: unknown;
+  try {
+    rawPayload = await response.json();
+  } catch {
+    throw new Error('AI service returned invalid JSON');
+  }
+
+  const payload = parseInferenceResponse(rawPayload);
   const coordinates = normalizeCoordinates(payload.coordinates);
 
+  if (
+    payload.coordinates !== undefined &&
+    payload.coordinates !== null &&
+    !(Array.isArray(payload.coordinates) && payload.coordinates.length === 0) &&
+    coordinates === null
+  ) {
+    throw new Error('AI service returned invalid coordinates');
+  }
+
   return {
-    anomalyDetected: Boolean(payload.anomalyDetected),
+    anomalyDetected: payload.anomalyDetected,
     coordinates,
   };
 };

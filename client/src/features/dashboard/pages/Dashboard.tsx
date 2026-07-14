@@ -1,23 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { getAnalysesMeta } from "../api";
 import { clearAuthStorage, getStoredUser } from "../../../lib/stored-user";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
 function overviewRequestErrorMessage(reason: unknown): string {
-  if (isAxiosError(reason)) {
-    const data = reason.response?.data as
-      | { message?: string; error?: string }
-      | undefined;
-    return (
-      data?.message ??
-      data?.error ??
-      reason.message ??
-      "Request failed"
-    );
-  }
-  if (reason instanceof Error) return reason.message;
-  return "Request failed";
+  return getApiErrorMessage(reason, "Could not refresh totals.");
 }
 
 export default function Dashboard() {
@@ -42,13 +30,13 @@ export default function Dashboard() {
     if (allRes.status === "fulfilled") {
       setTotalAnalyses(allRes.value.total);
     } else {
-      setTotalAnalyses(0);
+      setTotalAnalyses(null);
     }
 
     if (pendingRes.status === "fulfilled") {
       setPendingCount(pendingRes.value.total);
     } else {
-      setPendingCount(0);
+      setPendingCount(null);
     }
 
     const metaFailures: string[] = [];
@@ -64,7 +52,8 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    void loadOverview();
+    const timeoutId = window.setTimeout(() => void loadOverview(), 0);
+    return () => window.clearTimeout(timeoutId);
   }, [loadOverview]);
 
   useEffect(() => {
@@ -276,7 +265,7 @@ export default function Dashboard() {
                 Total Analyses
               </div>
               <div className="mt-2 text-4xl font-bold text-[#60a5fa]">
-                {overviewLoading ? "…" : (totalAnalyses ?? 0)}
+                {overviewLoading ? "…" : (totalAnalyses ?? "—")}
               </div>
             </div>
             <div className="glass-card rounded-xl p-6">
@@ -284,7 +273,7 @@ export default function Dashboard() {
                 Pending Results
               </div>
               <div className="mt-2 text-4xl font-bold text-[#f59e0b]">
-                {overviewLoading ? "…" : (pendingCount ?? 0)}
+                {overviewLoading ? "…" : (pendingCount ?? "—")}
               </div>
             </div>
           </div>
