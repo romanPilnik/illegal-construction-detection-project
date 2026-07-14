@@ -5,3 +5,5 @@ export const getLogsQuerySchema = z.strictObject({
   limit: z.coerce.number().int().min(1).max(50).default(10),
   action: z.string().optional(),
 });
+
+export type GetLogsQuery = z.output<typeof getLogsQuerySchema>;

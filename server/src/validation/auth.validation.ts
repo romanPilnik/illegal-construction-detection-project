@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { loginPasswordSchema, newPasswordSchema } from './password.validation';
+import {
+  loginPasswordSchema,
+  newPasswordSchema,
+} from './password.validation.js';
 
 const nonEmptyString = z.string().trim().min(1);
 const normalizedEmail = z
@@ -41,3 +44,9 @@ export const resetPasswordBodySchema = z.strictObject({
   token: nonEmptyString,
   newPassword: newPasswordSchema,
 });
+
+export type RegisterBody = z.output<typeof registerBodySchema>;
+export type LoginBody = z.output<typeof loginBodySchema>;
+export type ChangePasswordBody = z.output<typeof changePasswordBodySchema>;
+export type ForgotPasswordBody = z.output<typeof forgotPasswordBodySchema>;
+export type ResetPasswordBody = z.output<typeof resetPasswordBodySchema>;

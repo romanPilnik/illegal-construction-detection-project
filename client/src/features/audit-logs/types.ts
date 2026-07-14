@@ -1,19 +1,18 @@
+import type { ActionStatus, PaginationMeta } from '../../types/domain'
+
+export type { ActionStatus } from '../../types/domain'
+
 export type AuditLogRow = {
     id: string
     action: string
+    ip_address: string
     timestamp: string
-    status: string
+    status: ActionStatus
     details: string | null
-    user: { username: string; email: string; role: string }
+    user: { username: string }
 }
 
-export type AuditLogsListMeta = {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-    hasNextPage: boolean
-}
+export type AuditLogsListMeta = PaginationMeta
 
 export type AuditLogsResponse = {
     data: AuditLogRow[]

@@ -1,4 +1,6 @@
-export type UserRole = 'Admin' | 'Inspector'
+import type { UserRole } from '../../types/domain'
+
+export type { UserRole } from '../../types/domain'
 
 export type LoginBody = {
     email: string

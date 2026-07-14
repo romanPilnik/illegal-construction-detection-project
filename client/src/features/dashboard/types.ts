@@ -1,7 +1,1 @@
-export type AnalysesListMeta = {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasNextPage: boolean;
-};
+export type { PaginationMeta as AnalysesListMeta } from '../../types/domain'

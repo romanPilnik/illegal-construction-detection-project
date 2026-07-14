@@ -1,11 +1,30 @@
 import { z } from 'zod';
+import { isValidTimeZone } from '../lib/date-range.js';
+
+const dateOnlySchema = z.iso.date();
+const timeZoneSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine(isValidTimeZone, 'Invalid IANA time zone');
+
+const dateRangeFields = {
+  start_date: dateOnlySchema.optional(),
+  end_date: dateOnlySchema.optional(),
+  time_zone: timeZoneSchema.default('Asia/Jerusalem'),
+};
+
+const validDateRange = (value: { start_date?: string; end_date?: string }) =>
+  !value.start_date || !value.end_date || value.start_date <= value.end_date;
 
 export const getAnalysesQuerySchema = z.strictObject({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
   status: z.enum(['Pending', 'Completed', 'Failed']).optional(),
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
+  ...dateRangeFields,
+}).refine(validDateRange, {
+  message: 'start_date must be before or equal to end_date',
+  path: ['start_date'],
 });
 
 export const analysisIdParamsSchema = z.strictObject({
@@ -27,20 +46,14 @@ export const exportByIdBodySchema = z.strictObject({
 export const exportByDateRangeBodySchema = z
   .strictObject({
     format: exportFormatSchema,
-    start_date: z.string().datetime().optional(),
-    end_date: z.string().datetime().optional(),
+    ...dateRangeFields,
   })
-  .refine(
-    ({ start_date, end_date }) =>
-      !start_date || !end_date || new Date(start_date) <= new Date(end_date),
-    {
-      message: 'start_date must be before or equal to end_date',
-      path: ['start_date'],
-    }
-  );
+  .refine(validDateRange, {
+    message: 'start_date must be before or equal to end_date',
+    path: ['start_date'],
+  });
 
 export const createAnalysisBodySchema = z.strictObject({
-  location_address: z.string().trim().optional(),
   request_title: z
     .string()
     .trim()
@@ -52,3 +65,12 @@ export const createAnalysisBodySchema = z.strictObject({
 export const exportAnalysesSchema = z.object({
   body: exportByDateRangeBodySchema,
 });
+
+export type GetAnalysesQuery = z.output<typeof getAnalysesQuerySchema>;
+export type AnalysisIdParams = z.output<typeof analysisIdParamsSchema>;
+export type CreateAnalysisBody = z.output<typeof createAnalysisBodySchema>;
+export type ExportByIdParams = z.output<typeof exportByIdParamsSchema>;
+export type ExportByIdBody = z.output<typeof exportByIdBodySchema>;
+export type ExportByDateRangeBody = z.output<
+  typeof exportByDateRangeBodySchema
+>;

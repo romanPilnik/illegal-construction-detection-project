@@ -1,4 +1,6 @@
-export type UserRole = 'Admin' | 'Inspector'
+import type { PaginationMeta, UserRole } from '../../types/domain'
+
+export type { UserRole } from '../../types/domain'
 
 export type UserListRow = {
     id: string
@@ -8,13 +10,7 @@ export type UserListRow = {
     is_active: boolean
 }
 
-export type UsersListMeta = {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-    hasNextPage: boolean
-}
+export type UsersListMeta = PaginationMeta
 
 export type UsersListResponse = {
     data: UserListRow[]
@@ -39,11 +35,6 @@ export type UpdateUserBody = {
 }
 
 export type UpdateUserResponse = {
-    message: string
-    data: UserListRow
-}
-
-export type DeactivateUserResponse = {
     message: string
     data: UserListRow
 }

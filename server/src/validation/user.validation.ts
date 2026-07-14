@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { newPasswordSchema } from './password.validation';
+import { newPasswordSchema } from './password.validation.js';
 
 const optionalTrimmedString = z
   .transform((value) => {
@@ -33,9 +33,9 @@ export const getUsersQuerySchema = z.strictObject({
   role: z.enum(['Admin', 'Inspector']).optional(),
   search: optionalTrimmedString,
   isActiveFilter: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number(val) : 0)),
+    .enum(['0', '1'])
+    .default('0')
+    .transform(Number),
 });
 
 export const updateUserBodySchema = z
@@ -62,3 +62,10 @@ export const createUserBodySchema = z.strictObject({
   password: newPasswordSchema,
   role: z.enum(['Admin', 'Inspector']),
 });
+
+export type UserIdParams = z.output<typeof userIdParamsSchema>;
+export type GetUsersQuery = z.output<typeof getUsersQuerySchema> & {
+  isActiveFilter: number;
+};
+export type UpdateUserBody = z.output<typeof updateUserBodySchema>;
+export type CreateUserBody = z.output<typeof createUserBodySchema>;
