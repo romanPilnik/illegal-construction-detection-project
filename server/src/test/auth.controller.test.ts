@@ -86,12 +86,12 @@ describe('AuthController - register', () => {
     expect(mockSendWelcomeEmail).toHaveBeenCalledWith('shirel@test.com', 'shirelTest');
   });
 
-  it('should return 400 if user already exists', async () => {
+  it('should return 409 if user already exists', async () => {
     mockFindUnique.mockResolvedValue({ id: 99 });
 
     await AuthController.register(req as Request, res as Response);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(409);
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
@@ -181,6 +181,7 @@ describe('AuthController - login', () => {
                 email:'shirel@test.com',
                 password: 'Password123',
             },
+            ip: '127.0.0.1',
         };
         res = {
             status: jest.fn().mockReturnThis() as unknown as Response['status'],
@@ -203,7 +204,12 @@ describe('AuthController - login', () => {
                 email: 'shirel@test.com',
             }),
         }));
-        expect(mockLoginActivity).toHaveBeenCalledWith(1, 'USER_LOGIN', expect.any(String));
+        expect(mockLoginActivity).toHaveBeenCalledWith(
+          1,
+          'USER_LOGIN',
+          expect.any(String),
+          '127.0.0.1'
+        );
     });
 
     it('should return 401 if the user is not found', async () => {
@@ -253,6 +259,7 @@ describe('AuthController - changePassword', () => {
     jest.clearAllMocks();
     req = {
       user: { userId: 'user-uuid-1', role: 'Inspector' },
+      ip: '127.0.0.1',
       body: {
         currentPassword: 'OldPassword123',
         newPassword: 'NewPassword456',
@@ -281,7 +288,8 @@ describe('AuthController - changePassword', () => {
     expect(mockLoginActivity).toHaveBeenCalledWith(
       'user-uuid-1',
       'PASSWORD_CHANGE',
-      expect.any(String)
+      expect.any(String),
+      '127.0.0.1'
     );
   });
 
@@ -364,7 +372,10 @@ describe('AuthController - resetPassword', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    req = { body: { token: 'raw-token', newPassword: 'NewPassword456' } };
+    req = {
+      body: { token: 'raw-token', newPassword: 'NewPassword456' },
+      ip: '127.0.0.1',
+    };
     res = {
       status: jest.fn().mockReturnThis() as unknown as Response['status'],
       json: jest.fn() as unknown as Response['json'],
@@ -400,6 +411,12 @@ describe('AuthController - resetPassword', () => {
           reset_password_expires: null,
         }),
       })
+    );
+    expect(mockLoginActivity).toHaveBeenCalledWith(
+      'user-1',
+      'PASSWORD_RESET',
+      expect.any(String),
+      '127.0.0.1'
     );
   });
 });

@@ -86,4 +86,30 @@ describe('requestAIInference', () => {
     expect(out.anomalyDetected).toBe(false);
     expect(out.coordinates).toBeNull();
   });
+
+  it.each([
+    {},
+    { anomalyDetected: 'false', coordinates: [] },
+    { anomalyDetected: true, coordinates: [{ x: 1 }] },
+  ])('rejects a malformed successful response: %p', async (payload) => {
+    global.fetch = jest.fn(async () =>
+      new Response(JSON.stringify(payload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const { requestAIInference } = await import(
+      '../services/ai-inference.service.js'
+    );
+
+    await expect(
+      requestAIInference(
+        Buffer.from('x'),
+        Buffer.from('y'),
+        'before.png',
+        'after.png'
+      )
+    ).rejects.toThrow(/AI service returned (an )?invalid/);
+  });
 });

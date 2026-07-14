@@ -10,6 +10,7 @@ const mockFindUnique = jest.fn<() => Promise<unknown>>().mockResolvedValue(null)
 const mockUpdate = jest.fn<() => Promise<any>>().mockResolvedValue(null);
 const mockCreate = jest.fn<() => Promise<any>>().mockResolvedValue(null);
 const mockSendWelcomeEmail = jest.fn<() => Promise<void>>();
+const mockDisconnectUserSockets = jest.fn<() => void>();
 const mockGenSalt = jest.fn<() => Promise<string>>().mockResolvedValue('salt');
 const mockHash = jest.fn<() => Promise<string>>().mockResolvedValue('hashed');
 
@@ -31,6 +32,10 @@ jest.unstable_mockModule('../services/audit.service.js', () => ({
 
 jest.unstable_mockModule('../services/email.service.js', () => ({
   sendWelcomeEmail: mockSendWelcomeEmail,
+}));
+
+jest.unstable_mockModule('../services/socket.service.js', () => ({
+  disconnectUserSockets: mockDisconnectUserSockets,
 }));
 
 jest.unstable_mockModule('bcryptjs', () => ({
@@ -58,10 +63,12 @@ describe('UserController', () => {
         userId: 'admin-123',
         role: Role.Admin
       },
+      ip: '127.0.0.1',
     };
     res = {
       status: jest.fn().mockReturnThis() as unknown as Response['status'],
       json: jest.fn() as unknown as Response['json'],
+      sendStatus: jest.fn() as unknown as Response['sendStatus'],
     };
   });
 
@@ -90,11 +97,12 @@ describe('UserController', () => {
         'admin-123',
         'USER_CREATE',
         expect.stringContaining('new@test.com'),
+        '127.0.0.1',
         expect.objectContaining({ target_user_id: 'u-new' })
       );
     });
 
-    it('should return 400 if email already exists', async () => {
+    it('should return 409 if email already exists', async () => {
       req.body = {
         username: 'x',
         email: 'taken@test.com',
@@ -105,7 +113,7 @@ describe('UserController', () => {
 
       await UserController.createUser(req as Request, res as Response);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.status).toHaveBeenCalledWith(409);
       expect(mockCreate).not.toHaveBeenCalled();
     });
 
@@ -199,6 +207,7 @@ describe('UserController', () => {
         'admin-123',
         'USER_UPDATE',
         expect.stringContaining('new@test.com'),
+        '127.0.0.1',
         expect.objectContaining({
           before: { username: 'oldShirel', email: 'old@test.com' },
           after: { username: 'newShirel', email: 'new@test.com' }
@@ -225,15 +234,20 @@ describe('UserController', () => {
   });
 
   describe('deleteUser', () => {
-    it('should return 200 and deactivate user (soft delete)', async () => {
+    it('should return 204 and deactivate user (soft delete)', async () => {
       req.params = { id: 'user-1' };
       const deactivatedUser = { id: 'user-1', is_active: false, email: 's@test.com' };
 
+      mockFindUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 's@test.com',
+        is_active: true,
+      });
       mockUpdate.mockResolvedValue(deactivatedUser);
 
       await UserController.deleteUser(req as any, res as Response);
 
-      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.sendStatus).toHaveBeenCalledWith(204);
       expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
         where: { id: 'user-1' },
         data: { is_active: false }
@@ -242,19 +256,77 @@ describe('UserController', () => {
         'admin-123',
         'USER_DELETE',
         expect.any(String),
+        '127.0.0.1',
         expect.any(Object)
       );
+      expect(mockDisconnectUserSockets).toHaveBeenCalledWith('user-1');
+    });
+
+    it('should still return 204 when socket cleanup fails', async () => {
+      const consoleError = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+      req.params = { id: 'user-1' };
+      mockFindUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 's@test.com',
+        is_active: true,
+      });
+      mockUpdate.mockResolvedValue({
+        id: 'user-1',
+        email: 's@test.com',
+        is_active: false,
+      });
+      mockDisconnectUserSockets.mockImplementation(() => {
+        throw new Error('socket unavailable');
+      });
+
+      await UserController.deleteUser(req as any, res as Response);
+
+      expect(res.sendStatus).toHaveBeenCalledWith(204);
+      expect(res.status).not.toHaveBeenCalledWith(500);
+      consoleError.mockRestore();
     });
 
     it('should return 500 if DB fails', async () => {
+      mockFindUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 's@test.com',
+        is_active: true,
+      });
       mockUpdate.mockRejectedValue(new Error('DB Error'));
 
       await UserController.deleteUser(req as any, res as Response);
 
       expect(res.status).toHaveBeenCalledWith(500);
     });
+
+    it('should return 404 if the user does not exist', async () => {
+      req.params = { id: 'missing-user' };
+      mockFindUnique.mockResolvedValue(null);
+
+      await UserController.deleteUser(req as any, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it('should reject repeated deactivation', async () => {
+      req.params = { id: 'inactive-user' };
+      mockFindUnique.mockResolvedValue({
+        id: 'inactive-user',
+        email: 'inactive@test.com',
+        is_active: false,
+      });
+
+      await UserController.deleteUser(req as any, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'User is already inactive',
+      });
+      expect(mockUpdate).not.toHaveBeenCalled();
+    });
   });
 
 });
-
-

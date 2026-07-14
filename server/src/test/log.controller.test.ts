@@ -42,6 +42,19 @@ describe('AuditLogController', () => {
       data: expect.any(Array),
       meta: expect.any(Object)
     }));
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: {
+          id: true,
+          action: true,
+          ip_address: true,
+          timestamp: true,
+          status: true,
+          details: true,
+          user: { select: { username: true } },
+        },
+      })
+    );
   });
 
   it('should return a 500 if there is Error fetching logs', async () => {
