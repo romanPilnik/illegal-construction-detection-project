@@ -9,6 +9,13 @@ import {
 } from '../services/password-reset.service.js';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import type {
+  ChangePasswordBody,
+  ForgotPasswordBody,
+  LoginBody,
+  RegisterBody,
+  ResetPasswordBody,
+} from '../validation/auth.validation.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_123';
 
@@ -71,8 +78,8 @@ async function getRegistrationPolicy(): Promise<RegistrationPolicy> {
  * Handles new user registration (public only when allowed; see ALLOW_PUBLIC_REGISTRATION / NODE_ENV).
  */
 const register = async (
-  req: Request,   // was: req: Partial<e.Request>
-  res: Response   // was: res: Partial<e.Response>
+  req: Request<unknown, unknown, RegisterBody>,
+  res: Response
 ): Promise<void> => {
   try {
     const policy = await getRegistrationPolicy();
@@ -88,9 +95,12 @@ const register = async (
     const { username, email, password, role } = req.body;
 
     // Check if a user with this email  already exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
     if (existingUser) {
-      res.status(400).json({ message: 'Email already in use' });
+      res.status(409).json({ message: 'Email already in use' });
       return;
     }
 
@@ -107,6 +117,7 @@ const register = async (
         role: role || 'Inspector', // Default role if not provided
         is_active: true,
       },
+      select: { id: true, email: true, username: true },
     });
 
     res.status(201).json({
@@ -141,12 +152,25 @@ const registrationStatus = async (_req: Request, res: Response): Promise<void> =
 /**
  * Handles user authentication and issues a JWT
  */
-const login = async (req: Request, res: Response): Promise<void> => {
+const login = async (
+  req: Request<unknown, unknown, LoginBody>,
+  res: Response
+): Promise<void> => {
   try {
     const { email, password } = req.body;
 
     // 1. Find user by email
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        password_hash: true,
+        role: true,
+        is_active: true,
+      },
+    });
     if (!existingUser) {
       res.status(401).json({ message: 'Invalid email or password' });
       return;
@@ -180,7 +204,8 @@ const login = async (req: Request, res: Response): Promise<void> => {
     await logActivity(
       existingUser.id,
       'USER_LOGIN',
-      `User ${existingUser.email} logged in`
+      `User ${existingUser.email} logged in`,
+      req.ip || 'unknown'
     );
 
     // 4. Return the token and basic user info
@@ -203,7 +228,10 @@ const login = async (req: Request, res: Response): Promise<void> => {
 /**
  * Updates password for the authenticated user (JWT).
  */
-const changePassword = async (req: Request, res: Response): Promise<void> => {
+const changePassword = async (
+  req: Request<unknown, unknown, ChangePasswordBody>,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
@@ -211,12 +239,12 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { currentPassword, newPassword } = req.body as {
-      currentPassword: string;
-      newPassword: string;
-    };
+    const { currentPassword, newPassword } = req.body;
 
-    const existingUser = await prisma.user.findUnique({ where: { id: userId } });
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, password_hash: true, is_active: true },
+    });
     if (!existingUser) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -251,7 +279,8 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
     await logActivity(
       userId,
       'PASSWORD_CHANGE',
-      `User ${existingUser.email} changed their password`
+      `User ${existingUser.email} changed their password`,
+      req.ip || 'unknown'
     );
 
     res.status(200).json({ message: 'Password updated successfully' });
@@ -263,17 +292,23 @@ const changePassword = async (req: Request, res: Response): Promise<void> => {
 
 const FORGOT_PASSWORD_RESPONSE = {
   message:
-    'If an account with that email exists, a password reset link has been sent.',
+    'If an eligible account exists, password-reset instructions will be sent.',
 };
 
 /**
  * Initiates password reset: stores a hashed token and emails a reset link.
  */
-const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+const forgotPassword = async (
+  req: Request<unknown, unknown, ForgotPasswordBody>,
+  res: Response
+): Promise<void> => {
   try {
-    const { email } = req.body as { email: string };
+    const { email } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, username: true, is_active: true },
+    });
 
     if (user?.is_active) {
       const { token, tokenHash, expiresAt } = generateResetToken();
@@ -313,12 +348,12 @@ const forgotPassword = async (req: Request, res: Response): Promise<void> => {
 /**
  * Completes password reset using a valid, unexpired token.
  */
-const resetPassword = async (req: Request, res: Response): Promise<void> => {
+const resetPassword = async (
+  req: Request<unknown, unknown, ResetPasswordBody>,
+  res: Response
+): Promise<void> => {
   try {
-    const { token, newPassword } = req.body as {
-      token: string;
-      newPassword: string;
-    };
+    const { token, newPassword } = req.body;
 
     const tokenHash = hashResetToken(token);
 
@@ -328,6 +363,7 @@ const resetPassword = async (req: Request, res: Response): Promise<void> => {
         reset_password_expires: { gt: new Date() },
         is_active: true,
       },
+      select: { id: true, email: true },
     });
 
     if (!user) {
@@ -352,7 +388,8 @@ const resetPassword = async (req: Request, res: Response): Promise<void> => {
     await logActivity(
       user.id,
       'PASSWORD_RESET',
-      `User ${user.email} reset their password via email link`
+      `User ${user.email} reset their password via email link`,
+      req.ip || 'unknown'
     );
 
     res.status(200).json({

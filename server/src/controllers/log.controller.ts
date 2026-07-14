@@ -1,13 +1,13 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
+import type { GetLogsQuery } from '../validation/log.validation.js';
 
-const getLogs = async (req: Request, res: Response) => {
+const getLogs = async (
+  req: Request<unknown, unknown, unknown, GetLogsQuery>,
+  res: Response
+) => {
   try {
-    const { page, limit, action } = req.query as unknown as {
-      page: number;
-      limit: number;
-      action?: string;
-    };
+    const { page, limit, action } = req.query;
 
     const skip = (page - 1) * limit;
     const whereClause = action ? { action: { contains: action } } : {};
@@ -20,12 +20,16 @@ const getLogs = async (req: Request, res: Response) => {
       skip: skip,
       where: whereClause,
       orderBy: { timestamp: 'desc' },
-      include: {
+      select: {
+        id: true,
+        action: true,
+        ip_address: true,
+        timestamp: true,
+        status: true,
+        details: true,
         user: {
           select: {
             username: true,
-            email: true,
-            role: true,
           },
         },
       },

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { isAxiosError } from 'axios';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { resetPassword } from '../api';
 import { PasswordInput } from '../../../components/PasswordInput';
@@ -9,19 +8,7 @@ import {
   PASSWORD_MIN_LENGTH_MESSAGE,
   PASSWORD_PLACEHOLDER,
 } from '../../../lib/password-rules';
-
-function messageFromAxios(err: unknown, fallback: string): string {
-  if (isAxiosError(err)) {
-    const data = err.response?.data as
-      | { message?: string; errors?: Array<{ message?: string }> }
-      | undefined;
-    if (data?.errors?.length) {
-      return data.errors.map((e) => e.message).filter(Boolean).join('; ');
-    }
-    return data?.message ?? fallback;
-  }
-  return fallback;
-}
+import { getApiErrorMessage } from '../../../lib/api-error';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -58,7 +45,7 @@ export default function ResetPassword() {
         state: { passwordReset: true },
       });
     } catch (err: unknown) {
-      setError(messageFromAxios(err, 'Failed to reset password'));
+      setError(getApiErrorMessage(err, 'Failed to reset password.'));
     } finally {
       setLoading(false);
     }

@@ -1,18 +1,10 @@
 import React, { useState } from 'react';
-import { isAxiosError } from 'axios';
 import { Link } from 'react-router-dom';
 import { forgotPassword } from '../api';
+import { getApiErrorMessage } from '../../../lib/api-error';
 
 const inputClassName =
   'w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-all duration-200 placeholder:text-slate-500 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(96,165,250,0.15)]';
-
-function messageFromAxios(err: unknown, fallback: string): string {
-  if (isAxiosError(err)) {
-    const data = err.response?.data as { message?: string } | undefined;
-    return data?.message ?? fallback;
-  }
-  return fallback;
-}
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -30,10 +22,10 @@ export default function ForgotPassword() {
       const data = await forgotPassword({ email });
       setSuccess(
         data.message ||
-          'If an account with that email exists, a password reset link has been sent.'
+          'If an eligible account exists, password-reset instructions will be sent.'
       );
     } catch (err: unknown) {
-      setError(messageFromAxios(err, 'Failed to send reset link'));
+      setError(getApiErrorMessage(err, 'Failed to request password-reset instructions.'));
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { AUDIT_LOGS_PAGE_LIMIT, getAuditLogs } from "../api";
 import type { AuditLogRow, AuditLogsListMeta } from "../types";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
 const cell = "border-b border-white/10 px-4 py-3 text-left text-slate-300";
 const head = `${cell} bg-white/5 font-semibold text-slate-200`;
@@ -49,12 +49,7 @@ export default function AuditLogs() {
         }
       } catch (err) {
         if (!cancelled) {
-          if (isAxiosError(err)) {
-            const data = err.response?.data as { message?: string } | undefined;
-            setError(data?.message ?? "Failed to load logs");
-          } else {
-            setError("Failed to load logs");
-          }
+          setError(getApiErrorMessage(err, "Failed to load audit logs."));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -126,6 +121,7 @@ export default function AuditLogs() {
                 <tr>
                   <th className={head}>Time</th>
                   <th className={head}>User</th>
+                  <th className={head}>IP address</th>
                   <th className={head}>Action</th>
                   <th className={head}>Status</th>
                   <th className={head}>Details</th>
@@ -138,6 +134,7 @@ export default function AuditLogs() {
                       {new Date(log.timestamp).toLocaleString()}
                     </td>
                     <td className={cell}>{log.user?.username ?? "—"}</td>
+                    <td className={cell}>{log.ip_address || "—"}</td>
                     <td className={cell}>{log.action}</td>
                     <td className={cell}>{log.status}</td>
                     <td className={cell}>{log.details ?? "—"}</td>

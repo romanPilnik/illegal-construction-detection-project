@@ -2,33 +2,58 @@ import type { Request, Response } from 'express';
 import * as bcrypt from 'bcryptjs';
 import { logActivity } from '../services/audit.service.js';
 import { sendWelcomeEmail } from '../services/email.service.js';
-import { Prisma, Role } from '../generated/prisma/client.js';
+import { Prisma } from '../generated/prisma/client.js';
 import { prisma } from '../lib/prisma.js';
+import { disconnectUserSockets } from '../services/socket.service.js';
+import type {
+  CreateUserBody,
+  GetUsersQuery,
+  UpdateUserBody,
+  UserIdParams,
+} from '../validation/user.validation.js';
 
-type GetUserByIdParams = {
-  id: string;
+const respondToPrismaWriteError = (
+  error: unknown,
+  res: Response,
+  fallbackMessage: string
+): boolean => {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {
+    return false;
+  }
+  if (error.code === 'P2002') {
+    res.status(409).json({ message: 'Email already in use' });
+    return true;
+  }
+  if (error.code === 'P2025') {
+    res.status(404).json({ message: 'User not found' });
+    return true;
+  }
+
+  res.status(500).json({ message: fallbackMessage });
+  return true;
 };
 
 /**
  * Creates a user (admin-provisioned password). Sends welcome email and audit log.
  */
-const createUser = async (req: Request, res: Response) => {
+const createUser = async (
+  req: Request<unknown, unknown, CreateUserBody>,
+  res: Response
+) => {
   try {
-    const { username, email, password, role } = req.body as {
-      username: string;
-      email: string;
-      password: string;
-      role: Role;
-    };
+    const { username, email, password, role } = req.body;
     const adminId = req.user?.userId;
     if (!adminId) {
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
     if (existingUser) {
-      res.status(400).json({ message: 'Email already in use' });
+      res.status(409).json({ message: 'Email already in use' });
       return;
     }
 
@@ -58,6 +83,7 @@ const createUser = async (req: Request, res: Response) => {
       adminId,
       'USER_CREATE',
       `Created user: ${newUser.email}`,
+      req.ip || 'unknown',
       { target_user_id: newUser.id, role: newUser.role }
     );
 
@@ -67,6 +93,7 @@ const createUser = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
+    if (respondToPrismaWriteError(error, res, 'Error creating user')) return;
     res.status(500).json({ message: 'Error creating user' });
   }
 };
@@ -74,30 +101,24 @@ const createUser = async (req: Request, res: Response) => {
 /**
  * Fetches a paginated list of users with optional filtering
  */
-const getUsers = async (req: Request, res: Response) => {
+const getUsers = async (
+  req: Request<unknown, unknown, unknown, GetUsersQuery>,
+  res: Response
+) => {
   try {
-    const { page, limit, role, search, isActiveFilter } =
-      req.query as unknown as {
-        page: number;
-        limit: number;
-        role?: string;
-        search?: string;
-        isActiveFilter?: boolean;
-      };
+    const { page, limit, role, search, isActiveFilter } = req.query;
 
     const skip = (page - 1) * limit;
     const whereClause: Prisma.UserWhereInput = {};
 
-    const status = isActiveFilter !== undefined ? Number(isActiveFilter) : 0;
-
-    if (status === 0) {
+    if (isActiveFilter === 0) {
       whereClause.is_active = true;
-    } else if (status === 1) {
+    } else {
       whereClause.is_active = false;
     }
 
     if (role) {
-      whereClause.role = role as Role;
+      whereClause.role = role;
     }
     if (search) {
       whereClause.OR = [
@@ -136,7 +157,7 @@ const getUsers = async (req: Request, res: Response) => {
 /**
  * Fetches a single user by their ID
  */
-const getUserById = async (req: Request<GetUserByIdParams>, res: Response) => {
+const getUserById = async (req: Request<UserIdParams>, res: Response) => {
   try {
     const { id } = req.params;
     const user = await prisma.user.findUnique({
@@ -159,12 +180,18 @@ const getUserById = async (req: Request<GetUserByIdParams>, res: Response) => {
 /**
  * Updates user details and logs the changes (Before/After)
  */
-const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
+const updateUser = async (
+  req: Request<UserIdParams, unknown, UpdateUserBody>,
+  res: Response
+) => {
   try {
     const { id } = req.params; // We use 'id' as defined in GetUserByIdParams
     const { username, email } = req.body;
 
-    const oldUser = await prisma.user.findUnique({ where: { id } });
+    const oldUser = await prisma.user.findUnique({
+      where: { id },
+      select: { username: true, email: true },
+    });
     if (!oldUser) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -192,6 +219,7 @@ const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
         adminId,
         'USER_UPDATE',
         `Updated user details for: ${updatedUser.email}`,
+        req.ip || 'unknown',
         {
           before: { username: oldUser.username, email: oldUser.email },
           after: { username: updatedUser.username, email: updatedUser.email },
@@ -204,6 +232,9 @@ const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
       .json({ message: 'User updated successfully', data: updatedUser });
   } catch (error) {
     console.error(error);
+    if (
+      respondToPrismaWriteError(error, res, 'Error updating user details')
+    ) return;
     res.status(500).json({ message: 'Error updating user details' });
   }
 };
@@ -211,9 +242,22 @@ const updateUser = async (req: Request<GetUserByIdParams>, res: Response) => {
 /**
  * Soft deletes a user and logs the action
  */
-const deleteUser = async (req: Request<GetUserByIdParams>, res: Response) => {
+const deleteUser = async (req: Request<UserIdParams>, res: Response) => {
   try {
     const { id } = req.params;
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, is_active: true },
+    });
+    if (!existingUser) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    if (!existingUser.is_active) {
+      res.status(400).json({ message: 'User is already inactive' });
+      return;
+    }
 
     const deletedUser = await prisma.user.update({
       where: { id },
@@ -233,15 +277,20 @@ const deleteUser = async (req: Request<GetUserByIdParams>, res: Response) => {
         adminId,
         'USER_DELETE',
         `Deactivated user: ${deletedUser.email}`,
+        req.ip || 'unknown',
         { target_user_id: id }
       );
     }
 
-    res
-      .status(200)
-      .json({ message: 'User deleted successfully', data: deletedUser });
+    try {
+      disconnectUserSockets(id);
+    } catch (error) {
+      console.error(`Failed to disconnect sockets for deactivated user ${id}:`, error);
+    }
+    res.sendStatus(204);
   } catch (error) {
     console.error(error);
+    if (respondToPrismaWriteError(error, res, 'Error deleting user')) return;
     res.status(500).json({ message: 'Error deleting user' });
   }
 };

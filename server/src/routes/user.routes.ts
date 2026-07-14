@@ -9,6 +9,7 @@ import {
   updateUserBodySchema,
   userIdParamsSchema,
 } from '../validation/user.validation.js';
+import type { GetUsersQuery } from '../validation/user.validation.js';
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.post(
   validateRequest({ body: createUserBodySchema }),
   UserController.createUser
 );
-router.get(
+router.get<unknown, unknown, unknown, GetUsersQuery>(
   '/',
   authenticateToken,
   requireAdmin,

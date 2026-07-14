@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { isAxiosError } from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../api";
 import type { UserRole } from "../types";
@@ -10,22 +9,10 @@ import {
   PASSWORD_MIN_LENGTH_MESSAGE,
   PASSWORD_PLACEHOLDER,
 } from "../../../lib/password-rules";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
 const fieldClassName =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-all duration-200 focus:border-[#10b981] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
-
-function messageFromAxios(err: unknown, fallback: string): string {
-  if (isAxiosError(err)) {
-    const data = err.response?.data as
-      | { message?: string; errors?: Array<{ field?: string; message?: string }> }
-      | undefined;
-    if (data?.errors?.length) {
-      return data.errors.map((e) => e.message ?? e.field).join("; ");
-    }
-    return data?.message ?? fallback;
-  }
-  return fallback;
-}
 
 function RegisterForm() {
   const navigate = useNavigate();
@@ -58,7 +45,7 @@ function RegisterForm() {
 
       setError(data.message || "Registration failed");
     } catch (err: unknown) {
-      setError(messageFromAxios(err, "Registration failed"));
+      setError(getApiErrorMessage(err, "Registration failed."));
     } finally {
       setLoading(false);
     }

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { changePassword } from "../../auth/api";
 import { getUserById } from "../api";
-import type { UserByIdData, UserRole } from "../types";
+import type { UserByIdData } from "../types";
 import { getStoredUser } from "../../../lib/stored-user";
 import { PasswordInput } from "../../../components/PasswordInput";
 import {
@@ -12,6 +11,7 @@ import {
   PASSWORD_MIN_LENGTH_MESSAGE,
   PASSWORD_PLACEHOLDER,
 } from "../../../lib/password-rules";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
 const readOnlyInput =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] p-3 text-sm text-slate-200 read-only:cursor-not-allowed read-only:text-slate-400 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:outline-none";
@@ -45,7 +45,7 @@ export default function Profile() {
         id: stored.id,
         username: stored.username,
         email: stored.email ?? "",
-        role: stored.role as UserRole,
+        role: stored.role,
       });
       setLoadingProfile(false);
       return;
@@ -59,12 +59,7 @@ export default function Profile() {
         if (!cancelled) setRemote(res.data);
       } catch (err) {
         if (!cancelled) {
-          if (isAxiosError(err)) {
-            const data = err.response?.data as { message?: string } | undefined;
-            setLoadError(data?.message ?? "Failed to load profile");
-          } else {
-            setLoadError("Failed to load profile");
-          }
+          setLoadError(getApiErrorMessage(err, "Failed to load profile."));
         }
       } finally {
         if (!cancelled) setLoadingProfile(false);
@@ -96,12 +91,7 @@ export default function Profile() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      if (isAxiosError(err)) {
-        const data = err.response?.data as { message?: string } | undefined;
-        setPasswordError(data?.message ?? "Failed to update password");
-      } else {
-        setPasswordError("Failed to update password");
-      }
+      setPasswordError(getApiErrorMessage(err, "Failed to update password."));
     } finally {
       setPasswordSubmitting(false);
     }

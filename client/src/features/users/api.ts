@@ -2,7 +2,6 @@ import { api } from '../../services/api'
 import type {
     CreateUserBody,
     CreateUserResponse,
-    DeactivateUserResponse,
     GetUsersQuery,
     UpdateUserBody,
     UpdateUserResponse,
@@ -43,7 +42,6 @@ export async function updateUser(
     return res.data
 }
 
-export async function deactivateUser(id: string): Promise<DeactivateUserResponse> {
-    const res = await api.delete<DeactivateUserResponse>(`/users/${id}`)
-    return res.data
+export async function deactivateUser(id: string): Promise<void> {
+    await api.delete(`/users/${id}`)
 }

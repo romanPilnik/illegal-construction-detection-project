@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { isAxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import { createUser, deactivateUser, getUsers, updateUser } from "../api";
 import type { UserListRow, UserRole } from "../types";
-import { getStoredUser } from "../../../lib/stored-user";
+import { clearAuthStorage, getStoredUser } from "../../../lib/stored-user";
 import { PasswordInput } from "../../../components/PasswordInput";
 import {
   isPasswordLongEnough,
@@ -11,6 +10,7 @@ import {
   PASSWORD_MIN_LENGTH_MESSAGE,
   PASSWORD_PLACEHOLDER,
 } from "../../../lib/password-rules";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
 const PAGE_SIZE = 10;
 
@@ -20,14 +20,6 @@ function roleBadgeClasses(role: UserRole) {
   if (role === "Admin")
     return `${base} border border-purple-400/30 bg-purple-500/20 text-purple-200`;
   return `${base} border border-sky-400/30 bg-sky-500/20 text-sky-200`;
-}
-
-function messageFromAxios(err: unknown, fallback: string): string {
-  if (isAxiosError(err)) {
-    const data = err.response?.data as { message?: string } | undefined;
-    return data?.message ?? fallback;
-  }
-  return fallback;
 }
 
 export default function UserManagement() {
@@ -93,7 +85,7 @@ export default function UserManagement() {
         hasNextPage: res.meta.hasNextPage,
       });
     } catch (err) {
-      setError(messageFromAxios(err, "Failed to load users"));
+      setError(getApiErrorMessage(err, "Failed to load users."));
       setUsers([]);
     } finally {
       setLoading(false);
@@ -159,7 +151,7 @@ export default function UserManagement() {
       closeCreate();
       await loadUsers();
     } catch (err) {
-      setCreateError(messageFromAxios(err, "Failed to create user"));
+      setCreateError(getApiErrorMessage(err, "Failed to create user."));
     } finally {
       setCreateSaving(false);
     }
@@ -187,17 +179,13 @@ export default function UserManagement() {
       closeEdit();
       await loadUsers();
     } catch (err) {
-      setActionError(messageFromAxios(err, "Failed to update user"));
+      setActionError(getApiErrorMessage(err, "Failed to update user."));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeactivate = async (u: UserListRow) => {
-    if (u.id === currentUserId) {
-      setActionError("You cannot deactivate your own account.");
-      return;
-    }
     if (
       !window.confirm(
         `Deactivate user ${u.email}? They will no longer be able to sign in.`,
@@ -208,9 +196,14 @@ export default function UserManagement() {
     setActionError("");
     try {
       await deactivateUser(u.id);
+      if (u.id === currentUserId) {
+        clearAuthStorage();
+        navigate("/login", { replace: true });
+        return;
+      }
       await loadUsers();
     } catch (err) {
-      setActionError(messageFromAxios(err, "Failed to deactivate user"));
+      setActionError(getApiErrorMessage(err, "Failed to deactivate user."));
     }
   };
 
@@ -374,12 +367,8 @@ export default function UserManagement() {
                           <button
                             type="button"
                             className="cursor-pointer border-none bg-transparent p-0 text-slate-400 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
-                            title={
-                              u.id === currentUserId
-                                ? "Cannot deactivate yourself"
-                                : "Deactivate"
-                            }
-                            disabled={!u.is_active || u.id === currentUserId}
+                            title="Deactivate"
+                            disabled={!u.is_active}
                             onClick={() => handleDeactivate(u)}
                           >
                             🗑️

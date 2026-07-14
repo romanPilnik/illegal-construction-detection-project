@@ -5,6 +5,7 @@ export const logActivity = async (
   userId: string,
   action: string,
   details?: string,
+  ipAddress = 'unknown',
   metadata?: Record<string, unknown>,
   status: ActionStatus = ActionStatus.Success
 ) => {
@@ -16,7 +17,7 @@ export const logActivity = async (
         details: details || '',
         status: status,
         metadata: (metadata || {}) as Prisma.InputJsonValue,
-        ip_address: '0.0.0.0',
+        ip_address: ipAddress,
       },
     });
   } catch (error) {

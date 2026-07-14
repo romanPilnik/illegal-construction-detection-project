@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { isAxiosError } from "axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../api";
-import { markSessionActivity } from "../../../lib/stored-user";
+import {
+  markSessionActivity,
+  SESSION_MESSAGE_KEY,
+} from "../../../lib/stored-user";
 import { PasswordInput } from "../../../components/PasswordInput";
+import { getApiErrorMessage } from "../../../lib/api-error";
 
 const inputClassName =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-slate-500 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(96,165,250,0.15)]";
-
-function messageFromAxios(err: unknown, fallback: string): string {
-  if (isAxiosError(err)) {
-    const data = err.response?.data as { message?: string } | undefined;
-    return data?.message ?? fallback;
-  }
-  return fallback;
-}
 
 const IDLE_LOGOUT_KEY = "idleLogoutPrompt";
 
@@ -35,6 +30,12 @@ export default function Login() {
       typeof window !== "undefined" &&
       sessionStorage.getItem(IDLE_LOGOUT_KEY) === "1",
   );
+  const [sessionMessage, setSessionMessage] = useState(
+    () =>
+      typeof window !== "undefined"
+        ? sessionStorage.getItem(SESSION_MESSAGE_KEY) ?? ""
+        : "",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -48,6 +49,15 @@ export default function Login() {
     }, 5000);
     return () => window.clearTimeout(timeoutId);
   }, [showSessionExpired]);
+
+  useEffect(() => {
+    if (!sessionMessage) return;
+    const timeoutId = window.setTimeout(() => {
+      setSessionMessage("");
+      sessionStorage.removeItem(SESSION_MESSAGE_KEY);
+    }, 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [sessionMessage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,12 +74,13 @@ export default function Login() {
         }
         markSessionActivity();
         sessionStorage.removeItem(IDLE_LOGOUT_KEY);
+        sessionStorage.removeItem(SESSION_MESSAGE_KEY);
         navigate(from, { replace: true });
       } else {
         setError(data.message || "Login failed");
       }
     } catch (err: unknown) {
-      setError(messageFromAxios(err, "Login failed"));
+      setError(getApiErrorMessage(err, "Login failed."));
     } finally {
       setLoading(false);
     }
@@ -117,6 +128,22 @@ export default function Login() {
               onClick={() => {
                 sessionStorage.removeItem(IDLE_LOGOUT_KEY);
                 setShowSessionExpired(false);
+              }}
+              aria-label="Dismiss message"
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {sessionMessage && (
+          <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.8rem] text-amber-200">
+            <p className="m-0 text-left">{sessionMessage}</p>
+            <button
+              type="button"
+              className="cursor-pointer border-none bg-transparent p-0 text-[0.9rem] leading-none text-amber-200"
+              onClick={() => {
+                sessionStorage.removeItem(SESSION_MESSAGE_KEY);
+                setSessionMessage("");
               }}
               aria-label="Dismiss message"
             >
