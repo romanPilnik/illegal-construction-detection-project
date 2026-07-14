@@ -112,7 +112,7 @@ export default function Dashboard() {
             Quick Actions
           </h2>
           <div
-            className="relative flex cursor-pointer items-center gap-6 rounded-xl bg-gradient-to-r from-[#2563eb] to-[#7c3aed] px-8 py-6 text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)] transition-transform duration-200 hover:-translate-y-0.5"
+            className="relative flex cursor-pointer items-center gap-6 rounded-xl bg-linear-to-r from-[#2563eb] to-[#7c3aed] px-8 py-6 text-white shadow-[0_8px_24px_rgba(37,99,235,0.35)] transition-transform duration-200 hover:-translate-y-0.5"
             onClick={() => navigate("/submit")}
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15">
