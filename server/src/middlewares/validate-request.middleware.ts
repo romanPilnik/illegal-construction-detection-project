@@ -8,7 +8,11 @@ type RequestSchemas = {
 };
 
 export const validateRequest = (schemas: RequestSchemas) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return <Params, ResBody, ReqBody, ReqQuery>(
+    req: Request<Params, ResBody, ReqBody, ReqQuery>,
+    res: Response,
+    next: NextFunction
+  ): void => {
     const validationTargets = [
       { key: 'params' as const, schema: schemas.params, value: req.params },
       { key: 'query' as const, schema: schemas.query, value: req.query },
@@ -65,7 +69,7 @@ export const validateRequest = (schemas: RequestSchemas) => {
       });
     }
     if (validatedValues.body !== undefined) {
-      req.body = validatedValues.body;
+      req.body = validatedValues.body as ReqBody;
     }
 
     next();

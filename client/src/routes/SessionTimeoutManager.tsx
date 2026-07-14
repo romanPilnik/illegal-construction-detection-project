@@ -44,6 +44,10 @@ export function SessionTimeoutManager() {
       }
     }
 
+    const handleInvalidSession = () => {
+      navigate('/login', { replace: true, state: { from: location } })
+    }
+
     logoutIfExpired()
     const intervalId = window.setInterval(logoutIfExpired, 60 * 1000)
 
@@ -51,6 +55,7 @@ export function SessionTimeoutManager() {
       window.addEventListener(eventName, handleActivity, { passive: true }),
     )
     window.addEventListener('focus', logoutIfExpired)
+    window.addEventListener('session-invalid', handleInvalidSession)
     document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
@@ -59,6 +64,7 @@ export function SessionTimeoutManager() {
         window.removeEventListener(eventName, handleActivity),
       )
       window.removeEventListener('focus', logoutIfExpired)
+      window.removeEventListener('session-invalid', handleInvalidSession)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
   }, [location, navigate])

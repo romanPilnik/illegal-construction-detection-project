@@ -1,11 +1,9 @@
-export type StoredUser = {
-  id: string
-  username: string
-  role: string
-  email?: string
-}
+import type { AuthUser } from '../features/auth/types'
+
+export type StoredUser = AuthUser
 
 export const LAST_ACTIVITY_KEY = 'lastActivityAt'
+export const SESSION_MESSAGE_KEY = 'sessionMessage'
 export const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000
 
 export function getStoredUser(): StoredUser | null {
@@ -22,6 +20,12 @@ export function clearAuthStorage(): void {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   localStorage.removeItem(LAST_ACTIVITY_KEY)
+}
+
+export function invalidateSession(message: string): void {
+  clearAuthStorage()
+  sessionStorage.setItem(SESSION_MESSAGE_KEY, message)
+  window.dispatchEvent(new Event('session-invalid'))
 }
 
 export function markSessionActivity(at = Date.now()): void {

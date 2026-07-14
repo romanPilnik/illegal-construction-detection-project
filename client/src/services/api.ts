@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { invalidateSession } from '../lib/stored-user';
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:5001/api/v1';
@@ -59,6 +60,20 @@ api.interceptors.response.use(
                 `status=${error?.response?.status ?? 'unknown'}`,
                 durationMs !== null ? `durationMs=${durationMs}` : '',
                 error?.response?.data ?? error?.message
+            );
+        }
+        const payload = error?.response?.data as
+            | { code?: string }
+            | undefined;
+        if (
+            localStorage.getItem('token') &&
+            (payload?.code === 'SESSION_INVALID' ||
+                payload?.code === 'SESSION_INACTIVE')
+        ) {
+            invalidateSession(
+                payload.code === 'SESSION_INACTIVE'
+                    ? 'Your account is no longer active. Please contact an administrator.'
+                    : 'Your session expired or became invalid. Please sign in again.'
             );
         }
         return Promise.reject(error);
