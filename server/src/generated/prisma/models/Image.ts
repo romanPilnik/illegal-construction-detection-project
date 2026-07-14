@@ -20,96 +20,40 @@ export type ImageModel = runtime.Types.Result.DefaultSelection<Prisma.$ImagePayl
 
 export type AggregateImage = {
   _count: ImageCountAggregateOutputType | null
-  _avg: ImageAvgAggregateOutputType | null
-  _sum: ImageSumAggregateOutputType | null
   _min: ImageMinAggregateOutputType | null
   _max: ImageMaxAggregateOutputType | null
-}
-
-export type ImageAvgAggregateOutputType = {
-  file_size_bytes: number | null
-  width: number | null
-  height: number | null
-}
-
-export type ImageSumAggregateOutputType = {
-  file_size_bytes: number | null
-  width: number | null
-  height: number | null
 }
 
 export type ImageMinAggregateOutputType = {
   id: string | null
   file_path: string | null
-  file_size_bytes: number | null
-  mime_type: string | null
-  width: number | null
-  height: number | null
-  created_at: Date | null
 }
 
 export type ImageMaxAggregateOutputType = {
   id: string | null
   file_path: string | null
-  file_size_bytes: number | null
-  mime_type: string | null
-  width: number | null
-  height: number | null
-  created_at: Date | null
 }
 
 export type ImageCountAggregateOutputType = {
   id: number
   file_path: number
-  file_size_bytes: number
-  mime_type: number
-  width: number
-  height: number
-  created_at: number
   _all: number
 }
 
 
-export type ImageAvgAggregateInputType = {
-  file_size_bytes?: true
-  width?: true
-  height?: true
-}
-
-export type ImageSumAggregateInputType = {
-  file_size_bytes?: true
-  width?: true
-  height?: true
-}
-
 export type ImageMinAggregateInputType = {
   id?: true
   file_path?: true
-  file_size_bytes?: true
-  mime_type?: true
-  width?: true
-  height?: true
-  created_at?: true
 }
 
 export type ImageMaxAggregateInputType = {
   id?: true
   file_path?: true
-  file_size_bytes?: true
-  mime_type?: true
-  width?: true
-  height?: true
-  created_at?: true
 }
 
 export type ImageCountAggregateInputType = {
   id?: true
   file_path?: true
-  file_size_bytes?: true
-  mime_type?: true
-  width?: true
-  height?: true
-  created_at?: true
   _all?: true
 }
 
@@ -151,18 +95,6 @@ export type ImageAggregateArgs<ExtArgs extends runtime.Types.Extensions.Internal
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
-   * Select which fields to average
-  **/
-  _avg?: ImageAvgAggregateInputType
-  /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   * 
-   * Select which fields to sum
-  **/
-  _sum?: ImageSumAggregateInputType
-  /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   * 
    * Select which fields to find the minimum value
   **/
   _min?: ImageMinAggregateInputType
@@ -193,8 +125,6 @@ export type ImageGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   _count?: ImageCountAggregateInputType | true
-  _avg?: ImageAvgAggregateInputType
-  _sum?: ImageSumAggregateInputType
   _min?: ImageMinAggregateInputType
   _max?: ImageMaxAggregateInputType
 }
@@ -202,14 +132,7 @@ export type ImageGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
 export type ImageGroupByOutputType = {
   id: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at: Date
   _count: ImageCountAggregateOutputType | null
-  _avg: ImageAvgAggregateOutputType | null
-  _sum: ImageSumAggregateOutputType | null
   _min: ImageMinAggregateOutputType | null
   _max: ImageMaxAggregateOutputType | null
 }
@@ -235,11 +158,6 @@ export type ImageWhereInput = {
   NOT?: Prisma.ImageWhereInput | Prisma.ImageWhereInput[]
   id?: Prisma.StringFilter<"Image"> | string
   file_path?: Prisma.StringFilter<"Image"> | string
-  file_size_bytes?: Prisma.IntFilter<"Image"> | number
-  mime_type?: Prisma.StringFilter<"Image"> | string
-  width?: Prisma.IntFilter<"Image"> | number
-  height?: Prisma.IntFilter<"Image"> | number
-  created_at?: Prisma.DateTimeFilter<"Image"> | Date | string
   used_as_before_in?: Prisma.AnalysisListRelationFilter
   used_as_after_in?: Prisma.AnalysisListRelationFilter
   used_as_result_in?: Prisma.AnalysisListRelationFilter
@@ -248,11 +166,6 @@ export type ImageWhereInput = {
 export type ImageOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   file_path?: Prisma.SortOrder
-  file_size_bytes?: Prisma.SortOrder
-  mime_type?: Prisma.SortOrder
-  width?: Prisma.SortOrder
-  height?: Prisma.SortOrder
-  created_at?: Prisma.SortOrder
   used_as_before_in?: Prisma.AnalysisOrderByRelationAggregateInput
   used_as_after_in?: Prisma.AnalysisOrderByRelationAggregateInput
   used_as_result_in?: Prisma.AnalysisOrderByRelationAggregateInput
@@ -265,11 +178,6 @@ export type ImageWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.ImageWhereInput[]
   NOT?: Prisma.ImageWhereInput | Prisma.ImageWhereInput[]
   file_path?: Prisma.StringFilter<"Image"> | string
-  file_size_bytes?: Prisma.IntFilter<"Image"> | number
-  mime_type?: Prisma.StringFilter<"Image"> | string
-  width?: Prisma.IntFilter<"Image"> | number
-  height?: Prisma.IntFilter<"Image"> | number
-  created_at?: Prisma.DateTimeFilter<"Image"> | Date | string
   used_as_before_in?: Prisma.AnalysisListRelationFilter
   used_as_after_in?: Prisma.AnalysisListRelationFilter
   used_as_result_in?: Prisma.AnalysisListRelationFilter
@@ -278,16 +186,9 @@ export type ImageWhereUniqueInput = Prisma.AtLeast<{
 export type ImageOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   file_path?: Prisma.SortOrder
-  file_size_bytes?: Prisma.SortOrder
-  mime_type?: Prisma.SortOrder
-  width?: Prisma.SortOrder
-  height?: Prisma.SortOrder
-  created_at?: Prisma.SortOrder
   _count?: Prisma.ImageCountOrderByAggregateInput
-  _avg?: Prisma.ImageAvgOrderByAggregateInput
   _max?: Prisma.ImageMaxOrderByAggregateInput
   _min?: Prisma.ImageMinOrderByAggregateInput
-  _sum?: Prisma.ImageSumOrderByAggregateInput
 }
 
 export type ImageScalarWhereWithAggregatesInput = {
@@ -296,21 +197,11 @@ export type ImageScalarWhereWithAggregatesInput = {
   NOT?: Prisma.ImageScalarWhereWithAggregatesInput | Prisma.ImageScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Image"> | string
   file_path?: Prisma.StringWithAggregatesFilter<"Image"> | string
-  file_size_bytes?: Prisma.IntWithAggregatesFilter<"Image"> | number
-  mime_type?: Prisma.StringWithAggregatesFilter<"Image"> | string
-  width?: Prisma.IntWithAggregatesFilter<"Image"> | number
-  height?: Prisma.IntWithAggregatesFilter<"Image"> | number
-  created_at?: Prisma.DateTimeWithAggregatesFilter<"Image"> | Date | string
 }
 
 export type ImageCreateInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
   used_as_before_in?: Prisma.AnalysisCreateNestedManyWithoutBefore_imageInput
   used_as_after_in?: Prisma.AnalysisCreateNestedManyWithoutAfter_imageInput
   used_as_result_in?: Prisma.AnalysisCreateNestedManyWithoutResult_imageInput
@@ -319,11 +210,6 @@ export type ImageCreateInput = {
 export type ImageUncheckedCreateInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
   used_as_before_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutBefore_imageInput
   used_as_after_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutAfter_imageInput
   used_as_result_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutResult_imageInput
@@ -332,11 +218,6 @@ export type ImageUncheckedCreateInput = {
 export type ImageUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   used_as_before_in?: Prisma.AnalysisUpdateManyWithoutBefore_imageNestedInput
   used_as_after_in?: Prisma.AnalysisUpdateManyWithoutAfter_imageNestedInput
   used_as_result_in?: Prisma.AnalysisUpdateManyWithoutResult_imageNestedInput
@@ -345,11 +226,6 @@ export type ImageUpdateInput = {
 export type ImageUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   used_as_before_in?: Prisma.AnalysisUncheckedUpdateManyWithoutBefore_imageNestedInput
   used_as_after_in?: Prisma.AnalysisUncheckedUpdateManyWithoutAfter_imageNestedInput
   used_as_result_in?: Prisma.AnalysisUncheckedUpdateManyWithoutResult_imageNestedInput
@@ -358,31 +234,16 @@ export type ImageUncheckedUpdateInput = {
 export type ImageCreateManyInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
 }
 
 export type ImageUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ImageUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ImageOrderByRelevanceInput = {
@@ -394,43 +255,16 @@ export type ImageOrderByRelevanceInput = {
 export type ImageCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   file_path?: Prisma.SortOrder
-  file_size_bytes?: Prisma.SortOrder
-  mime_type?: Prisma.SortOrder
-  width?: Prisma.SortOrder
-  height?: Prisma.SortOrder
-  created_at?: Prisma.SortOrder
-}
-
-export type ImageAvgOrderByAggregateInput = {
-  file_size_bytes?: Prisma.SortOrder
-  width?: Prisma.SortOrder
-  height?: Prisma.SortOrder
 }
 
 export type ImageMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   file_path?: Prisma.SortOrder
-  file_size_bytes?: Prisma.SortOrder
-  mime_type?: Prisma.SortOrder
-  width?: Prisma.SortOrder
-  height?: Prisma.SortOrder
-  created_at?: Prisma.SortOrder
 }
 
 export type ImageMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   file_path?: Prisma.SortOrder
-  file_size_bytes?: Prisma.SortOrder
-  mime_type?: Prisma.SortOrder
-  width?: Prisma.SortOrder
-  height?: Prisma.SortOrder
-  created_at?: Prisma.SortOrder
-}
-
-export type ImageSumOrderByAggregateInput = {
-  file_size_bytes?: Prisma.SortOrder
-  width?: Prisma.SortOrder
-  height?: Prisma.SortOrder
 }
 
 export type ImageScalarRelationFilter = {
@@ -441,14 +275,6 @@ export type ImageScalarRelationFilter = {
 export type ImageNullableScalarRelationFilter = {
   is?: Prisma.ImageWhereInput | null
   isNot?: Prisma.ImageWhereInput | null
-}
-
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
 }
 
 export type ImageCreateNestedOneWithoutUsed_as_before_inInput = {
@@ -498,11 +324,6 @@ export type ImageUpdateOneWithoutUsed_as_result_inNestedInput = {
 export type ImageCreateWithoutUsed_as_before_inInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
   used_as_after_in?: Prisma.AnalysisCreateNestedManyWithoutAfter_imageInput
   used_as_result_in?: Prisma.AnalysisCreateNestedManyWithoutResult_imageInput
 }
@@ -510,11 +331,6 @@ export type ImageCreateWithoutUsed_as_before_inInput = {
 export type ImageUncheckedCreateWithoutUsed_as_before_inInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
   used_as_after_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutAfter_imageInput
   used_as_result_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutResult_imageInput
 }
@@ -527,11 +343,6 @@ export type ImageCreateOrConnectWithoutUsed_as_before_inInput = {
 export type ImageCreateWithoutUsed_as_after_inInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
   used_as_before_in?: Prisma.AnalysisCreateNestedManyWithoutBefore_imageInput
   used_as_result_in?: Prisma.AnalysisCreateNestedManyWithoutResult_imageInput
 }
@@ -539,11 +350,6 @@ export type ImageCreateWithoutUsed_as_after_inInput = {
 export type ImageUncheckedCreateWithoutUsed_as_after_inInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
   used_as_before_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutBefore_imageInput
   used_as_result_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutResult_imageInput
 }
@@ -556,11 +362,6 @@ export type ImageCreateOrConnectWithoutUsed_as_after_inInput = {
 export type ImageCreateWithoutUsed_as_result_inInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
   used_as_before_in?: Prisma.AnalysisCreateNestedManyWithoutBefore_imageInput
   used_as_after_in?: Prisma.AnalysisCreateNestedManyWithoutAfter_imageInput
 }
@@ -568,11 +369,6 @@ export type ImageCreateWithoutUsed_as_result_inInput = {
 export type ImageUncheckedCreateWithoutUsed_as_result_inInput = {
   id?: string
   file_path: string
-  file_size_bytes: number
-  mime_type: string
-  width: number
-  height: number
-  created_at?: Date | string
   used_as_before_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutBefore_imageInput
   used_as_after_in?: Prisma.AnalysisUncheckedCreateNestedManyWithoutAfter_imageInput
 }
@@ -596,11 +392,6 @@ export type ImageUpdateToOneWithWhereWithoutUsed_as_before_inInput = {
 export type ImageUpdateWithoutUsed_as_before_inInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   used_as_after_in?: Prisma.AnalysisUpdateManyWithoutAfter_imageNestedInput
   used_as_result_in?: Prisma.AnalysisUpdateManyWithoutResult_imageNestedInput
 }
@@ -608,11 +399,6 @@ export type ImageUpdateWithoutUsed_as_before_inInput = {
 export type ImageUncheckedUpdateWithoutUsed_as_before_inInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   used_as_after_in?: Prisma.AnalysisUncheckedUpdateManyWithoutAfter_imageNestedInput
   used_as_result_in?: Prisma.AnalysisUncheckedUpdateManyWithoutResult_imageNestedInput
 }
@@ -631,11 +417,6 @@ export type ImageUpdateToOneWithWhereWithoutUsed_as_after_inInput = {
 export type ImageUpdateWithoutUsed_as_after_inInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   used_as_before_in?: Prisma.AnalysisUpdateManyWithoutBefore_imageNestedInput
   used_as_result_in?: Prisma.AnalysisUpdateManyWithoutResult_imageNestedInput
 }
@@ -643,11 +424,6 @@ export type ImageUpdateWithoutUsed_as_after_inInput = {
 export type ImageUncheckedUpdateWithoutUsed_as_after_inInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   used_as_before_in?: Prisma.AnalysisUncheckedUpdateManyWithoutBefore_imageNestedInput
   used_as_result_in?: Prisma.AnalysisUncheckedUpdateManyWithoutResult_imageNestedInput
 }
@@ -666,11 +442,6 @@ export type ImageUpdateToOneWithWhereWithoutUsed_as_result_inInput = {
 export type ImageUpdateWithoutUsed_as_result_inInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   used_as_before_in?: Prisma.AnalysisUpdateManyWithoutBefore_imageNestedInput
   used_as_after_in?: Prisma.AnalysisUpdateManyWithoutAfter_imageNestedInput
 }
@@ -678,11 +449,6 @@ export type ImageUpdateWithoutUsed_as_result_inInput = {
 export type ImageUncheckedUpdateWithoutUsed_as_result_inInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   file_path?: Prisma.StringFieldUpdateOperationsInput | string
-  file_size_bytes?: Prisma.IntFieldUpdateOperationsInput | number
-  mime_type?: Prisma.StringFieldUpdateOperationsInput | string
-  width?: Prisma.IntFieldUpdateOperationsInput | number
-  height?: Prisma.IntFieldUpdateOperationsInput | number
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   used_as_before_in?: Prisma.AnalysisUncheckedUpdateManyWithoutBefore_imageNestedInput
   used_as_after_in?: Prisma.AnalysisUncheckedUpdateManyWithoutAfter_imageNestedInput
 }
@@ -739,11 +505,6 @@ export type ImageCountOutputTypeCountUsed_as_result_inArgs<ExtArgs extends runti
 export type ImageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   file_path?: boolean
-  file_size_bytes?: boolean
-  mime_type?: boolean
-  width?: boolean
-  height?: boolean
-  created_at?: boolean
   used_as_before_in?: boolean | Prisma.Image$used_as_before_inArgs<ExtArgs>
   used_as_after_in?: boolean | Prisma.Image$used_as_after_inArgs<ExtArgs>
   used_as_result_in?: boolean | Prisma.Image$used_as_result_inArgs<ExtArgs>
@@ -755,14 +516,9 @@ export type ImageSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
 export type ImageSelectScalar = {
   id?: boolean
   file_path?: boolean
-  file_size_bytes?: boolean
-  mime_type?: boolean
-  width?: boolean
-  height?: boolean
-  created_at?: boolean
 }
 
-export type ImageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "file_path" | "file_size_bytes" | "mime_type" | "width" | "height" | "created_at", ExtArgs["result"]["image"]>
+export type ImageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "file_path", ExtArgs["result"]["image"]>
 export type ImageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   used_as_before_in?: boolean | Prisma.Image$used_as_before_inArgs<ExtArgs>
   used_as_after_in?: boolean | Prisma.Image$used_as_after_inArgs<ExtArgs>
@@ -780,11 +536,6 @@ export type $ImagePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     file_path: string
-    file_size_bytes: number
-    mime_type: string
-    width: number
-    height: number
-    created_at: Date
   }, ExtArgs["result"]["image"]>
   composites: {}
 }
@@ -1159,11 +910,6 @@ export interface Prisma__ImageClient<T, Null = never, ExtArgs extends runtime.Ty
 export interface ImageFieldRefs {
   readonly id: Prisma.FieldRef<"Image", 'String'>
   readonly file_path: Prisma.FieldRef<"Image", 'String'>
-  readonly file_size_bytes: Prisma.FieldRef<"Image", 'Int'>
-  readonly mime_type: Prisma.FieldRef<"Image", 'String'>
-  readonly width: Prisma.FieldRef<"Image", 'Int'>
-  readonly height: Prisma.FieldRef<"Image", 'Int'>
-  readonly created_at: Prisma.FieldRef<"Image", 'DateTime'>
 }
     
 

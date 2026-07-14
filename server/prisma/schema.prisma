@@ -25,11 +25,6 @@ model User {
 model Image {
   id                String     @id @default(uuid())
   file_path         String
-  file_size_bytes   Int
-  mime_type         String
-  width             Int
-  height            Int
-  created_at        DateTime   @default(now())
   used_as_before_in Analysis[] @relation("BeforeImage")
   used_as_after_in  Analysis[] @relation("AfterImage")
   used_as_result_in Analysis[] @relation("ResultImage")
@@ -47,11 +42,6 @@ model Analysis {
   result_image     Image?         @relation("ResultImage", fields: [result_image_id], references: [id])
   status           AnalysisStatus @default(Pending)
   anomaly_detected Boolean?
-  bbox_x1          Int?
-  bbox_y1          Int?
-  bbox_x2          Int?
-  bbox_y2          Int?
-  location_address String?
   request_title    String?        @db.VarChar(120)
   created_at       DateTime       @default(now())
 }

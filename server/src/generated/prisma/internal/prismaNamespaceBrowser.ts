@@ -91,12 +91,7 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 
 export const ImageScalarFieldEnum = {
   id: 'id',
-  file_path: 'file_path',
-  file_size_bytes: 'file_size_bytes',
-  mime_type: 'mime_type',
-  width: 'width',
-  height: 'height',
-  created_at: 'created_at'
+  file_path: 'file_path'
 } as const
 
 export type ImageScalarFieldEnum = (typeof ImageScalarFieldEnum)[keyof typeof ImageScalarFieldEnum]
@@ -110,11 +105,6 @@ export const AnalysisScalarFieldEnum = {
   result_image_id: 'result_image_id',
   status: 'status',
   anomaly_detected: 'anomaly_detected',
-  bbox_x1: 'bbox_x1',
-  bbox_y1: 'bbox_y1',
-  bbox_x2: 'bbox_x2',
-  bbox_y2: 'bbox_y2',
-  location_address: 'location_address',
   request_title: 'request_title',
   created_at: 'created_at'
 } as const
@@ -173,8 +163,7 @@ export type UserOrderByRelevanceFieldEnum = (typeof UserOrderByRelevanceFieldEnu
 
 export const ImageOrderByRelevanceFieldEnum = {
   id: 'id',
-  file_path: 'file_path',
-  mime_type: 'mime_type'
+  file_path: 'file_path'
 } as const
 
 export type ImageOrderByRelevanceFieldEnum = (typeof ImageOrderByRelevanceFieldEnum)[keyof typeof ImageOrderByRelevanceFieldEnum]
@@ -186,7 +175,6 @@ export const AnalysisOrderByRelevanceFieldEnum = {
   before_image_id: 'before_image_id',
   after_image_id: 'after_image_id',
   result_image_id: 'result_image_id',
-  location_address: 'location_address',
   request_title: 'request_title'
 } as const
 

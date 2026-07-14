@@ -20,24 +20,8 @@ export type AnalysisModel = runtime.Types.Result.DefaultSelection<Prisma.$Analys
 
 export type AggregateAnalysis = {
   _count: AnalysisCountAggregateOutputType | null
-  _avg: AnalysisAvgAggregateOutputType | null
-  _sum: AnalysisSumAggregateOutputType | null
   _min: AnalysisMinAggregateOutputType | null
   _max: AnalysisMaxAggregateOutputType | null
-}
-
-export type AnalysisAvgAggregateOutputType = {
-  bbox_x1: number | null
-  bbox_y1: number | null
-  bbox_x2: number | null
-  bbox_y2: number | null
-}
-
-export type AnalysisSumAggregateOutputType = {
-  bbox_x1: number | null
-  bbox_y1: number | null
-  bbox_x2: number | null
-  bbox_y2: number | null
 }
 
 export type AnalysisMinAggregateOutputType = {
@@ -48,11 +32,6 @@ export type AnalysisMinAggregateOutputType = {
   result_image_id: string | null
   status: $Enums.AnalysisStatus | null
   anomaly_detected: boolean | null
-  bbox_x1: number | null
-  bbox_y1: number | null
-  bbox_x2: number | null
-  bbox_y2: number | null
-  location_address: string | null
   request_title: string | null
   created_at: Date | null
 }
@@ -65,11 +44,6 @@ export type AnalysisMaxAggregateOutputType = {
   result_image_id: string | null
   status: $Enums.AnalysisStatus | null
   anomaly_detected: boolean | null
-  bbox_x1: number | null
-  bbox_y1: number | null
-  bbox_x2: number | null
-  bbox_y2: number | null
-  location_address: string | null
   request_title: string | null
   created_at: Date | null
 }
@@ -82,30 +56,11 @@ export type AnalysisCountAggregateOutputType = {
   result_image_id: number
   status: number
   anomaly_detected: number
-  bbox_x1: number
-  bbox_y1: number
-  bbox_x2: number
-  bbox_y2: number
-  location_address: number
   request_title: number
   created_at: number
   _all: number
 }
 
-
-export type AnalysisAvgAggregateInputType = {
-  bbox_x1?: true
-  bbox_y1?: true
-  bbox_x2?: true
-  bbox_y2?: true
-}
-
-export type AnalysisSumAggregateInputType = {
-  bbox_x1?: true
-  bbox_y1?: true
-  bbox_x2?: true
-  bbox_y2?: true
-}
 
 export type AnalysisMinAggregateInputType = {
   id?: true
@@ -115,11 +70,6 @@ export type AnalysisMinAggregateInputType = {
   result_image_id?: true
   status?: true
   anomaly_detected?: true
-  bbox_x1?: true
-  bbox_y1?: true
-  bbox_x2?: true
-  bbox_y2?: true
-  location_address?: true
   request_title?: true
   created_at?: true
 }
@@ -132,11 +82,6 @@ export type AnalysisMaxAggregateInputType = {
   result_image_id?: true
   status?: true
   anomaly_detected?: true
-  bbox_x1?: true
-  bbox_y1?: true
-  bbox_x2?: true
-  bbox_y2?: true
-  location_address?: true
   request_title?: true
   created_at?: true
 }
@@ -149,11 +94,6 @@ export type AnalysisCountAggregateInputType = {
   result_image_id?: true
   status?: true
   anomaly_detected?: true
-  bbox_x1?: true
-  bbox_y1?: true
-  bbox_x2?: true
-  bbox_y2?: true
-  location_address?: true
   request_title?: true
   created_at?: true
   _all?: true
@@ -197,18 +137,6 @@ export type AnalysisAggregateArgs<ExtArgs extends runtime.Types.Extensions.Inter
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
-   * Select which fields to average
-  **/
-  _avg?: AnalysisAvgAggregateInputType
-  /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   * 
-   * Select which fields to sum
-  **/
-  _sum?: AnalysisSumAggregateInputType
-  /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   * 
    * Select which fields to find the minimum value
   **/
   _min?: AnalysisMinAggregateInputType
@@ -239,8 +167,6 @@ export type AnalysisGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   _count?: AnalysisCountAggregateInputType | true
-  _avg?: AnalysisAvgAggregateInputType
-  _sum?: AnalysisSumAggregateInputType
   _min?: AnalysisMinAggregateInputType
   _max?: AnalysisMaxAggregateInputType
 }
@@ -253,16 +179,9 @@ export type AnalysisGroupByOutputType = {
   result_image_id: string | null
   status: $Enums.AnalysisStatus
   anomaly_detected: boolean | null
-  bbox_x1: number | null
-  bbox_y1: number | null
-  bbox_x2: number | null
-  bbox_y2: number | null
-  location_address: string | null
   request_title: string | null
   created_at: Date
   _count: AnalysisCountAggregateOutputType | null
-  _avg: AnalysisAvgAggregateOutputType | null
-  _sum: AnalysisSumAggregateOutputType | null
   _min: AnalysisMinAggregateOutputType | null
   _max: AnalysisMaxAggregateOutputType | null
 }
@@ -293,11 +212,6 @@ export type AnalysisWhereInput = {
   result_image_id?: Prisma.StringNullableFilter<"Analysis"> | string | null
   status?: Prisma.EnumAnalysisStatusFilter<"Analysis"> | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.BoolNullableFilter<"Analysis"> | boolean | null
-  bbox_x1?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_y1?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_x2?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_y2?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  location_address?: Prisma.StringNullableFilter<"Analysis"> | string | null
   request_title?: Prisma.StringNullableFilter<"Analysis"> | string | null
   created_at?: Prisma.DateTimeFilter<"Analysis"> | Date | string
   issued_by?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -314,11 +228,6 @@ export type AnalysisOrderByWithRelationInput = {
   result_image_id?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   anomaly_detected?: Prisma.SortOrderInput | Prisma.SortOrder
-  bbox_x1?: Prisma.SortOrderInput | Prisma.SortOrder
-  bbox_y1?: Prisma.SortOrderInput | Prisma.SortOrder
-  bbox_x2?: Prisma.SortOrderInput | Prisma.SortOrder
-  bbox_y2?: Prisma.SortOrderInput | Prisma.SortOrder
-  location_address?: Prisma.SortOrderInput | Prisma.SortOrder
   request_title?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   issued_by?: Prisma.UserOrderByWithRelationInput
@@ -339,11 +248,6 @@ export type AnalysisWhereUniqueInput = Prisma.AtLeast<{
   result_image_id?: Prisma.StringNullableFilter<"Analysis"> | string | null
   status?: Prisma.EnumAnalysisStatusFilter<"Analysis"> | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.BoolNullableFilter<"Analysis"> | boolean | null
-  bbox_x1?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_y1?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_x2?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_y2?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  location_address?: Prisma.StringNullableFilter<"Analysis"> | string | null
   request_title?: Prisma.StringNullableFilter<"Analysis"> | string | null
   created_at?: Prisma.DateTimeFilter<"Analysis"> | Date | string
   issued_by?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -360,18 +264,11 @@ export type AnalysisOrderByWithAggregationInput = {
   result_image_id?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   anomaly_detected?: Prisma.SortOrderInput | Prisma.SortOrder
-  bbox_x1?: Prisma.SortOrderInput | Prisma.SortOrder
-  bbox_y1?: Prisma.SortOrderInput | Prisma.SortOrder
-  bbox_x2?: Prisma.SortOrderInput | Prisma.SortOrder
-  bbox_y2?: Prisma.SortOrderInput | Prisma.SortOrder
-  location_address?: Prisma.SortOrderInput | Prisma.SortOrder
   request_title?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   _count?: Prisma.AnalysisCountOrderByAggregateInput
-  _avg?: Prisma.AnalysisAvgOrderByAggregateInput
   _max?: Prisma.AnalysisMaxOrderByAggregateInput
   _min?: Prisma.AnalysisMinOrderByAggregateInput
-  _sum?: Prisma.AnalysisSumOrderByAggregateInput
 }
 
 export type AnalysisScalarWhereWithAggregatesInput = {
@@ -385,11 +282,6 @@ export type AnalysisScalarWhereWithAggregatesInput = {
   result_image_id?: Prisma.StringNullableWithAggregatesFilter<"Analysis"> | string | null
   status?: Prisma.EnumAnalysisStatusWithAggregatesFilter<"Analysis"> | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.BoolNullableWithAggregatesFilter<"Analysis"> | boolean | null
-  bbox_x1?: Prisma.IntNullableWithAggregatesFilter<"Analysis"> | number | null
-  bbox_y1?: Prisma.IntNullableWithAggregatesFilter<"Analysis"> | number | null
-  bbox_x2?: Prisma.IntNullableWithAggregatesFilter<"Analysis"> | number | null
-  bbox_y2?: Prisma.IntNullableWithAggregatesFilter<"Analysis"> | number | null
-  location_address?: Prisma.StringNullableWithAggregatesFilter<"Analysis"> | string | null
   request_title?: Prisma.StringNullableWithAggregatesFilter<"Analysis"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"Analysis"> | Date | string
 }
@@ -398,11 +290,6 @@ export type AnalysisCreateInput = {
   id?: string
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
   issued_by: Prisma.UserCreateNestedOneWithoutAnalysesInput
@@ -419,11 +306,6 @@ export type AnalysisUncheckedCreateInput = {
   result_image_id?: string | null
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -432,11 +314,6 @@ export type AnalysisUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   issued_by?: Prisma.UserUpdateOneRequiredWithoutAnalysesNestedInput
@@ -453,11 +330,6 @@ export type AnalysisUncheckedUpdateInput = {
   result_image_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -470,11 +342,6 @@ export type AnalysisCreateManyInput = {
   result_image_id?: string | null
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -483,11 +350,6 @@ export type AnalysisUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -500,11 +362,6 @@ export type AnalysisUncheckedUpdateManyInput = {
   result_image_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -533,20 +390,8 @@ export type AnalysisCountOrderByAggregateInput = {
   result_image_id?: Prisma.SortOrder
   status?: Prisma.SortOrder
   anomaly_detected?: Prisma.SortOrder
-  bbox_x1?: Prisma.SortOrder
-  bbox_y1?: Prisma.SortOrder
-  bbox_x2?: Prisma.SortOrder
-  bbox_y2?: Prisma.SortOrder
-  location_address?: Prisma.SortOrder
   request_title?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
-}
-
-export type AnalysisAvgOrderByAggregateInput = {
-  bbox_x1?: Prisma.SortOrder
-  bbox_y1?: Prisma.SortOrder
-  bbox_x2?: Prisma.SortOrder
-  bbox_y2?: Prisma.SortOrder
 }
 
 export type AnalysisMaxOrderByAggregateInput = {
@@ -557,11 +402,6 @@ export type AnalysisMaxOrderByAggregateInput = {
   result_image_id?: Prisma.SortOrder
   status?: Prisma.SortOrder
   anomaly_detected?: Prisma.SortOrder
-  bbox_x1?: Prisma.SortOrder
-  bbox_y1?: Prisma.SortOrder
-  bbox_x2?: Prisma.SortOrder
-  bbox_y2?: Prisma.SortOrder
-  location_address?: Prisma.SortOrder
   request_title?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
@@ -574,20 +414,8 @@ export type AnalysisMinOrderByAggregateInput = {
   result_image_id?: Prisma.SortOrder
   status?: Prisma.SortOrder
   anomaly_detected?: Prisma.SortOrder
-  bbox_x1?: Prisma.SortOrder
-  bbox_y1?: Prisma.SortOrder
-  bbox_x2?: Prisma.SortOrder
-  bbox_y2?: Prisma.SortOrder
-  location_address?: Prisma.SortOrder
   request_title?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
-}
-
-export type AnalysisSumOrderByAggregateInput = {
-  bbox_x1?: Prisma.SortOrder
-  bbox_y1?: Prisma.SortOrder
-  bbox_x2?: Prisma.SortOrder
-  bbox_y2?: Prisma.SortOrder
 }
 
 export type AnalysisCreateNestedManyWithoutIssued_byInput = {
@@ -766,23 +594,10 @@ export type NullableBoolFieldUpdateOperationsInput = {
   set?: boolean | null
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type AnalysisCreateWithoutIssued_byInput = {
   id?: string
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
   before_image: Prisma.ImageCreateNestedOneWithoutUsed_as_before_inInput
@@ -797,11 +612,6 @@ export type AnalysisUncheckedCreateWithoutIssued_byInput = {
   result_image_id?: string | null
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -843,11 +653,6 @@ export type AnalysisScalarWhereInput = {
   result_image_id?: Prisma.StringNullableFilter<"Analysis"> | string | null
   status?: Prisma.EnumAnalysisStatusFilter<"Analysis"> | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.BoolNullableFilter<"Analysis"> | boolean | null
-  bbox_x1?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_y1?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_x2?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  bbox_y2?: Prisma.IntNullableFilter<"Analysis"> | number | null
-  location_address?: Prisma.StringNullableFilter<"Analysis"> | string | null
   request_title?: Prisma.StringNullableFilter<"Analysis"> | string | null
   created_at?: Prisma.DateTimeFilter<"Analysis"> | Date | string
 }
@@ -856,11 +661,6 @@ export type AnalysisCreateWithoutBefore_imageInput = {
   id?: string
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
   issued_by: Prisma.UserCreateNestedOneWithoutAnalysesInput
@@ -875,11 +675,6 @@ export type AnalysisUncheckedCreateWithoutBefore_imageInput = {
   result_image_id?: string | null
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -898,11 +693,6 @@ export type AnalysisCreateWithoutAfter_imageInput = {
   id?: string
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
   issued_by: Prisma.UserCreateNestedOneWithoutAnalysesInput
@@ -917,11 +707,6 @@ export type AnalysisUncheckedCreateWithoutAfter_imageInput = {
   result_image_id?: string | null
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -940,11 +725,6 @@ export type AnalysisCreateWithoutResult_imageInput = {
   id?: string
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
   issued_by: Prisma.UserCreateNestedOneWithoutAnalysesInput
@@ -959,11 +739,6 @@ export type AnalysisUncheckedCreateWithoutResult_imageInput = {
   after_image_id: string
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -1033,11 +808,6 @@ export type AnalysisCreateManyIssued_byInput = {
   result_image_id?: string | null
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -1046,11 +816,6 @@ export type AnalysisUpdateWithoutIssued_byInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   before_image?: Prisma.ImageUpdateOneRequiredWithoutUsed_as_before_inNestedInput
@@ -1065,11 +830,6 @@ export type AnalysisUncheckedUpdateWithoutIssued_byInput = {
   result_image_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1081,11 +841,6 @@ export type AnalysisUncheckedUpdateManyWithoutIssued_byInput = {
   result_image_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1097,11 +852,6 @@ export type AnalysisCreateManyBefore_imageInput = {
   result_image_id?: string | null
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -1113,11 +863,6 @@ export type AnalysisCreateManyAfter_imageInput = {
   result_image_id?: string | null
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -1129,11 +874,6 @@ export type AnalysisCreateManyResult_imageInput = {
   after_image_id: string
   status?: $Enums.AnalysisStatus
   anomaly_detected?: boolean | null
-  bbox_x1?: number | null
-  bbox_y1?: number | null
-  bbox_x2?: number | null
-  bbox_y2?: number | null
-  location_address?: string | null
   request_title?: string | null
   created_at?: Date | string
 }
@@ -1142,11 +882,6 @@ export type AnalysisUpdateWithoutBefore_imageInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   issued_by?: Prisma.UserUpdateOneRequiredWithoutAnalysesNestedInput
@@ -1161,11 +896,6 @@ export type AnalysisUncheckedUpdateWithoutBefore_imageInput = {
   result_image_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1177,11 +907,6 @@ export type AnalysisUncheckedUpdateManyWithoutBefore_imageInput = {
   result_image_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1190,11 +915,6 @@ export type AnalysisUpdateWithoutAfter_imageInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   issued_by?: Prisma.UserUpdateOneRequiredWithoutAnalysesNestedInput
@@ -1209,11 +929,6 @@ export type AnalysisUncheckedUpdateWithoutAfter_imageInput = {
   result_image_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1225,11 +940,6 @@ export type AnalysisUncheckedUpdateManyWithoutAfter_imageInput = {
   result_image_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1238,11 +948,6 @@ export type AnalysisUpdateWithoutResult_imageInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   issued_by?: Prisma.UserUpdateOneRequiredWithoutAnalysesNestedInput
@@ -1257,11 +962,6 @@ export type AnalysisUncheckedUpdateWithoutResult_imageInput = {
   after_image_id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1273,11 +973,6 @@ export type AnalysisUncheckedUpdateManyWithoutResult_imageInput = {
   after_image_id?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   anomaly_detected?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  bbox_x1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y1?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_x2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  bbox_y2?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   request_title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1292,11 +987,6 @@ export type AnalysisSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   result_image_id?: boolean
   status?: boolean
   anomaly_detected?: boolean
-  bbox_x1?: boolean
-  bbox_y1?: boolean
-  bbox_x2?: boolean
-  bbox_y2?: boolean
-  location_address?: boolean
   request_title?: boolean
   created_at?: boolean
   issued_by?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1315,16 +1005,11 @@ export type AnalysisSelectScalar = {
   result_image_id?: boolean
   status?: boolean
   anomaly_detected?: boolean
-  bbox_x1?: boolean
-  bbox_y1?: boolean
-  bbox_x2?: boolean
-  bbox_y2?: boolean
-  location_address?: boolean
   request_title?: boolean
   created_at?: boolean
 }
 
-export type AnalysisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "inspector_id" | "before_image_id" | "after_image_id" | "result_image_id" | "status" | "anomaly_detected" | "bbox_x1" | "bbox_y1" | "bbox_x2" | "bbox_y2" | "location_address" | "request_title" | "created_at", ExtArgs["result"]["analysis"]>
+export type AnalysisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "inspector_id" | "before_image_id" | "after_image_id" | "result_image_id" | "status" | "anomaly_detected" | "request_title" | "created_at", ExtArgs["result"]["analysis"]>
 export type AnalysisInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   issued_by?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   before_image?: boolean | Prisma.ImageDefaultArgs<ExtArgs>
@@ -1348,11 +1033,6 @@ export type $AnalysisPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     result_image_id: string | null
     status: $Enums.AnalysisStatus
     anomaly_detected: boolean | null
-    bbox_x1: number | null
-    bbox_y1: number | null
-    bbox_x2: number | null
-    bbox_y2: number | null
-    location_address: string | null
     request_title: string | null
     created_at: Date
   }, ExtArgs["result"]["analysis"]>
@@ -1735,11 +1415,6 @@ export interface AnalysisFieldRefs {
   readonly result_image_id: Prisma.FieldRef<"Analysis", 'String'>
   readonly status: Prisma.FieldRef<"Analysis", 'AnalysisStatus'>
   readonly anomaly_detected: Prisma.FieldRef<"Analysis", 'Boolean'>
-  readonly bbox_x1: Prisma.FieldRef<"Analysis", 'Int'>
-  readonly bbox_y1: Prisma.FieldRef<"Analysis", 'Int'>
-  readonly bbox_x2: Prisma.FieldRef<"Analysis", 'Int'>
-  readonly bbox_y2: Prisma.FieldRef<"Analysis", 'Int'>
-  readonly location_address: Prisma.FieldRef<"Analysis", 'String'>
   readonly request_title: Prisma.FieldRef<"Analysis", 'String'>
   readonly created_at: Prisma.FieldRef<"Analysis", 'DateTime'>
 }
