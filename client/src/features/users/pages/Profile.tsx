@@ -12,6 +12,7 @@ import {
   PASSWORD_PLACEHOLDER,
 } from "../../../lib/password-rules";
 import { getApiErrorMessage } from "../../../lib/api-error";
+import { PageHeaderBar } from "../../../components/PageHeaderBar";
 
 const readOnlyInput =
   "w-full rounded-lg border border-white/10 bg-[#0b1220] p-3 text-sm text-slate-200 read-only:cursor-not-allowed read-only:text-slate-400 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:outline-none";
@@ -99,28 +100,24 @@ export default function Profile() {
 
   return (
     <div className="app-page pt-8">
-      <div className="mx-auto mb-8 max-w-[1000px]">
+      <div className="mx-auto mb-8 max-w-[1100px]">
         <h1 className="page-title mb-6 text-[2rem] font-bold">
           Profile Page:
         </h1>
       </div>
-      <div className="glass-card flex items-center gap-8 px-8 py-4">
-        <button
-          type="button"
-          className="flex cursor-pointer items-center gap-2 border-none bg-transparent text-sm font-semibold text-slate-300 hover:text-[#60a5fa]"
-          onClick={() => navigate("/")}
-        >
-          ← Back to Dashboard
-        </button>
-        <div>
-          <h2 className="text-lg font-bold text-slate-100">Profile Settings</h2>
-          <p className="text-xs text-slate-400">
-            Manage your account information
-          </p>
-        </div>
-      </div>
+      <PageHeaderBar
+        title="Profile Settings"
+        subtitle="Manage your account information"
+        onBack={() => navigate("/")}
+        icon={
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        }
+      />
 
-      <div className="mx-auto my-8 flex max-w-[800px] flex-col gap-6">
+      <div className="mx-auto my-6 flex max-w-[1100px] flex-col gap-6">
         {loadError && (
           <div className="rounded-lg bg-red-500/10 px-4 py-4 text-sm text-red-300">
             {loadError}

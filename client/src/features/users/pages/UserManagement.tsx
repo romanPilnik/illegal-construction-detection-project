@@ -11,15 +11,16 @@ import {
   PASSWORD_PLACEHOLDER,
 } from "../../../lib/password-rules";
 import { getApiErrorMessage } from "../../../lib/api-error";
+import { PageHeaderBar } from "../../../components/PageHeaderBar";
 
 const PAGE_SIZE = 10;
 
 function roleBadgeClasses(role: UserRole) {
   const base =
-    "inline-block rounded-full px-2.5 py-1 text-[0.7rem] font-semibold";
+    "inline-flex w-24 items-center justify-center rounded-full px-2.5 py-1 text-[0.7rem] font-semibold text-slate-900";
   if (role === "Admin")
-    return `${base} border border-purple-400/30 bg-purple-500/20 text-purple-200`;
-  return `${base} border border-sky-400/30 bg-sky-500/20 text-sky-200`;
+    return `${base} border border-purple-400/30 bg-purple-500/20`;
+  return `${base} border border-sky-400/30 bg-sky-500/20`;
 }
 
 export default function UserManagement() {
@@ -219,19 +220,19 @@ export default function UserManagement() {
           Admin UserManagement Page:
         </h1>
       </div>
-      <div className="glass-card flex items-center gap-8 px-8 py-4">
-        <button
-          type="button"
-          className="flex cursor-pointer items-center gap-2 border-none bg-transparent text-sm font-semibold text-slate-300 hover:text-[#60a5fa]"
-          onClick={() => navigate("/")}
-        >
-          ← Back to Dashboard
-        </button>
-        <div>
-          <h2 className="text-lg font-bold text-slate-100">User Management</h2>
-          <p className="text-xs text-slate-400">Manage users and permissions</p>
-        </div>
-      </div>
+      <PageHeaderBar
+        title="User Management"
+        subtitle="Manage users and permissions"
+        onBack={() => navigate("/")}
+        icon={
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        }
+      />
 
       {error && (
         <div className="mx-auto mt-4 max-w-[1100px] rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-200">

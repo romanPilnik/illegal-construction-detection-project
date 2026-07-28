@@ -2,11 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAnalysesMeta } from "../api";
 import { clearAuthStorage, getStoredUser } from "../../../lib/stored-user";
-import { getApiErrorMessage } from "../../../lib/api-error";
-
-function overviewRequestErrorMessage(reason: unknown): string {
-  return getApiErrorMessage(reason, "Could not refresh totals.");
-}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -15,11 +10,9 @@ export default function Dashboard() {
 
   const [totalAnalyses, setTotalAnalyses] = useState<number | null>(null);
   const [pendingCount, setPendingCount] = useState<number | null>(null);
-  const [countsError, setCountsError] = useState("");
   const [overviewLoading, setOverviewLoading] = useState(true);
 
   const loadOverview = useCallback(async () => {
-    setCountsError("");
     setOverviewLoading(true);
 
     const [allRes, pendingRes] = await Promise.allSettled([
@@ -30,23 +23,16 @@ export default function Dashboard() {
     if (allRes.status === "fulfilled") {
       setTotalAnalyses(allRes.value.total);
     } else {
-      setTotalAnalyses(null);
+      console.warn("Could not fetch total analyses count:", allRes.reason);
+      setTotalAnalyses(0);
     }
 
     if (pendingRes.status === "fulfilled") {
       setPendingCount(pendingRes.value.total);
     } else {
-      setPendingCount(null);
+      console.warn("Could not fetch pending analyses count:", pendingRes.reason);
+      setPendingCount(0);
     }
-
-    const metaFailures: string[] = [];
-    if (allRes.status === "rejected") {
-      metaFailures.push(overviewRequestErrorMessage(allRes.reason));
-    }
-    if (pendingRes.status === "rejected") {
-      metaFailures.push(overviewRequestErrorMessage(pendingRes.reason));
-    }
-    setCountsError(metaFailures.filter(Boolean).join(" · "));
 
     setOverviewLoading(false);
   }, []);
@@ -254,11 +240,6 @@ export default function Dashboard() {
           <h2 className="mb-5 mt-6 text-sm font-semibold uppercase tracking-[0.05em] text-slate-400">
             Overview
           </h2>
-          {countsError && (
-            <p className="mb-4 text-sm text-amber-200/90">
-              Totals could not be refreshed: {countsError}
-            </p>
-          )}
           <div className="mb-8 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
             <div className="glass-card rounded-xl p-6">
               <div className="text-[0.8rem] font-medium text-slate-400">

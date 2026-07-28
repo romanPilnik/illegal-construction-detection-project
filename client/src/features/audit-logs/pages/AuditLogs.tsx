@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AUDIT_LOGS_PAGE_LIMIT, getAuditLogs } from "../api";
 import type { AuditLogRow, AuditLogsListMeta } from "../types";
 import { getApiErrorMessage } from "../../../lib/api-error";
+import { PageHeaderBar } from "../../../components/PageHeaderBar";
 
 const cell = "border-b border-white/10 px-4 py-3 text-left text-slate-300";
 const head = `${cell} bg-white/5 font-semibold text-slate-200`;
@@ -69,15 +70,16 @@ export default function AuditLogs() {
       <div className="mx-auto mb-4 max-w-[1100px] px-4">
         <h1 className="page-title text-[2rem] font-bold">Audit logs</h1>
       </div>
-      <div className="glass-card flex items-center gap-8 px-8 py-4">
-        <button
-          type="button"
-          className="cursor-pointer border-none bg-transparent text-sm font-semibold text-slate-300 hover:text-[#60a5fa]"
-          onClick={() => navigate("/")}
-        >
-          ← Back to Dashboard
-        </button>
-      </div>
+      <PageHeaderBar
+        title="Audit Logs"
+        subtitle="Track user actions and system events"
+        onBack={() => navigate("/")}
+        icon={
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        }
+      />
       <div className="mx-auto mt-6 max-w-[1100px] px-4">
         <label
           className="block text-sm font-medium text-slate-300"

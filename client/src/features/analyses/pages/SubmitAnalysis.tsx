@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createAnalysis } from "../api";
 import { AnalysisSubmitLoader } from "../../../components/AnalysisSubmitLoader";
 import { getApiErrorMessage } from "../../../lib/api-error";
+import { PageHeaderBar } from "../../../components/PageHeaderBar";
 
 function submitErrorMessage(err: unknown): string {
   return getApiErrorMessage(err, "Failed to submit analysis.");
@@ -89,29 +90,26 @@ export default function SubmitAnalysis() {
 
   return (
     <div className="app-page pt-8">
-      <div className="mx-auto mb-8 max-w-[1000px]">
+      <div className="mx-auto mb-8 max-w-[1100px]">
         <h1 className="page-title mb-6 text-[2rem] font-bold">
           Image Submission
         </h1>
       </div>
 
-      <div className="glass-card flex items-center gap-8 px-8 py-4">
-        <button
-          type="button"
-          className="flex cursor-pointer items-center gap-2 border-none bg-transparent text-sm font-semibold text-slate-300 hover:text-slate-100"
-          onClick={() => navigate("/")}
-        >
-          ← Back to Dashboard
-        </button>
-        <div>
-          <h2 className="text-lg font-bold text-slate-100">Submit Analysis</h2>
-          <p className="text-xs text-slate-400">
-            Upload before and after images
-          </p>
-        </div>
-      </div>
+      <PageHeaderBar
+        title="Submit Analysis"
+        subtitle="Upload before and after images"
+        onBack={() => navigate("/")}
+        icon={
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+        }
+      />
 
-      <div className="glass-card mx-auto max-w-[1000px] rounded-xl p-8">
+      <div className="glass-card mx-auto my-6 max-w-[1100px] rounded-xl p-8">
         <div className="mb-8">
           <label htmlFor="request-title" className="mb-2 block font-semibold text-slate-100">
             Request Title
