@@ -77,20 +77,13 @@ export default function SubmitAnalysis() {
 
   const canSubmit = Boolean(beforeImage && afterImage) && !submitting;
 
-  const missingTitle = Boolean(beforeImage && afterImage && !requestTitle.trim());
-
-  const dropCardClass =
-    "group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-blue-200 bg-blue-50 transition-[border-color,background-color] hover:border-blue-300 hover:bg-blue-100/80";
-
-  const footerStripClass =
-    "w-full border-t border-blue-200 bg-blue-100 px-4 py-3 text-center text-sm font-semibold text-blue-700 transition-colors group-hover:bg-blue-200/70";
-
-  const dropZoneInnerClass =
-    "flex min-h-[240px] flex-col items-center justify-center bg-blue-50 px-4 py-6";
+  const missingTitle = Boolean(
+    beforeImage && afterImage && !requestTitle.trim(),
+  );
 
   return (
     <div className="app-page pt-8">
-      <div className="mx-auto mb-8 max-w-[1100px]">
+      <div className="mx-auto mb-8 max-w-275">
         <h1 className="page-title mb-6 text-[2rem] font-bold">
           Image Submission
         </h1>
@@ -101,7 +94,16 @@ export default function SubmitAnalysis() {
         subtitle="Upload before and after images"
         onBack={() => navigate("/")}
         icon={
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
@@ -109,9 +111,9 @@ export default function SubmitAnalysis() {
         }
       />
 
-      <div className="glass-card mx-auto my-6 max-w-[1100px] rounded-xl p-8">
+      <div className="glass-card glass-card-elevated mx-auto my-6 max-w-275 p-8">
         <div className="mb-8">
-          <label htmlFor="request-title" className="mb-2 block font-semibold text-slate-100">
+          <label htmlFor="request-title" className="form-label">
             Request Title
           </label>
           <input
@@ -121,13 +123,13 @@ export default function SubmitAnalysis() {
             placeholder="e.g. Main Street building inspection — March 2026"
             value={requestTitle}
             onChange={(e) => setRequestTitle(e.target.value)}
-            className="w-full rounded-lg border border-white/15 bg-[#0b1220] px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400/50 focus:ring-2 focus:ring-sky-400/20"
+            className="form-input"
           />
-          <p className="mt-1.5 text-xs text-slate-400">
+          <p className="mt-1.5 text-xs text-slate-500">
             Give this analysis a name so you can find it easily in your history.
           </p>
           {missingTitle && (
-            <p className="mt-1.5 text-xs font-medium text-amber-300">
+            <p className="mt-1.5 text-xs font-medium text-amber-600">
               Enter a request title to enable submission.
             </p>
           )}
@@ -135,19 +137,17 @@ export default function SubmitAnalysis() {
 
         <div className="mb-8 grid grid-cols-2 gap-8">
           <div className="flex flex-col gap-3">
-            <div className="font-semibold text-slate-100">Before Image</div>
-            <label htmlFor="submit-before-file" className={dropCardClass}>
-              <div className={dropZoneInnerClass}>
+            <div className="form-label mb-0">Before Image</div>
+            <label htmlFor="submit-before-file" className="drop-zone">
+              <div className="drop-zone-inner">
                 {beforePreview ? (
                   <img
                     src={beforePreview}
                     alt=""
-                    className="max-h-44 max-w-full rounded-lg border border-blue-200 object-contain shadow-sm"
+                    className="max-h-44 max-w-full rounded-lg border border-blue-200 object-contain shadow-md"
                   />
                 ) : (
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-200 text-blue-600 shadow-[0_2px_8px_rgba(37,99,235,0.12)]">
-                    ↑
-                  </div>
+                  <div className="drop-zone-icon">↑</div>
                 )}
                 <p className="text-sm font-semibold text-slate-700">
                   {beforeImage ? beforeImage.name : "No image uploaded"}
@@ -156,7 +156,9 @@ export default function SubmitAnalysis() {
                   Upload the initial state image
                 </span>
               </div>
-              <span className={footerStripClass}>Browse or click here to upload</span>
+              <span className="drop-zone-footer">
+                Browse or click here to upload
+              </span>
               <input
                 id="submit-before-file"
                 type="file"
@@ -169,7 +171,7 @@ export default function SubmitAnalysis() {
             {beforePreview && (
               <button
                 type="button"
-                className="self-start rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:bg-white/10"
+                className="btn btn-ghost self-start text-xs"
                 onClick={() => setQuickView("before")}
               >
                 Quick view
@@ -178,19 +180,17 @@ export default function SubmitAnalysis() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <div className="font-semibold text-slate-100">After Image</div>
-            <label htmlFor="submit-after-file" className={dropCardClass}>
-              <div className={dropZoneInnerClass}>
+            <div className="form-label mb-0">After Image</div>
+            <label htmlFor="submit-after-file" className="drop-zone">
+              <div className="drop-zone-inner">
                 {afterPreview ? (
                   <img
                     src={afterPreview}
                     alt=""
-                    className="max-h-44 max-w-full rounded-lg border border-blue-200 object-contain shadow-sm"
+                    className="max-h-44 max-w-full rounded-lg border border-blue-200 object-contain shadow-md"
                   />
                 ) : (
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-200 text-blue-600 shadow-[0_2px_8px_rgba(37,99,235,0.12)]">
-                    ↑
-                  </div>
+                  <div className="drop-zone-icon">↑</div>
                 )}
                 <p className="text-sm font-semibold text-slate-700">
                   {afterImage ? afterImage.name : "No image uploaded"}
@@ -199,7 +199,9 @@ export default function SubmitAnalysis() {
                   Upload the current state image
                 </span>
               </div>
-              <span className={footerStripClass}>Browse or click here to upload</span>
+              <span className="drop-zone-footer">
+                Browse or click here to upload
+              </span>
               <input
                 id="submit-after-file"
                 type="file"
@@ -212,7 +214,7 @@ export default function SubmitAnalysis() {
             {afterPreview && (
               <button
                 type="button"
-                className="self-start rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:bg-white/10"
+                className="btn btn-ghost self-start text-xs"
                 onClick={() => setQuickView("after")}
               >
                 Quick view
@@ -221,21 +223,13 @@ export default function SubmitAnalysis() {
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {error}
-          </div>
-        )}
+        {error && <div className="alert alert-error mb-4">{error}</div>}
 
         <button
           type="button"
-          className={`w-full rounded-lg border-none p-4 font-semibold text-white transition-[background-color,transform] duration-200 ${
-            canSubmit && requestTitle.trim()
-              ? "cursor-pointer bg-[#2563eb] hover:bg-[#1d4ed8] active:scale-[0.99]"
-              : canSubmit
-                ? "cursor-pointer bg-amber-600 hover:bg-amber-700 active:scale-[0.99]"
-                : "cursor-not-allowed bg-slate-600/50 text-slate-400"
-          }`}
+          className={`btn btn-primary w-full p-4 text-base ${
+            !canSubmit || !requestTitle.trim() ? "opacity-50" : ""
+          } ${canSubmit && !requestTitle.trim() ? "bg-amber-600! hover:bg-amber-700!" : ""}`}
           disabled={!canSubmit}
           onClick={() => void handleSubmit()}
         >
@@ -249,27 +243,35 @@ export default function SubmitAnalysis() {
         <div
           role="presentation"
           tabIndex={-1}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          className="modal-overlay"
           onClick={() => setQuickView(null)}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Image preview"
-            className="relative max-h-[90vh] max-w-[min(92vw,900px)] rounded-xl border border-white/10 bg-[#0f172a] p-3 shadow-2xl"
+            className="modal-panel modal-panel-lg p-3"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
-              className="absolute right-2 top-2 z-10 rounded-lg border border-white/15 bg-white/10 px-2 py-1 text-xs font-semibold text-slate-100 hover:bg-white/20"
+              className="btn btn-secondary absolute right-3 top-3 z-10 text-xs"
               onClick={() => setQuickView(null)}
             >
               Close
             </button>
             <img
-              src={quickView === "before" ? beforePreview ?? "" : afterPreview ?? ""}
-              alt={quickView === "before" ? "Before upload preview" : "After upload preview"}
-              className="max-h-[80vh] w-full rounded-lg object-contain"
+              src={
+                quickView === "before"
+                  ? (beforePreview ?? "")
+                  : (afterPreview ?? "")
+              }
+              alt={
+                quickView === "before"
+                  ? "Before upload preview"
+                  : "After upload preview"
+              }
+              className="max-h-[80vh] w-full rounded-lg object-contain shadow-lg"
             />
           </div>
         </div>

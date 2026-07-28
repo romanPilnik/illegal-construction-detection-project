@@ -14,11 +14,9 @@ import {
 import { getApiErrorMessage } from "../../../lib/api-error";
 import { PageHeaderBar } from "../../../components/PageHeaderBar";
 
-const readOnlyInput =
-  "w-full rounded-lg border border-white/10 bg-[#0b1220] p-3 text-sm text-slate-200 read-only:cursor-not-allowed read-only:text-slate-400 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:outline-none";
+const readOnlyInput = "form-input read-only:cursor-not-allowed";
 
-const profilePasswordInputClass =
-  "w-full rounded-lg border border-white/10 bg-[#0b1220] p-3 text-sm text-slate-200 outline-none focus:border-[#60a5fa] focus:ring-2 focus:ring-[rgba(96,165,250,0.15)]";
+const profilePasswordInputClass = "form-input pr-11";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -100,37 +98,38 @@ export default function Profile() {
 
   return (
     <div className="app-page pt-8">
-      <div className="mx-auto mb-8 max-w-[1100px]">
-        <h1 className="page-title mb-6 text-[2rem] font-bold">
-          Profile Page:
-        </h1>
+      <div className="mx-auto mb-8 max-w-275">
+        <h1 className="page-title mb-6 text-[2rem] font-bold">Profile</h1>
       </div>
       <PageHeaderBar
         title="Profile Settings"
         subtitle="Manage your account information"
         onBack={() => navigate("/")}
         icon={
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
         }
       />
 
-      <div className="mx-auto my-6 flex max-w-[1100px] flex-col gap-6">
-        {loadError && (
-          <div className="rounded-lg bg-red-500/10 px-4 py-4 text-sm text-red-300">
-            {loadError}
-          </div>
-        )}
-        <div className="glass-card rounded-xl p-8">
+      <div className="mx-auto my-6 flex max-w-275 flex-col gap-6">
+        {loadError && <div className="alert alert-error">{loadError}</div>}
+        <div className="glass-card glass-card-elevated p-8">
           <div className="mb-6">
-            <h3 className="flex items-center gap-2 text-[1.1rem] text-slate-100">
+            <h3 className="card-heading flex items-center gap-2">
               👤 Account Information
             </h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Your basic account details
-            </p>
+            <p className="card-subheading">Your basic account details</p>
           </div>
           {loadingProfile ? (
             <p className="py-4 text-center text-sm text-slate-400">Loading…</p>
@@ -138,9 +137,7 @@ export default function Profile() {
             <>
               <div className="mb-6 grid grid-cols-2 gap-6">
                 <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-400">
-                    Username
-                  </label>
+                  <label className="form-label">Username</label>
                   <input
                     type="text"
                     className={readOnlyInput}
@@ -149,9 +146,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                    Email
-                  </label>
+                  <label className="form-label">Email</label>
                   <input
                     type="email"
                     className={readOnlyInput}
@@ -160,9 +155,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                    Role
-                  </label>
+                  <label className="form-label">Role</label>
                   <input
                     type="text"
                     className={readOnlyInput}
@@ -175,22 +168,18 @@ export default function Profile() {
           )}
         </div>
 
-        <div className="glass-card rounded-xl p-8">
+        <div className="glass-card glass-card-elevated p-8">
           <div className="mb-6">
-            <h3 className="flex items-center gap-2 text-[1.1rem] text-slate-100">
+            <h3 className="card-heading flex items-center gap-2">
               🔒 Security Settings
             </h3>
-            <p className="mt-1 text-sm text-slate-400">Change your password</p>
+            <p className="card-subheading">Change your password</p>
           </div>
           {passwordError && (
-            <div className="mb-4 rounded-lg bg-[#fef2f2] px-4 py-3 text-sm text-[#b91c1c]">
-              {passwordError}
-            </div>
+            <div className="alert alert-error mb-4">{passwordError}</div>
           )}
           {passwordSuccess && (
-            <div className="mb-4 rounded-lg bg-[#f0fdf4] px-4 py-3 text-sm text-[#166534]">
-              {passwordSuccess}
-            </div>
+            <div className="alert alert-success mb-4">{passwordSuccess}</div>
           )}
           <div className="mb-4">
             <PasswordInput
@@ -230,7 +219,7 @@ export default function Profile() {
           <button
             type="button"
             disabled={passwordSubmitting}
-            className="cursor-pointer rounded-lg border-none bg-[#2563eb] px-6 py-3 font-semibold text-white hover:enabled:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn btn-primary px-6 py-3"
             onClick={() => void handleChangePassword()}
           >
             {passwordSubmitting ? "Updating…" : "Update Password"}

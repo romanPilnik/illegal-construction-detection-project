@@ -208,16 +208,14 @@ export default function UserManagement() {
     }
   };
 
-  const btnSecondary =
-    "flex cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50";
-  const btnPrimary =
-    "flex cursor-pointer items-center gap-2 rounded-md border-none bg-[#2563eb] px-4 py-2 font-semibold text-white hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50";
+  const btnSecondary = "btn btn-secondary";
+  const btnPrimary = "btn btn-primary";
 
   return (
     <div className="app-page pt-8">
-      <div className="mx-auto mb-8 max-w-[1100px]">
+      <div className="mx-auto mb-8 max-w-275">
         <h1 className="page-title mb-6 text-[2rem] font-bold">
-          Admin UserManagement Page:
+          User Management
         </h1>
       </div>
       <PageHeaderBar
@@ -225,7 +223,16 @@ export default function UserManagement() {
         subtitle="Manage users and permissions"
         onBack={() => navigate("/")}
         icon={
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
             <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -235,26 +242,22 @@ export default function UserManagement() {
       />
 
       {error && (
-        <div className="mx-auto mt-4 max-w-[1100px] rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-200">
-          {error}
-        </div>
+        <div className="alert alert-error mx-auto mt-4 max-w-275">{error}</div>
       )}
       {actionError && !editing && (
-        <div className="mx-auto mt-4 max-w-[1100px] rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-200">
+        <div className="alert alert-error mx-auto mt-4 max-w-275">
           {actionError}
         </div>
       )}
 
-      <div className="mx-auto my-8 max-w-[1100px]">
-        <div className="glass-card rounded-xl p-8">
+      <div className="mx-auto my-8 max-w-275">
+        <div className="glass-card glass-card-elevated p-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h3 className="flex items-center gap-2 text-[1.1rem] font-semibold text-slate-100">
+              <h3 className="card-heading flex items-center gap-2">
                 👥 All Users
               </h3>
-              <p className="mt-1 text-sm text-slate-400">
-                Manage user accounts and roles
-              </p>
+              <p className="card-subheading">Manage user accounts and roles</p>
             </div>
             <button type="button" className={btnPrimary} onClick={openCreate}>
               + Add User
@@ -264,13 +267,13 @@ export default function UserManagement() {
           <div className="mb-6 flex flex-wrap gap-4">
             <input
               type="text"
-              className="min-w-[200px] flex-1 rounded-lg border border-white/15 bg-[#0b1220] px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30"
+              className="form-input min-w-50 flex-1"
               placeholder="🔍 Search by username or email..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
             <select
-              className="cursor-pointer rounded-lg border border-white/15 bg-[#0b1220] px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30"
+              className="form-input w-auto cursor-pointer"
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value as "" | UserRole);
@@ -282,7 +285,7 @@ export default function UserManagement() {
               <option value="Inspector">Inspector</option>
             </select>
             <select
-              className="cursor-pointer rounded-lg border border-white/15 bg-[#0b1220] px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-400/50 focus:ring-1 focus:ring-sky-400/30"
+              className="form-input w-auto cursor-pointer"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value as "active" | "inactive");
@@ -296,7 +299,7 @@ export default function UserManagement() {
               type="button"
               disabled={!hasActiveFilters || loading}
               onClick={handleResetFilters}
-              className="rounded-lg border border-slate-500/40 bg-white/5 px-4 py-3 text-sm font-bold text-slate-300 transition-all hover:enabled:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+              className="btn btn-secondary"
             >
               Reset
             </button>
@@ -313,53 +316,44 @@ export default function UserManagement() {
               <table className="w-full border-collapse text-left">
                 <thead>
                   <tr>
-                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
-                      Username
-                    </th>
-                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
-                      Email
-                    </th>
-                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
-                      Role
-                    </th>
-                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
-                      Status
-                    </th>
-                    <th className="border-b-2 border-white/10 px-4 py-4 text-sm font-semibold text-slate-400">
-                      Actions
-                    </th>
+                    <th className="table-head">Username</th>
+                    <th className="table-head">Email</th>
+                    <th className="table-head">Role</th>
+                    <th className="table-head">Status</th>
+                    <th className="table-head">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((u) => (
-                    <tr key={u.id}>
-                      <td className="border-b border-white/10 px-4 py-4 text-sm font-semibold text-slate-100">
+                    <tr
+                      key={u.id}
+                      className="transition-colors hover:bg-sky-50/50"
+                    >
+                      <td className="table-cell font-semibold text-slate-900">
                         {u.username}
                       </td>
-                      <td className="border-b border-white/10 px-4 py-4 text-sm text-slate-200">
-                        {u.email}
-                      </td>
-                      <td className="border-b border-white/10 px-4 py-4 text-sm">
+                      <td className="table-cell">{u.email}</td>
+                      <td className="table-cell">
                         <span className={roleBadgeClasses(u.role)}>
                           {u.role}
                         </span>
                       </td>
-                      <td className="border-b border-white/10 px-4 py-4 text-sm">
+                      <td className="table-cell">
                         <span
                           className={
                             u.is_active
-                              ? "font-semibold text-emerald-300"
-                              : "font-semibold text-slate-500"
+                              ? "font-semibold text-emerald-600"
+                              : "font-semibold text-slate-400"
                           }
                         >
                           {u.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="border-b border-white/10 px-4 py-4 text-sm text-slate-400">
+                      <td className="table-cell">
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
-                            className="cursor-pointer border-none bg-transparent p-0 text-slate-400 hover:text-sky-300"
+                            className="cursor-pointer border-none bg-transparent p-0 text-slate-400 hover:text-sky-600"
                             title="Edit"
                             onClick={() => openEdit(u)}
                           >
@@ -367,7 +361,7 @@ export default function UserManagement() {
                           </button>
                           <button
                             type="button"
-                            className="cursor-pointer border-none bg-transparent p-0 text-slate-400 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="cursor-pointer border-none bg-transparent p-0 text-slate-400 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40"
                             title="Deactivate"
                             disabled={!u.is_active}
                             onClick={() => handleDeactivate(u)}
@@ -381,7 +375,7 @@ export default function UserManagement() {
                 </tbody>
               </table>
 
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200/60 pt-6">
                 <p className="text-sm text-slate-400">
                   {meta.total} user{meta.total !== 1 ? "s" : ""} · Page{" "}
                   {meta.page} of {Math.max(1, meta.totalPages)}
@@ -412,12 +406,12 @@ export default function UserManagement() {
 
       {creating && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="modal-overlay"
           role="presentation"
           onClick={closeCreate}
         >
           <div
-            className="w-full max-w-md rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-lg"
+            className="modal-panel"
             role="dialog"
             aria-modal="true"
             aria-labelledby="create-user-title"
@@ -425,34 +419,28 @@ export default function UserManagement() {
           >
             <h3
               id="create-user-title"
-              className="mb-4 text-lg font-bold text-[#1e293b]"
+              className="mb-4 text-lg font-bold text-slate-900"
             >
               Add user
             </h3>
             {createError && (
-              <div className="mb-4 rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#b91c1c]">
-                {createError}
-              </div>
+              <div className="alert alert-error mb-4">{createError}</div>
             )}
             <div className="mb-4">
-              <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                Username
-              </label>
+              <label className="form-label">Username</label>
               <input
                 type="text"
-                className="w-full rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm outline-none focus:border-[#2563eb]"
+                className="form-input"
                 value={createUsername}
                 onChange={(e) => setCreateUsername(e.target.value)}
                 autoComplete="off"
               />
             </div>
             <div className="mb-4">
-              <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                Email
-              </label>
+              <label className="form-label">Email</label>
               <input
                 type="email"
-                className="w-full rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm outline-none focus:border-[#2563eb]"
+                className="form-input"
                 value={createEmail}
                 onChange={(e) => setCreateEmail(e.target.value)}
                 autoComplete="off"
@@ -467,15 +455,13 @@ export default function UserManagement() {
                 placeholder={PASSWORD_PLACEHOLDER}
                 autoComplete="new-password"
                 minLength={PASSWORD_MIN_LENGTH}
-                inputClassName="w-full rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm text-[#1e293b] outline-none focus:border-[#2563eb]"
+                inputClassName="form-input pr-11"
               />
             </div>
             <div className="mb-6">
-              <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                Role
-              </label>
+              <label className="form-label">Role</label>
               <select
-                className="w-full rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm text-[#1e293b] outline-none focus:border-[#2563eb]"
+                className="form-input"
                 value={createRole}
                 onChange={(e) => setCreateRole(e.target.value as UserRole)}
               >
@@ -505,13 +491,9 @@ export default function UserManagement() {
       )}
 
       {editing && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          role="presentation"
-          onClick={closeEdit}
-        >
+        <div className="modal-overlay" role="presentation" onClick={closeEdit}>
           <div
-            className="w-full max-w-md rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-lg"
+            className="modal-panel"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-user-title"
@@ -519,33 +501,27 @@ export default function UserManagement() {
           >
             <h3
               id="edit-user-title"
-              className="mb-4 text-lg font-bold text-[#1e293b]"
+              className="mb-4 text-lg font-bold text-slate-900"
             >
               Edit user
             </h3>
             {actionError && (
-              <div className="mb-4 rounded-lg bg-[#fef2f2] px-3 py-2 text-sm text-[#b91c1c]">
-                {actionError}
-              </div>
+              <div className="alert alert-error mb-4">{actionError}</div>
             )}
             <div className="mb-4">
-              <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                Username
-              </label>
+              <label className="form-label">Username</label>
               <input
                 type="text"
-                className="w-full rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm outline-none focus:border-[#2563eb]"
+                className="form-input"
                 value={editUsername}
                 onChange={(e) => setEditUsername(e.target.value)}
               />
             </div>
             <div className="mb-6">
-              <label className="mb-2 block text-sm font-semibold text-[#475569]">
-                Email
-              </label>
+              <label className="form-label">Email</label>
               <input
                 type="email"
-                className="w-full rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm outline-none focus:border-[#2563eb]"
+                className="form-input"
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
               />

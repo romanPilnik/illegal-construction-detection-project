@@ -8,9 +8,6 @@ import {
 import { PasswordInput } from "../../../components/PasswordInput";
 import { getApiErrorMessage } from "../../../lib/api-error";
 
-const inputClassName =
-  "w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-slate-500 focus:border-[#60a5fa] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(96,165,250,0.15)]";
-
 const IDLE_LOGOUT_KEY = "idleLogoutPrompt";
 
 export default function Login() {
@@ -89,7 +86,7 @@ export default function Login() {
   return (
     <div className="app-page flex min-h-screen flex-col items-center justify-center px-4">
       <div className="mb-8 flex flex-col items-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#2563eb] shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+        <div className="auth-logo mb-4">
           <svg
             className="h-7 w-7 fill-white"
             viewBox="0 0 24 24"
@@ -98,7 +95,7 @@ export default function Login() {
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM8 18v-1h8v1H8zm0-3v-1h8v1H8zm0-3V11h5v1H8z" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-100">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Construction Compliance
         </h1>
         <p className="page-subtitle mt-1 text-sm">
@@ -106,25 +103,25 @@ export default function Login() {
         </p>
       </div>
 
-      <div className="glass-card w-full max-w-[420px] rounded-2xl p-8">
+      <div className="glass-card auth-card glass-card-elevated">
         {registered && (
-          <p className="mb-4 text-center text-[0.8rem] text-emerald-300">
+          <p className="alert alert-success mb-4 text-center text-[0.8rem]">
             Account created. Sign in with your email and password.
           </p>
         )}
         {passwordReset && (
-          <p className="mb-4 text-center text-[0.8rem] text-emerald-300">
+          <p className="alert alert-success mb-4 text-center text-[0.8rem]">
             Password reset successfully. Sign in with your new password.
           </p>
         )}
         {showSessionExpired && (
-          <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.8rem] text-amber-200">
+          <div className="alert alert-warning mb-4 flex items-start justify-between gap-3 text-[0.8rem]">
             <p className="m-0 text-left">
               Session expired after 1 hour of inactivity. Please sign in again.
             </p>
             <button
               type="button"
-              className="cursor-pointer border-none bg-transparent p-0 text-[0.9rem] leading-none text-amber-200"
+              className="cursor-pointer border-none bg-transparent p-0 text-[0.9rem] leading-none"
               onClick={() => {
                 sessionStorage.removeItem(IDLE_LOGOUT_KEY);
                 setShowSessionExpired(false);
@@ -136,11 +133,11 @@ export default function Login() {
           </div>
         )}
         {sessionMessage && (
-          <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[0.8rem] text-amber-200">
+          <div className="alert alert-warning mb-4 flex items-start justify-between gap-3 text-[0.8rem]">
             <p className="m-0 text-left">{sessionMessage}</p>
             <button
               type="button"
-              className="cursor-pointer border-none bg-transparent p-0 text-[0.9rem] leading-none text-amber-200"
+              className="cursor-pointer border-none bg-transparent p-0 text-[0.9rem] leading-none"
               onClick={() => {
                 sessionStorage.removeItem(SESSION_MESSAGE_KEY);
                 setSessionMessage("");
@@ -152,17 +149,15 @@ export default function Login() {
           </div>
         )}
         {error && (
-          <p className="mb-4 text-center text-[0.8rem] text-red-300">
+          <p className="alert alert-error mb-4 text-center text-[0.8rem]">
             {error}
           </p>
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Email
-            </label>
+            <label className="form-label">Email</label>
             <input
-              className={inputClassName}
+              className="form-input"
               type="email"
               placeholder="Enter your email"
               value={email}
@@ -179,12 +174,12 @@ export default function Login() {
               placeholder="Enter your password"
               autoComplete="current-password"
               required
-              inputClassName={inputClassName + " pr-11"}
+              inputClassName="form-input pr-11"
             />
           </div>
           <div className="mb-1 text-right">
             <Link
-              className="text-[0.8rem] text-[#60a5fa] no-underline hover:underline"
+              className="text-[0.8rem] text-[#2563eb] no-underline hover:underline"
               to="/forgot-password"
             >
               Forgot password?
@@ -192,18 +187,18 @@ export default function Login() {
           </div>
           <button
             type="submit"
-            className="mt-2 w-full rounded-lg border-none bg-[#2563eb] py-3 text-[0.9rem] font-semibold text-white transition-[background-color,transform] duration-200 hover:enabled:bg-[#1d4ed8] active:enabled:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+            className="btn btn-primary mt-2 w-full py-3 text-[0.9rem]"
             disabled={loading}
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
           <Link
-            className="mt-3 box-border block w-full rounded-lg border border-white/15 bg-white/5 py-3 text-center text-[0.9rem] font-semibold text-slate-200 no-underline transition-all duration-200 hover:border-[#94a3b8] hover:bg-white/10 active:scale-[0.99]"
+            className="btn btn-secondary mt-3 box-border block w-full py-3 text-center text-[0.9rem] no-underline"
             to="/register"
           >
             Create account
           </Link>
-          <p className="mt-4 text-center text-[0.8rem] text-slate-400">
+          <p className="mt-4 text-center text-[0.8rem] text-slate-500">
             Authorized personnel only
           </p>
         </form>

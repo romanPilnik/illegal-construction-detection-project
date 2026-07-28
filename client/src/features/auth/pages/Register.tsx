@@ -11,8 +11,7 @@ import {
 } from "../../../lib/password-rules";
 import { getApiErrorMessage } from "../../../lib/api-error";
 
-const fieldClassName =
-  "w-full rounded-lg border border-white/10 bg-[#0b1220] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition-all duration-200 focus:border-[#10b981] focus:bg-[#0b1220] focus:shadow-[0_0_0_3px_rgba(16,185,129,0.1)]";
+const fieldClassName = "form-input";
 
 function RegisterForm() {
   const navigate = useNavigate();
@@ -54,7 +53,7 @@ function RegisterForm() {
   return (
     <div className="app-page flex min-h-screen flex-col items-center justify-center px-4 py-8">
       <div className="mb-8 flex flex-col items-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#10b981] shadow-[0_4px_14px_rgba(16,185,129,0.35)]">
+        <div className="auth-logo auth-logo--green mb-4">
           <svg
             className="h-7 w-7 fill-white"
             viewBox="0 0 24 24"
@@ -63,7 +62,7 @@ function RegisterForm() {
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-100">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Register Account
         </h1>
         <p className="page-subtitle mt-1 text-sm">
@@ -71,17 +70,15 @@ function RegisterForm() {
         </p>
       </div>
 
-      <div className="glass-card w-full max-w-[420px] rounded-2xl p-8">
+      <div className="glass-card auth-card auth-card--green glass-card-elevated">
         {error && (
-          <p className="mb-4 text-center text-[0.8rem] text-red-300">
+          <p className="alert alert-error mb-4 text-center text-[0.8rem]">
             {error}
           </p>
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Username
-            </label>
+            <label className="form-label">Username</label>
             <input
               className={fieldClassName}
               type="text"
@@ -93,9 +90,7 @@ function RegisterForm() {
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Email Address
-            </label>
+            <label className="form-label">Email Address</label>
             <input
               className={fieldClassName}
               type="email"
@@ -107,9 +102,7 @@ function RegisterForm() {
           </div>
 
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              System Role
-            </label>
+            <label className="form-label">System Role</label>
             <select
               className={fieldClassName}
               value={role}
@@ -136,14 +129,14 @@ function RegisterForm() {
 
           <button
             type="submit"
-            className="mt-2 w-full rounded-lg border-none bg-[#10b981] py-3 text-[0.9rem] font-semibold text-white transition-colors duration-200 hover:enabled:bg-[#059669] disabled:cursor-not-allowed disabled:opacity-70"
+            className="btn btn-primary mt-2 w-full py-3 text-[0.9rem] bg-emerald-600! hover:bg-emerald-700!"
             disabled={loading}
           >
             {loading ? "Creating Account..." : "Sign Up"}
           </button>
 
           <Link
-            className="mt-2 block w-full cursor-pointer border-none bg-transparent py-3 text-center text-sm text-slate-400 no-underline hover:text-slate-200"
+            className="mt-2 block w-full py-3 text-center text-sm text-slate-500 no-underline hover:text-slate-700"
             to="/login"
           >
             Already have an account? Sign In

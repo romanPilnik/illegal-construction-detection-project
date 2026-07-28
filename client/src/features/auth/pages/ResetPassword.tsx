@@ -54,12 +54,12 @@ export default function ResetPassword() {
   if (!token) {
     return (
       <div className="app-page flex min-h-screen flex-col items-center justify-center px-4">
-        <div className="glass-card w-full max-w-[420px] rounded-2xl p-8 text-center">
-          <p className="mb-4 text-[0.9rem] text-red-300">
+        <div className="glass-card auth-card glass-card-elevated text-center">
+          <p className="alert alert-error mb-4 text-[0.9rem]">
             This reset link is invalid or missing a token.
           </p>
           <Link
-            className="text-sm text-[#60a5fa] no-underline hover:underline"
+            className="text-sm text-[#2563eb] no-underline hover:underline"
             to="/forgot-password"
           >
             Request a new reset link
@@ -72,15 +72,15 @@ export default function ResetPassword() {
   return (
     <div className="app-page flex min-h-screen flex-col items-center justify-center px-4">
       <div className="mb-8 flex flex-col items-center">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-100">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           Reset Password
         </h1>
         <p className="page-subtitle mt-1 text-sm">Choose a new password</p>
       </div>
 
-      <div className="glass-card w-full max-w-[420px] rounded-2xl p-8">
+      <div className="glass-card auth-card glass-card-elevated">
         {error && (
-          <p className="mb-4 text-center text-[0.8rem] text-red-300">{error}</p>
+          <p className="alert alert-error mb-4 text-center text-[0.8rem]">{error}</p>
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
@@ -93,6 +93,7 @@ export default function ResetPassword() {
               autoComplete="new-password"
               required
               minLength={PASSWORD_MIN_LENGTH}
+              inputClassName="form-input pr-11"
             />
           </div>
           <div className="mb-5">
@@ -105,17 +106,18 @@ export default function ResetPassword() {
               autoComplete="new-password"
               required
               minLength={PASSWORD_MIN_LENGTH}
+              inputClassName="form-input pr-11"
             />
           </div>
           <button
             type="submit"
-            className="mt-2 w-full rounded-lg border-none bg-[#2563eb] py-3 text-[0.9rem] font-semibold text-white transition-colors duration-200 hover:enabled:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-70"
+            className="btn btn-primary mt-2 w-full py-3 text-[0.9rem]"
             disabled={loading}
           >
             {loading ? 'Saving…' : 'Reset password'}
           </button>
           <Link
-            className="mt-3 block w-full py-3 text-center text-sm text-slate-400 no-underline hover:text-slate-200"
+            className="mt-3 block w-full py-3 text-center text-sm text-slate-500 no-underline hover:text-slate-700"
             to="/login"
           >
             Back to sign in
