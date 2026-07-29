@@ -23,6 +23,39 @@ import type {
   GetAnalysesQuery,
 } from '../validation/analysis.validation.js';
 
+type AuthenticatedUser = {
+  userId: string;
+  role: Role;
+};
+
+/**
+ * Admins see every analysis (including other Admins').
+ * Inspectors are limited to their own `inspector_id` records.
+ */
+const applyAnalysisVisibility = (
+  where: Prisma.AnalysisWhereInput,
+  user: AuthenticatedUser | undefined
+): Prisma.AnalysisWhereInput => {
+  if (!user || user.role === Role.Admin) {
+    return where;
+  }
+
+  return { ...where, inspector_id: user.userId };
+};
+
+const canAccessAnalysis = (
+  analysisInspectorId: string,
+  user: AuthenticatedUser | undefined
+): boolean => {
+  if (!user) {
+    return false;
+  }
+  if (user.role === Role.Admin) {
+    return true;
+  }
+  return analysisInspectorId === user.userId;
+};
+
 type ProcessAnalysisPayload = {
   analysisId: string;
   inspectorId: string;
@@ -351,9 +384,36 @@ const createAnalysis = async (
       });
       return;
     }
-    res
-      .status(500)
-      .json({ message: 'Internal server error during analysis creation' });
+
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (
+      message.includes('Image storage') ||
+      message.includes('S3') ||
+      /credentials|AccessDenied|InvalidAccessKeyId/i.test(message)
+    ) {
+      res.status(500).json({
+        error:
+          'Image storage failed. Check AWS/S3 env vars on the API service, or leave them empty to use local disk.',
+        detail: message,
+      });
+      return;
+    }
+
+    if (/Unknown argument `request_title`|column.*request_title/i.test(message)) {
+      res.status(500).json({
+        error:
+          'Database schema is missing request_title. Run pending Prisma migrations on production.',
+        detail: message,
+      });
+      return;
+    }
+
+    res.status(500).json({
+      error: 'Internal server error during analysis creation',
+      message: 'Internal server error during analysis creation',
+      detail: message,
+    });
   }
 };
 
@@ -406,14 +466,13 @@ const getAnalysisFailureReason = async (analysisId: string) => {
 
 const getOutcomeSummary = async (req: Request, res: Response) => {
   try {
-    const whereBase: Prisma.AnalysisWhereInput = {
-      status: 'Completed',
-      anomaly_detected: { not: null },
-    };
-
-    if (req.user && req.user.role === Role.Inspector) {
-      whereBase.inspector_id = req.user.userId;
-    }
+    const whereBase = applyAnalysisVisibility(
+      {
+        status: 'Completed',
+        anomaly_detected: { not: null },
+      },
+      req.user
+    );
 
     const [anomalyDetected, noAnomaly] = await Promise.all([
       prisma.analysis.count({
@@ -453,9 +512,6 @@ const getAnalyses = async (
 
     const where: Prisma.AnalysisWhereInput = {};
 
-    if (req.user && req.user?.role === Role.Inspector) {
-      where.inspector_id = req.user.userId;
-    }
     if (status) {
       where.status = status;
     }
@@ -467,12 +523,14 @@ const getAnalyses = async (
       });
     }
 
+    const scopedWhere = applyAnalysisVisibility(where, req.user);
+
     const skip = (page - 1) * limit;
-    const total = await prisma.analysis.count({ where });
+    const total = await prisma.analysis.count({ where: scopedWhere });
     const totalPages = Math.ceil(total / limit);
 
     const analyses = await prisma.analysis.findMany({
-      where,
+      where: scopedWhere,
       select: analysisListSelect,
       orderBy: { created_at: 'desc' },
       skip,
@@ -535,11 +593,7 @@ const getAnalysisById = async (
       return;
     }
 
-    if (
-      req.user &&
-      req.user?.role === Role.Inspector &&
-      analysis.inspector_id !== req.user.userId
-    ) {
+    if (!canAccessAnalysis(analysis.inspector_id, req.user)) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -587,11 +641,7 @@ const exportById = async (
       return;
     }
 
-    if (
-      req.user &&
-      req.user.role === Role.Inspector &&
-      analysis.inspector_id !== req.user.userId
-    ) {
+    if (!canAccessAnalysis(analysis.inspector_id, req.user)) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -616,20 +666,19 @@ const exportByDateRange = async (
 ) => {
   try {
     const { format, start_date, end_date, time_zone } = req.body;
-    const where: Prisma.AnalysisWhereInput = {
-      status: 'Completed',
-      ...((start_date || end_date) && {
-        created_at: buildLocalDateRange({
-          startDate: start_date,
-          endDate: end_date,
-          timeZone: time_zone,
+    const where = applyAnalysisVisibility(
+      {
+        status: 'Completed',
+        ...((start_date || end_date) && {
+          created_at: buildLocalDateRange({
+            startDate: start_date,
+            endDate: end_date,
+            timeZone: time_zone,
+          }),
         }),
-      }),
-    };
-
-    if (req.user?.role === Role.Inspector) {
-      where.inspector_id = req.user.userId;
-    }
+      },
+      req.user
+    );
 
     const analyses = await prisma.analysis.findMany({
       where,

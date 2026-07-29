@@ -5,12 +5,11 @@ import type { AnalysisDetailData, AnalysisStatus } from "../types";
 import { AnalysisSubmitLoader } from "../../../components/AnalysisSubmitLoader";
 import { subscribeToAnalysisUpdates } from "../socket";
 import { getApiErrorMessage } from "../../../lib/api-error";
+import { API_BASE_URL } from "../../../services/api";
 
-const viteApiUrl =
-  import.meta.env.VITE_API_URL || "http://localhost:5001/api/v1";
-const API_ORIGIN = viteApiUrl.startsWith("/")
+const API_ORIGIN = API_BASE_URL.startsWith("/")
   ? ""
-  : viteApiUrl.replace(/\/api\/v1\/?$/, "");
+  : API_BASE_URL.replace(/\/api\/v1\/?$/, "");
 
 export default function AnalysisDetail() {
   const { analysisId } = useParams<{ analysisId: string }>();

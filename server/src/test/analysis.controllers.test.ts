@@ -269,6 +269,67 @@ describe('AnalysisController', () => {
         }),
       });
     });
+
+    it('should return 200 for Admin viewing another Admin analysis', async () => {
+      req = {
+        params: { id: 'analys-admin-2' },
+        user: { userId: 'admin-1', role: 'Admin' },
+      };
+
+      mockAnalysisFindUnique.mockResolvedValue({
+        id: 'analys-admin-2',
+        inspector_id: 'admin-2',
+      } as unknown);
+
+      await AnalysisController.getAnalysisById(req as any, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+  });
+
+  describe('getAnalyses', () => {
+    it('should not scope by inspector_id for Admin (global visibility)', async () => {
+      req = {
+        query: { page: 1, limit: 50 },
+        user: { userId: 'admin-1', role: 'Admin' },
+      };
+
+      mockAnalysisCount.mockResolvedValue(2);
+      mockAnalysisFindMany.mockResolvedValue([
+        { id: 'a1', inspector_id: 'admin-1' },
+        { id: 'a2', inspector_id: 'admin-2' },
+      ] as unknown as any[]);
+
+      await AnalysisController.getAnalyses(req as any, res as Response);
+
+      expect(mockAnalysisFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.not.objectContaining({ inspector_id: expect.anything() }),
+        })
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('should scope Inspector list to their own inspector_id', async () => {
+      req = {
+        query: { page: 1, limit: 50 },
+        user: { userId: 'inspector-me', role: 'Inspector' },
+      };
+
+      mockAnalysisCount.mockResolvedValue(1);
+      mockAnalysisFindMany.mockResolvedValue([
+        { id: 'a1', inspector_id: 'inspector-me' },
+      ] as unknown as any[]);
+
+      await AnalysisController.getAnalyses(req as any, res as Response);
+
+      expect(mockAnalysisFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ inspector_id: 'inspector-me' }),
+        })
+      );
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
   });
 
   describe('getAnalyses', () => {

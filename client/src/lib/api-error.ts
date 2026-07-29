@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios'
 type ErrorPayload = {
   message?: string
   error?: string
+  detail?: string
   errors?: Array<{ field?: string; message?: string }>
 }
 
@@ -17,8 +18,12 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (validationMessages?.length) {
     return validationMessages.join('; ')
   }
-  if (payload?.message) return payload.message
-  if (payload?.error) return payload.error
+
+  const main = payload?.message ?? payload?.error
+  if (main && payload?.detail) {
+    return `${main} (${payload.detail})`
+  }
+  if (main) return main
 
   if (error.code === 'ECONNABORTED') {
     return 'The request timed out. Please try again.'

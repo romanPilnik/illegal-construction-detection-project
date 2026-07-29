@@ -15,12 +15,29 @@ type UploadedAsset = {
   mimeType: string;
 };
 
-const AWS_REGION = process.env.AWS_REGION;
-const S3_UPLOADS_BUCKET = process.env.S3_UPLOADS_BUCKET;
-const S3_PUBLIC_BASE_URL = process.env.S3_PUBLIC_BASE_URL;
+const AWS_REGION = process.env.AWS_REGION?.trim();
+const S3_UPLOADS_BUCKET = process.env.S3_UPLOADS_BUCKET?.trim();
+const S3_PUBLIC_BASE_URL = process.env.S3_PUBLIC_BASE_URL?.trim();
+const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID?.trim();
+const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY?.trim();
 
-const s3Client =
-  AWS_REGION && S3_UPLOADS_BUCKET ? new S3Client({ region: AWS_REGION }) : null;
+/** On Render, S3 needs explicit keys. Partial config previously caused PutObject 500s. */
+const canUseS3 = Boolean(
+  AWS_REGION &&
+    S3_UPLOADS_BUCKET &&
+    AWS_ACCESS_KEY_ID &&
+    AWS_SECRET_ACCESS_KEY
+);
+
+const s3Client = canUseS3
+  ? new S3Client({
+      region: AWS_REGION,
+      credentials: {
+        accessKeyId: AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: AWS_SECRET_ACCESS_KEY as string,
+      },
+    })
+  : null;
 
 const getExtension = (name: string, mimeType: string) => {
   const ext = path.extname(name);
@@ -60,18 +77,29 @@ export const uploadImageAsset = async (
   input: UploadAssetInput
 ): Promise<UploadedAsset> => {
   if (!s3Client || !S3_UPLOADS_BUCKET || !AWS_REGION) {
+    if (AWS_REGION || S3_UPLOADS_BUCKET) {
+      console.warn(
+        'S3 partially configured (need AWS_REGION, S3_UPLOADS_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY). Using local disk.'
+      );
+    }
     return saveToLocalDisk(input);
   }
 
   const key = buildObjectKey(input);
-  await s3Client.send(
-    new PutObjectCommand({
-      Bucket: S3_UPLOADS_BUCKET,
-      Key: key,
-      Body: input.buffer,
-      ContentType: input.mimeType,
-    })
-  );
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: S3_UPLOADS_BUCKET,
+        Key: key,
+        Body: input.buffer,
+        ContentType: input.mimeType,
+      })
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`S3 upload failed for ${key}: ${message}`);
+    throw new Error(`Image storage (S3) failed: ${message}`);
+  }
 
   return {
     filePath: buildS3PublicUrl(key),

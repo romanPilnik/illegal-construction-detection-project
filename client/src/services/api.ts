@@ -1,8 +1,29 @@
 import axios from 'axios';
 import { invalidateSession } from '../lib/stored-user';
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5001/api/v1';
+/**
+ * Docker Compose uses same-origin `/api/v1` (nginx → api).
+ * On Render the frontend and API are separate services, so `/api/v1` must not
+ * stay relative — call the API host directly.
+ */
+const resolveApiBaseUrl = (): string => {
+  const configured = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+
+  if (configured && configured !== '/api/v1') {
+    return configured.replace(/\/$/, '');
+  }
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.endsWith('onrender.com') && host.includes('illegal-construction-detection-project')) {
+      return 'https://illegal-construction-detection-project.onrender.com/api/v1';
+    }
+  }
+
+  return configured || 'http://localhost:5001/api/v1';
+};
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 const OBSERVABILITY_ENABLED =
   import.meta.env.VITE_OBSERVABILITY_LOGS !== 'false';

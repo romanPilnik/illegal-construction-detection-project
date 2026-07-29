@@ -47,20 +47,22 @@ const joinUserRooms = (socket: Socket, payload: SocketUserPayload) => {
 
 const authenticateSocket = async (socket: Socket, token: string) => {
   const decoded = jwt.verify(token, JWT_SECRET) as SocketUserPayload;
-  if (!decoded.userId || !decoded.role) {
+  if (!decoded.userId) {
     throw new Error('Invalid token payload');
   }
 
   const user = await prisma.user.findUnique({
     where: { id: decoded.userId },
-    select: { is_active: true, role: true },
+    select: { id: true, role: true, is_active: true },
   });
-  if (!user?.is_active || user.role !== decoded.role) {
-    throw new Error('User is inactive or token role is stale');
+  if (!user?.is_active) {
+    throw new Error('User is inactive or unavailable');
   }
 
-  socket.data.user = decoded;
-  return decoded;
+  // Prefer live DB role so Admins join the admin room after promotions.
+  const payload: SocketUserPayload = { userId: user.id, role: user.role };
+  socket.data.user = payload;
+  return payload;
 };
 
 export const initWebSocket = (server: HttpServer) => {

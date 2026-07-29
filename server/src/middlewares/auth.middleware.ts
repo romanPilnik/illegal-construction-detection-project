@@ -77,15 +77,14 @@ export const authenticateToken = async <Params, ResBody, ReqBody, ReqQuery>(
     });
 
     if (!user?.is_active) {
-      res
-        .status(401)
-        .json({
-          code: 'SESSION_INACTIVE',
-          message: 'User account is inactive or unavailable.',
-        });
+      res.status(401).json({
+        code: 'SESSION_INACTIVE',
+        message: 'User account is inactive or unavailable.',
+      });
       return;
     }
 
+    // Live role from DB so Admin global visibility applies after role changes.
     req.user = { userId: user.id, role: user.role };
     next();
   } catch (error) {
