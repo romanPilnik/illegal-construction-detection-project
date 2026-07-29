@@ -212,10 +212,6 @@ export const processAnalysisInBackground = async (
       const imageRecord = await tx.image.create({
         data: {
           file_path: uploadedResultImage.filePath,
-          file_size_bytes: uploadedResultImage.fileSizeBytes,
-          mime_type: uploadedResultImage.mimeType,
-          width: resultImage.width,
-          height: resultImage.height,
         },
       });
 
@@ -323,37 +319,17 @@ const createAnalysis = async (
       }),
     ]);
 
-
-    const [beforeDimensions, afterDimensions] = await Promise.all([
-      Jimp.read(beforeBuffer).then((img) => ({
-        width: img.bitmap.width,
-        height: img.bitmap.height,
-      })),
-      Jimp.read(afterBuffer).then((img) => ({
-        width: img.bitmap.width,
-        height: img.bitmap.height,
-      })),
-    ]);
-
     const analysis = await prisma.$transaction(
       async (tx: Prisma.TransactionClient) => {
         const beforeImg = await tx.image.create({
           data: {
             file_path: beforeStored.filePath,
-            file_size_bytes: beforeStored.fileSizeBytes,
-            mime_type: beforeStored.mimeType,
-            width: beforeDimensions.width,
-            height: beforeDimensions.height,
           },
         });
 
         const afterImg = await tx.image.create({
           data: {
             file_path: afterStored.filePath,
-            file_size_bytes: afterStored.fileSizeBytes,
-            mime_type: afterStored.mimeType,
-            width: afterDimensions.width,
-            height: afterDimensions.height,
           },
         });
 
