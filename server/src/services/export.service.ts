@@ -14,9 +14,9 @@ export interface AnalysisReport {
   created_at: Date;
   status: AnalysisStatus;
   anomaly_detected: boolean | null;
-  issued_by: { username: string };
-  before_image: ImageInfo;
-  after_image: ImageInfo;
+  issued_by: { username: string } | null;
+  before_image: ImageInfo | null;
+  after_image: ImageInfo | null;
   result_image: ImageInfo | null;
 }
 
@@ -39,21 +39,61 @@ function ensureVerticalSpace(doc: PdfDoc, minHeight: number): void {
 
 const IMAGE_TAIL_GAP = 14;
 
+const isRemoteUrl = (value: string) => /^https?:\/\//i.test(value);
+
+/**
+ * Images may be local relative paths (dev) or absolute S3/HTTPS URLs (Render).
+ */
+async function loadImageBuffer(filePath: string): Promise<Buffer | null> {
+  try {
+    if (isRemoteUrl(filePath)) {
+      const response = await fetch(filePath);
+      if (!response.ok) {
+        console.warn(
+          `Failed to fetch remote image (${response.status}): ${filePath}`
+        );
+        return null;
+      }
+      return Buffer.from(await response.arrayBuffer());
+    }
+
+    const fullPath = path.isAbsolute(filePath)
+      ? filePath
+      : path.join(process.cwd(), filePath);
+    if (!fs.existsSync(fullPath)) {
+      console.warn(`Local image missing: ${fullPath}`);
+      return null;
+    }
+    return fs.readFileSync(fullPath);
+  } catch (error) {
+    console.warn(`Could not load image: ${filePath}`, error);
+    return null;
+  }
+}
+
 async function addImageToDoc(
   doc: PdfDoc,
   imageObj: ImageInfo | null | undefined,
   label: string,
-  labelColor = '#64748b',
+  labelColor = '#64748b'
 ): Promise<void> {
   if (!imageObj?.file_path) return;
 
-  const fullPath = path.join(process.cwd(), imageObj.file_path);
-  if (!fs.existsSync(fullPath)) return;
+  const imageBuffer = await loadImageBuffer(imageObj.file_path);
+  if (!imageBuffer) {
+    ensureVerticalSpace(doc, 28);
+    doc
+      .fillColor('#b91c1c')
+      .fontSize(9)
+      .text(`${label} (image unavailable)`);
+    doc.moveDown(0.5);
+    return;
+  }
 
   let iw = 800;
   let ih = 600;
   try {
-    const img = await Jimp.read(fullPath);
+    const img = await Jimp.read(imageBuffer);
     iw = Math.max(1, img.bitmap.width);
     ih = Math.max(1, img.bitmap.height);
   } catch {
@@ -95,13 +135,20 @@ async function addImageToDoc(
   try {
     const x = marginLeft + Math.max(0, (maxW - drawW) / 2);
     const y = doc.y;
-    doc.image(fullPath, x, y, { width: drawW, height: drawH });
+    doc.image(imageBuffer, x, y, { width: drawW, height: drawH });
     doc.y = y + drawH + IMAGE_TAIL_GAP;
     doc.x = marginLeft;
   } catch (err) {
     console.warn(`Could not embed image: ${label}`, err);
+    doc
+      .fillColor('#b91c1c')
+      .fontSize(9)
+      .text(`${label} (could not embed image)`);
   }
 }
+
+const toDate = (value: Date | string): Date =>
+  value instanceof Date ? value : new Date(value);
 
 export class ExportService {
   static async generateExcelReport(analyses: AnalysisReport[]): Promise<string> {
@@ -114,15 +161,15 @@ export class ExportService {
       { header: 'Inspector Name', key: 'inspector', width: 20 },
       { header: 'Current Status', key: 'status', width: 15 },
       { header: 'Anomaly Detected', key: 'anomaly', width: 18 },
-      { header: 'Before Image Path', key: 'beforePath', width: 45 },
-      { header: 'After Image Path', key: 'afterPath', width: 45 },
-      { header: 'Result Image Path', key: 'resultPath', width: 45 },
+      { header: 'Before Image URL', key: 'beforePath', width: 45 },
+      { header: 'After Image URL', key: 'afterPath', width: 45 },
+      { header: 'Result Image URL', key: 'resultPath', width: 45 },
     ];
 
     analyses.forEach((analysis) => {
-      worksheet.addRow({
+      const row = worksheet.addRow({
         id: analysis.id,
-        date: analysis.created_at.toLocaleString('en-US'),
+        date: toDate(analysis.created_at).toLocaleString('en-US'),
         inspector: analysis.issued_by?.username || 'Unknown',
         status: analysis.status,
         anomaly:
@@ -134,6 +181,19 @@ export class ExportService {
         beforePath: analysis.before_image?.file_path || 'N/A',
         afterPath: analysis.after_image?.file_path || 'N/A',
         resultPath: analysis.result_image?.file_path || 'N/A',
+      });
+
+      // Make remote image paths clickable in Excel.
+      (['beforePath', 'afterPath', 'resultPath'] as const).forEach((key) => {
+        const cell = row.getCell(key);
+        const value = String(cell.value ?? '');
+        if (isRemoteUrl(value)) {
+          cell.value = {
+            text: value,
+            hyperlink: value,
+          };
+          cell.font = { color: { argb: 'FF0563C1' }, underline: true };
+        }
       });
     });
 
@@ -155,7 +215,7 @@ export class ExportService {
   }
 
   static async generatePdfReport(analyses: AnalysisReport[]): Promise<string> {
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new PDFDocument({ margin: 50, autoFirstPage: true });
     const fileName = `report_${Date.now()}.pdf`;
     const reportsDir = path.join(process.cwd(), 'reports');
     const filePath = path.join(reportsDir, fileName);
@@ -173,7 +233,9 @@ export class ExportService {
     doc
       .fillColor('#444444')
       .fontSize(10)
-      .text(`Generated at: ${new Date().toLocaleString('en-US')}`, { align: 'right' });
+      .text(`Generated at: ${new Date().toLocaleString('en-US')}`, {
+        align: 'right',
+      });
     doc.moveDown();
     const lineY = doc.y;
     doc
@@ -183,15 +245,14 @@ export class ExportService {
       .stroke();
     doc.moveDown(2);
 
-    if (analyses.length > 0) {
-      doc.addPage();
-    }
-
     for (let index = 0; index < analyses.length; index++) {
       const item = analyses[index];
       if (index > 0) doc.addPage();
 
-      doc.fillColor('#203764').fontSize(14).text(`Record #${index + 1}`, { underline: true });
+      doc
+        .fillColor('#203764')
+        .fontSize(14)
+        .text(`Record #${index + 1}`, { underline: true });
       doc.moveDown(0.5);
 
       doc.fillColor('black').fontSize(10);
@@ -199,7 +260,7 @@ export class ExportService {
       ensureVerticalSpace(doc, textBlock);
 
       doc.text(`ID: ${item.id}`);
-      doc.text(`Created: ${item.created_at.toLocaleString('en-GB')}`);
+      doc.text(`Created: ${toDate(item.created_at).toLocaleString('en-GB')}`);
       doc.text(`Inspector: ${item.issued_by?.username || 'Unknown'}`);
       doc.text(`Current Status: ${item.status}`);
 
@@ -223,7 +284,7 @@ export class ExportService {
         doc,
         item.result_image,
         '3. AI Analysis Result (Annotated):',
-        '#2563eb',
+        '#2563eb'
       );
 
       doc.moveDown();

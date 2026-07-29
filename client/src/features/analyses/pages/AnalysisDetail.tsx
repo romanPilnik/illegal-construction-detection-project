@@ -6,6 +6,7 @@ import { AnalysisSubmitLoader } from "../../../components/AnalysisSubmitLoader";
 import { subscribeToAnalysisUpdates } from "../socket";
 import { getApiErrorMessage } from "../../../lib/api-error";
 import { API_BASE_URL } from "../../../services/api";
+import { downloadExportFile } from "../download-export";
 
 const API_ORIGIN = API_BASE_URL.startsWith("/")
   ? ""
@@ -36,16 +37,7 @@ export default function AnalysisDetail() {
     setExporting(format);
     try {
       const res = await exportAnalysisById(data.id, format);
-
-      const link = document.createElement("a");
-      link.href = res.downloadUrl;
-      link.setAttribute(
-        "download",
-        `Report_${data.id}.${format.toLowerCase()}`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      await downloadExportFile(res.downloadUrl, format, `Report_${data.id}`);
     } catch (err) {
       console.error("Export failed", err);
       alert(getApiErrorMessage(err, "Failed to export analysis."));

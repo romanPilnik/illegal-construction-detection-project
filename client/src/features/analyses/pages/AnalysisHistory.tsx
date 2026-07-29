@@ -4,6 +4,7 @@ import { getAnalyses, exportAnalysesByDate } from "../api";
 import type { AnalysisListRow, AnalysisStatus } from "../types";
 import { getApiErrorMessage } from "../../../lib/api-error";
 import { PageHeaderBar } from "../../../components/PageHeaderBar";
+import { downloadExportFile } from "../download-export";
 
 type StatusType = AnalysisStatus | "";
 
@@ -114,16 +115,11 @@ export default function AnalysisHistory() {
         end_date: endDate || undefined,
         format,
       });
-
-      const link = document.createElement("a");
-      link.href = res.downloadUrl;
-      link.setAttribute(
-        "download",
-        `Bulk_Report_${Date.now()}.${format.toLowerCase()}`,
+      await downloadExportFile(
+        res.downloadUrl,
+        format,
+        `Bulk_Report_${Date.now()}`,
       );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
     } catch (err) {
       alert(getApiErrorMessage(err, "Failed to export analyses."));
     } finally {

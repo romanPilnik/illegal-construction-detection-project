@@ -559,8 +559,19 @@ const buildReportDownloadUrl = (
   req: Pick<Request, 'protocol' | 'get'>,
   fileName: string
 ) => {
-  const protocol = req.protocol;
-  const host = req.get('host');
+  const configured = process.env.PUBLIC_API_URL?.trim().replace(/\/$/, '');
+  if (configured) {
+    return `${configured}/reports/${fileName}`;
+  }
+
+  const protoHeader = req.get('x-forwarded-proto');
+  const protocol = (
+    protoHeader?.split(',')[0]?.trim() ||
+    req.protocol ||
+    'https'
+  ).replace(/:$/, '');
+  const host =
+    req.get('x-forwarded-host')?.split(',')[0]?.trim() || req.get('host');
   return `${protocol}://${host}/reports/${fileName}`;
 };
 

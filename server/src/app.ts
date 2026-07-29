@@ -14,6 +14,9 @@ import config from './config.js';
 
 const app = express();
 
+// Render / reverse proxies terminate TLS; honor X-Forwarded-* for correct report URLs.
+app.set('trust proxy', 1);
+
 const corsOptions: CorsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     if (!origin || config.allowedOrigins.includes(origin)) {
